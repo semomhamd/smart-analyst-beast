@@ -16,7 +16,7 @@ LOGO_URL = "https://raw.githubusercontent.com/semomhamd/smart-analyst-beast/main
 
 # تصحيح الـ API Key (رسالة الخطأ 400 في صورة 33 كانت بسببه)
 # اتأكد يا بطل إن المفتاح ده هو اللي نسخته من Google AI Studio
-genai.configure(api_key="AIzaSyBBiIEEGCzXpv80cwR9yzLXuQdj_J5n9tA")
+genai.configure(api_key="AIzaSyC9Vk1CHJ2DPiZoGCyFKJB1GAflQcB1FOU")
 model = genai.GenerativeModel('gemini-pro')
 
 # وظائف الأمان (Login)
