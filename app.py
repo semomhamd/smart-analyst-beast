@@ -6,10 +6,12 @@ import hashlib
 import plotly.express as px
 from io import BytesIO
 from fpdf import FPDF
-# 1. الإعدادات الملكية للواجهة
+
+# 1. الإعدادات الملكية
 st.set_page_config(page_title="Smart Analyst Ultimate Pro", layout="wide")
 
-# 2. تفعيل ذكاء Gemini (باستخدام كودك الخاص)
+# 2. تفعيل Gemini (تأكد من كتابة المفتاح الصحيح هنا)
+# ملحوظة: المفتاح اللي في الصورة كان ناقص، يرجى التأكد منه
 genai.configure(api_key="AIzaSyBBiIEEGCzXpv80cwR9yzLXuQdj_J5n9tA")
 model = genai.GenerativeModel('gemini-pro')
 
@@ -24,112 +26,65 @@ if 'auth' not in st.session_state: st.session_state.auth = False
 # واجهة الدخول
 if not st.session_state.auth:
     st.markdown("<h1 style='text-align: center; color: #fbbf24;'>👑 Smart Analyst Pro Login</h1>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns([1,2,1])
-    with col2:
-        u = st.text_input("Username")
-        p = st.text_input("Password", type="password")
-        if st.button("دخول للنظام"):
-            if u in st.session_state.user_db and check_hashes(p, st.session_state.user_db[u]):
-                st.session_state.auth = True
-                st.rerun()
-            else: st.error("بيانات الدخول غير صحيحة")
+    u = st.text_input("Username")
+    p = st.text_input("Password", type="password")
+    if st.button("دخول للنظام"):
+        if u in st.session_state.user_db and check_hashes(p, st.session_state.user_db[u]):
+            st.session_state.auth = True
+            st.rerun()
+        else: st.error("بيانات الدخول غير صحيحة")
     st.stop()
 
-# 3. ستايل الألوان المثالية (Power BI Style)
+# 3. ستايل الألوان والتبويبات
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
     html, body, [class*="css"] { font-family: 'Cairo', sans-serif; text-align: right; direction: rtl; }
-    .header-box { background: linear-gradient(90deg, #161b22, #fbbf24); padding: 15px; border-radius: 15px; text-align: center; color: white; border: 2px solid #fbbf24; }
-    .stDataEditor { border: 1.5px solid #fbbf24 !important; border-radius: 10px; }
+    .main-header { background: linear-gradient(90deg, #161b22, #fbbf24); padding: 15px; border-radius: 15px; text-align: center; color: white; border: 2px solid #fbbf24; }
 </style>
 """, unsafe_allow_html=True)
 
-# أزرار التحكم العلوية
-c1, c2, c3 = st.columns([1, 4, 1])
-with c1: st.button("🌐 لغة النظام")
-with c3: st.button("⚙️ الإعدادات")
-with c2: st.markdown("<div class='header-box'><h1>Smart Analyst Ultimate Pro Edition</h1></div>", unsafe_allow_html=True)
+# الهيدر
+st.markdown("<div class='main-header'><h1>Smart Analyst Ultimate Pro</h1></div>", unsafe_allow_html=True)
 
-# 4. المساعد الذكي (AI in Data)
+# 4. المساعد الذكي في Sidebar
 with st.sidebar:
-    st.image("https://raw.githubusercontent.com/semomhamd/smart-analyst-beast/main/99afc3d2-b6ef-4eda-977f-2fdc4b6621dd.jpg")
     st.header("🤖 مساعدك الذكي Gemini")
-    chat = st.text_input("اسأل المساعد عن أي شيء في بياناتك...")
+    chat = st.text_input("اسأل المساعد...")
     if chat:
         try:
             res = model.generate_content(chat)
             st.info(res.text)
-        except Exception as e: st.error(f"خطأ في الاتصال: {e}")
-    st.divider()
-    st.markdown("### 🔗 أدوات الربط والتحليل")
-    st.button("🔗 Power BI Connector")
-    st.button("🔗 Google Sheets Sync")
+        except Exception as e: 
+            st.error("تأكد من صحة الـ API Key في الكود")
 
-# 5. الأدوات الاحترافية المطلوبة (Tabs)
-t_ex, t_bi, t_py, t_pdf = st.tabs(["📑 Excel Professional", "📊 Dashboards", "🐍 Python Lab", "📥 PDF Export"])
+# 5. منطقة العمل (التبويبات)
+# هنا عرفنا t1, t2, t3 بالترتيب الصحيح
+t1, t2, t3 = st.tabs(["📑 Excel Professional", "📊 Dashboards", "📥 PDF Export"])
 
-with t_ex:
+with t1:
     st.subheader("📝 Microsoft Excel Workstation")
     up = st.file_uploader("ارفع ملف Excel أو CSV", type=['xlsx', 'csv'])
     if up:
         df = pd.read_excel(up) if up.name.endswith('xlsx') else pd.read_csv(up)
-        # عرض إكسيل ميكروسوفت التفاعلي بدقة عالية
-        st.data_editor(df, use_container_width=True, num_rows="dynamic", height=500)
-        st.success("البيانات جاهزة للتحليل")
-
-with t_bi:
-    st.subheader("📈 Professional Analytics (High Quality)")
-    if up:
-        c1, c2 = st.columns(2)
-        with c1: x_axis = st.selectbox("المحور الأفقي", df.columns)
-        with c2: y_axis = st.selectbox("المحور الرأسي", df.select_dtypes(include=np.number).columns)
-        
-        fig = px.area(df, x=x_axis, y=y_axis, template="plotly_dark", color_discrete_sequence=['#fbbf24'])
-        st.plotly_chart(fig, use_container_width=True)
-    else: st.warning("الرجاء رفع الملف أولاً")
-
-with t_py:
-    st.subheader("🐍 Advanced Python Engine")
- # 6. منطقة العمل (Tabs)
-# هنا بنعرف t1 و t2 و t3 عشان البرنامج يفهمهم
-t1, t2, t3 = st.tabs(["البيانات", "الأدوات", "النتائج"])
-
-with t1:
-    up = st.file_uploader("ارفع ملفاتك هنا (Excel/CSV)", accept_multiple_files=True)
-    if up:
-        st.success(f"تم استلام {len(up)} ملفات بنجاح")
+        st.data_editor(df, use_container_width=True, height=400)
 
 with t2:
-    st.info("أدوات التحليل المتقدمة ستظهر هنا عند معالجة البيانات")
+    st.subheader("📈 Professional Dashboards")
+    if up:
+        fig = px.area(df, template="plotly_dark", color_discrete_sequence=['#fbbf24'])
+        st.plotly_chart(fig, use_container_width=True)
+    else: st.warning("ارفع ملفاً أولاً")
 
 with t3:
-    st.subheader("📥 مركز استخراج التقارير النهائية")
-    st.write("اضغط لتوليد ملف PDF احترافي")
-    
-    if st.button("تجهيز التقرير للتحميل"):
-        try:
-            # صنع ملف PDF حقيقي باستخدام FPDF اللي ضفناها في سطر 8
-            pdf = FPDF()
-            pdf.add_page()
-            pdf.set_font("Arial", 'B', 16)
-            pdf.cell(200, 10, txt="Smart Analyst Ultimate Pro", ln=1, align='C')
-            pdf.ln(10)
-            pdf.set_font("Arial", size=12)
-            pdf.cell(200, 10, txt="Certified Data Analysis Report - 2026", ln=2, align='C')
-            
-            # تحويل الملف لبايتات متوافقة مع المتصفح
-            pdf_output = pdf.output(dest='S').encode('latin-1')
-            
-            st.download_button(
-                label="تحميل التقرير الآن (PDF)",
-                data=pdf_output,
-                file_name="Smart_Analyst_Report.pdf",
-                mime="application/pdf"
-            )
-            st.success("✅ الملف جاهز! اضغط على زر التحميل اللي ظهر فوق")
-        except Exception as e:
-            st.error(f"خطأ تقني في PDF: {e}")
+    st.subheader("📥 تقارير PDF النهائية")
+    if st.button("تجهيز التقرير"):
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=15)
+        pdf.cell(200, 10, txt="Smart Analyst Pro Report", ln=1, align='C')
+        pdf_output = pdf.output(dest='S').encode('latin-1')
+        st.download_button("تحميل الآن (PDF)", data=pdf_output, file_name="Report.pdf", mime="application/pdf")
+        st.success("جاهز للتحميل!")
 
-# 7. الفوتر
-st.markdown("<div style='text-align: center; color: #fbbf24; padding: 20px;'>Smart Analyst Ultimate | Certified System | 2026</div>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; padding-top: 20px;'>Certified System | 2026</p>", unsafe_allow_html=True)
