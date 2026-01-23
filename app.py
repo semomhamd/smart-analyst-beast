@@ -2,113 +2,129 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import os
+from PIL import Image
 
-# 1. إعدادات الهوية والاحترافية
-st.set_page_config(page_title="Smart Analyst PRO", layout="wide", page_icon="📊")
+# 1. إعدادات المنصة الاحترافية
+st.set_page_config(page_title="Smart Analyst | Ultimate AI Engine", layout="wide", page_icon="⚙️")
 
-# 2. لغة الديزاين (CSS) لتحويل الشكل للنمط الفاخر (Dark & Gold)
+# 2. لغة التصميم (CSS) - بناء الأيقونات والبطاقات التفاعلية
 st.markdown("""
     <style>
-    /* الخلفية الداكنة العميقة */
     .stApp { background-color: #0d1117; color: #e6edf3; }
     
-    /* تصميم البطاقات الاحترافي (Cards) */
-    .metric-card {
-        background-color: #161b22;
+    /* تصميم أيقونات الأدوات */
+    .tool-card {
+        background: linear-gradient(145deg, #161b22, #1f2937);
         border: 1px solid #30363d;
-        border-radius: 12px;
-        padding: 25px;
+        border-radius: 15px;
+        padding: 20px;
         text-align: center;
-        transition: 0.3s;
+        transition: 0.4s;
+        cursor: pointer;
+        height: 100%;
     }
-    .metric-card:hover { border-color: #d4af37; transform: translateY(-5px); }
-    
-    /* النصوص الذهبية */
-    .gold-header { color: #d4af37; font-family: 'Arial'; font-weight: bold; }
-    
-    /* أزرار التصدير الذهبية المتدرجة */
-    .export-btn {
-        background: linear-gradient(135deg, #d4af37 0%, #f1d37e 100%);
-        color: #000 !important;
-        padding: 12px 25px;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: bold;
-        display: block;
-        text-align: center;
-        margin-top: 10px;
+    .tool-card:hover { 
+        border-color: #fbbf24; 
+        transform: scale(1.05);
+        box-shadow: 0 10px 20px rgba(251, 191, 36, 0.2);
     }
-    
-    /* الشريط السفلي (MIA8444) */
-    .footer {
+    .tool-icon { font-size: 40px; margin-bottom: 10px; }
+    .tool-name { color: #fbbf24; font-weight: bold; font-size: 18px; }
+    .tool-desc { color: #8b949e; font-size: 12px; }
+
+    /* توقيع MIA8444 المعتمد */
+    .footer-bar {
         position: fixed;
         left: 0;
         bottom: 0;
         width: 100%;
         background-color: #161b22;
-        color: #d4af37;
+        color: #fbbf24;
         text-align: center;
-        padding: 10px;
-        border-top: 1px solid #30363d;
-        font-size: 14px;
-        z-index: 999;
+        padding: 12px;
+        border-top: 2px solid #fbbf24;
+        font-weight: bold;
+        z-index: 1000;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. الهيدر (اللوجو والعنوان)
-c1, c2 = st.columns([1, 5])
+# 3. الهيدر (Smart Analyst Brand)
+c1, c2 = st.columns([1, 4])
 with c1:
     if os.path.exists("40833.jpg"):
-        st.image("40833.jpg", width=90)
+        st.image("40833.jpg", width=100)
 with c2:
-    st.markdown("<h1 class='gold-header'>Smart Analyst <span style='color:white;'>PRO</span></h1>", unsafe_allow_html=True)
-    st.caption("The Ultimate Financial Brand - Powered by MIA8444")
+    st.markdown("<h1 style='color: white; margin-bottom: 0;'>Smart Analyst <span style='color: #fbbf24;'>Ultimate</span></h1>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #8b949e;'>The Integrated Ecosystem for Data Science & Accounting</p>", unsafe_allow_html=True)
 
-st.markdown("---")
+st.divider()
 
-# 4. توزيع العناصر (الـ Dashboard) كما في الصورة
-col_side, col_main = st.columns([1, 3])
+# 4. قسم العمليات الذكية (Handwriting to Excel)
+st.markdown("<h3 style='color: #fbbf24;'>🚀 Smart Operations | تحويل البيانات الذكي</h3>", unsafe_allow_html=True)
+op1, op2, op3 = st.columns(3)
 
-with col_side:
-    st.markdown("<h3 class='gold-header'>Review & Edit</h3>", unsafe_allow_html=True)
-    doc_type = st.selectbox("Select Document Type", ["Expenses", "Revenue", "Journals"])
-    month = st.selectbox("Select Month", ["January", "February", "December"])
-    
-    st.markdown("---")
-    file = st.file_uploader("Upload Documents", type=['xlsx', 'csv'])
+with op1:
+    st.markdown("""<div class='tool-card'>
+        <div class='tool-icon'>✍️</div>
+        <div class='tool-name'>AI Handwriting to Excel</div>
+        <div class='tool-desc'>تحويل خط اليد إلى جداول منظمة</div>
+    </div>""", unsafe_allow_html=True)
+    img_file = st.file_uploader("ارفع صورة خط اليد", type=['jpg','png','jpeg'], key="ocr")
 
-with col_main:
-    if file:
-        df = pd.read_excel(file) if file.name.endswith('xlsx') else pd.read_csv(file)
-        st.markdown("<p style='color: #8b949e;'>Data Preview & Analysis</p>", unsafe_allow_html=True)
-        st.dataframe(df.head(10), use_container_width=True)
-        
-        # العمليات الحسابية (المحرك الخفي)
-        num_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-        if num_cols:
-            target = st.selectbox("Choose Column for Insight:", num_cols)
-            total = df[target].sum()
-            avg = df[target].mean()
-            
-            # عرض البطاقات (Cards)
-            m1, m2 = st.columns(2)
-            with m1:
-                st.markdown(f"<div class='metric-card'><p>Total Summation</p><h2 class='gold-header'>{total:,.2f}</h2></div>", unsafe_allow_html=True)
-            with m2:
-                st.markdown(f"<div class='metric-card'><p>Average Rating</p><h2 class='gold-header'>{avg:,.2f}</h2></div>", unsafe_allow_html=True)
+with op2:
+    st.markdown("""<div class='tool-card'>
+        <div class='tool-icon'>🧹</div>
+        <div class='tool-name'>Smart Data Cleaner</div>
+        <div class='tool-desc'>تنظيم الملفات الملغبطة آلياً</div>
+    </div>""", unsafe_allow_html=True)
+    messy_file = st.file_uploader("ارفع الملف الملغبط", type=['xlsx','csv'], key="cleaner")
 
-    else:
-        st.info("قم برفع ملف البيانات لبدء التحليل في لوحة القيادة.")
+with op3:
+    st.markdown("""<div class='tool-card'>
+        <div class='tool-icon'>📊</div>
+        <div class='tool-name'>Auto Report Gen</div>
+        <div class='tool-desc'>إنشاء تقارير إكسل احترافية بضغطة واحدة</div>
+    </div>""", unsafe_allow_html=True)
+    if st.button("Generate Professional Sheet"):
+        st.success("جاري بناء الشيت الاحترافي...")
 
-# 5. منطقة التصدير (Export & Share)
-st.markdown("---")
-st.markdown("<h3 class='gold-header'>Export & Share</h3>", unsafe_allow_html=True)
-ce1, ce2 = st.columns(2)
-with ce1:
-    st.markdown('<a href="#" class="export-btn">📄 Export Excel</a>', unsafe_allow_html=True)
-with ce2:
-    st.markdown('<a href="#" class="export-btn">📑 Export PDF</a>', unsafe_allow_html=True)
+st.markdown("<br>", unsafe_allow_html=True)
 
-# 6. التوقيع العالمي الثابت
-st.markdown("<div class='footer'>Smart Analyst PRO | توقيع الخبير المعتمد: MIA8444</div>", unsafe_allow_html=True)
+# 5. قسم أدوات التحليل العملاق (Tools Integration)
+st.markdown("<h3 style='color: #fbbf24;'>🛠️ Professional Toolset | أدوات التحليل</h3>", unsafe_allow_html=True)
+
+# الصف الأول من الأدوات
+row1_1, row1_2, row1_3, row1_4 = st.columns(4)
+tools1 = [
+    ("📗 Excel Pro", "Advanced Formulas & Macros"),
+    ("📉 Power BI", "Interactive Dashboards"),
+    ("⚡ Power Query", "ETL & Data Transformation"),
+    ("🗄️ SQL Engine", "Database Querying")
+]
+
+for i, col in enumerate([row1_1, row1_2, row1_3, row1_4]):
+    with col:
+        st.markdown(f"""<div class='tool-card'>
+            <div class='tool-name'>{tools1[i][0]}</div>
+            <div class='tool-desc'>{tools1[i][1]}</div>
+        </div>""", unsafe_allow_html=True)
+
+# الصف الثاني من الأدوات
+row2_1, row2_2, row2_3, row2_4 = st.columns(4)
+tools2 = [
+    ("🐍 Python Data", "Machine Learning & Analysis"),
+    ("🤖 AI Analysis", "Predictive Insights"),
+    ("🎨 Tableau", "High-end Visualization"),
+    ("☁️ Google Sheets", "Cloud Collaboration")
+]
+
+for i, col in enumerate([row2_1, row2_2, row2_3, row2_4]):
+    with col:
+        st.markdown(f"""<div class='tool-card'>
+            <div class='tool-name'>{tools2[i][0]}</div>
+            <div class='tool-desc'>{tools2[i][1]}</div>
+        </div>""", unsafe_allow_html=True)
+
+# 6. التوقيع النهائي المعتمد
+st.markdown(f"<div class='footer-bar'>Smart Analyst Ultimate | Certified System by MIA8444</div>", unsafe_allow_html=True)
