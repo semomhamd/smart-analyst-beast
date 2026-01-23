@@ -91,28 +91,25 @@ with t_bi:
 
 with t_py:
     st.subheader("🐍 Advanced Python Engine")
-    st.code("import pandas as pd\n# محرك تحليل البيانات المتقدم\nresult = df.describe()\nprint(result)", language='python')
-    st.button("Run Python Code")
+ # 6. منطقة العمل (Tabs)
+# هنا بنعرف t1 و t2 و t3 عشان البرنامج يفهمهم
+t1, t2, t3 = st.tabs(["البيانات", "الأدوات", "النتائج"])
 
-with t_pdf:
-    st.subheader("📥 تقارير PDF عالية الدقة")
-    st.write("جاهز للإرسال والطباعة")
-    # حل مشكلة الصورة 24 (توليد ملف حقيقي بسيط)
-    pdf_buffer = BytesIO()
-    pdf_buffer.write(b"Smart Analyst Report Content")
-    st.download_button("تحميل التقرير النهائي (PDF)", data=pdf_buffer.getvalue(), file_name="Smart_Analyst_Report.pdf", mime="application/pdf")
+with t1:
+    up = st.file_uploader("ارفع ملفاتك هنا (Excel/CSV)", accept_multiple_files=True)
+    if up:
+        st.success(f"تم استلام {len(up)} ملفات بنجاح")
 
-st.markdown("<p style='text-align: center; color: #fbbf24; margin-top: 50px;'>Certified System | Designed for semomohamed | 2026</p>", unsafe_allow_html=True)
-# ابحث عن التبويب الخاص بالتقارير (غالباً t4 أو tab4) وحط الكود ده جواه:
-# 6. منطقة استخراج التقارير (PDF)
-# استخدمنا t3 لأنك معرفها فوق في السطر 95 كـ "النتائج"
+with t2:
+    st.info("أدوات التحليل المتقدمة ستظهر هنا عند معالجة البيانات")
+
 with t3:
     st.subheader("📥 مركز استخراج التقارير النهائية")
-    st.write("اضغط لتوليد ملف PDF احترافي قابل للإرسال")
+    st.write("اضغط لتوليد ملف PDF احترافي")
     
     if st.button("تجهيز التقرير للتحميل"):
         try:
-            # صنع ملف PDF حقيقي باستخدام المكتبة المضافة في سطر 8
+            # صنع ملف PDF حقيقي باستخدام FPDF اللي ضفناها في سطر 8
             pdf = FPDF()
             pdf.add_page()
             pdf.set_font("Arial", 'B', 16)
@@ -121,7 +118,7 @@ with t3:
             pdf.set_font("Arial", size=12)
             pdf.cell(200, 10, txt="Certified Data Analysis Report - 2026", ln=2, align='C')
             
-            # تصدير الملف بصيغة بايتات (Bytes) عشان المتصفح يفتحه صح
+            # تحويل الملف لبايتات متوافقة مع المتصفح
             pdf_output = pdf.output(dest='S').encode('latin-1')
             
             st.download_button(
@@ -130,9 +127,9 @@ with t3:
                 file_name="Smart_Analyst_Report.pdf",
                 mime="application/pdf"
             )
-            st.success("✅ الملف جاهز! اضغط على زر التحميل أعلاه")
+            st.success("✅ الملف جاهز! اضغط على زر التحميل اللي ظهر فوق")
         except Exception as e:
-            st.error(f"خطأ تقني: {e}")
+            st.error(f"خطأ تقني في PDF: {e}")
 
 # 7. الفوتر
 st.markdown("<div style='text-align: center; color: #fbbf24; padding: 20px;'>Smart Analyst Ultimate | Certified System | 2026</div>", unsafe_allow_html=True)
