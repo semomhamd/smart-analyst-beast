@@ -16,7 +16,7 @@ choice = st.radio("اختر القسم:", ["الداشبورد الصباحي", 
 # 4. قسم رفع الملفات
 if choice == "تحليل الملفات الضخمة":
 st.subheader("📂 معالج البيانات العملاق")
-files = st.file_uploader("ارفع كل ملفاتك هنا (Excel/CSV):", accept_multiple_files=True)
+files = st.file_uploader("ارفع ملفاتك هنا (Excel/CSV):", accept_multiple_files=True)
 if files:
 st.success(f"تم استلام {len(files)} ملفات. الوحش جاهز للعمل!")
 
