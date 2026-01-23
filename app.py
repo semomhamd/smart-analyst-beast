@@ -8,10 +8,13 @@ from io import BytesIO
 from fpdf import FPDF
 
 # 1. الإعدادات الملكية
-st.set_page_config(page_title="Smart Analyst Ultimate Pro", layout="wide")
+st.set_page_config(page_title="Smart Analyst Pro", page_icon="📊", layout="wide")
 
-# 2. تفعيل Gemini (تأكد من كتابة المفتاح الصحيح هنا)
-# ملحوظة: المفتاح اللي في الصورة كان ناقص، يرجى التأكد منه
+# 2. اللوجو والذكاء الاصطناعي
+# استبدلت الرابط برابط لوجو احترافي دائم
+LOGO_URL = "https://cdn-icons-png.flaticon.com/512/1541/1541402.png" 
+
+# تنبيه: المفتاح ده لازم يكون صحيح من Google AI Studio
 genai.configure(api_key="AIzaSyBBiIEEGCzXpv80cwR9yzLXuQdj_J5n9tA")
 model = genai.GenerativeModel('gemini-pro')
 
@@ -19,72 +22,72 @@ model = genai.GenerativeModel('gemini-pro')
 def make_hashes(password): return hashlib.sha256(str.encode(password)).hexdigest()
 def check_hashes(password, hashed_text): return make_hashes(password) == hashed_text
 
-if 'user_db' not in st.session_state:
-    st.session_state.user_db = {"admin": make_hashes("1234"), "semomohamed": make_hashes("123456")} 
 if 'auth' not in st.session_state: st.session_state.auth = False
 
 # واجهة الدخول
 if not st.session_state.auth:
-    st.markdown("<h1 style='text-align: center; color: #fbbf24;'>👑 Smart Analyst Pro Login</h1>", unsafe_allow_html=True)
+    st.image(LOGO_URL, width=100)
+    st.title("🔐 Smart Analyst Login")
     u = st.text_input("Username")
     p = st.text_input("Password", type="password")
-    if st.button("دخول للنظام"):
-        if u in st.session_state.user_db and check_hashes(p, st.session_state.user_db[u]):
+    if st.button("دخول"):
+        if u == "semomohamed" and p == "123456":
             st.session_state.auth = True
             st.rerun()
-        else: st.error("بيانات الدخول غير صحيحة")
+        else: st.error("بيانات خطأ")
     st.stop()
 
-# 3. ستايل الألوان والتبويبات
-st.markdown("""
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
-    html, body, [class*="css"] { font-family: 'Cairo', sans-serif; text-align: right; direction: rtl; }
-    .main-header { background: linear-gradient(90deg, #161b22, #fbbf24); padding: 15px; border-radius: 15px; text-align: center; color: white; border: 2px solid #fbbf24; }
-</style>
-""", unsafe_allow_html=True)
+# 3. التصميم (CSS) لإظهار اللوجو في الجنب
+st.markdown(f"""
+    <style>
+    [data-testid="stSidebarNav"] {{
+        background-image: url({LOGO_URL});
+        background-repeat: no-repeat;
+        padding-top: 120px;
+        background-position: 20px 20px;
+        background-size: 80px;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
 
-# الهيدر
-st.markdown("<div class='main-header'><h1>Smart Analyst Ultimate Pro</h1></div>", unsafe_allow_html=True)
-
-# 4. المساعد الذكي في Sidebar
+# 4. المساعد الذكي في الجنب
 with st.sidebar:
-    st.header("🤖 مساعدك الذكي Gemini")
-    chat = st.text_input("اسأل المساعد...")
+    st.image(LOGO_URL, width=80)
+    st.header("🤖 مساعد Gemini")
+    chat = st.text_input("اسأل عن بياناتك...")
     if chat:
         try:
             res = model.generate_content(chat)
             st.info(res.text)
-        except Exception as e: 
-            st.error("تأكد من صحة الـ API Key في الكود")
+        except: st.error("المفتاح (API Key) فيه مشكلة")
 
-# 5. منطقة العمل (التبويبات)
-# هنا عرفنا t1, t2, t3 بالترتيب الصحيح
-t1, t2, t3 = st.tabs(["📑 Excel Professional", "📊 Dashboards", "📥 PDF Export"])
+# 5. التبويبات (Tabs) - حل مشكلة NameError
+st.markdown("<h1 style='text-align:center; color:#fbbf24;'>Smart Analyst Ultimate Pro</h1>", unsafe_allow_html=True)
+t1, t2, t3 = st.tabs(["📑 Excel Pro", "📈 Dashboards", "📥 PDF Export"])
 
 with t1:
     st.subheader("📝 Microsoft Excel Workstation")
     up = st.file_uploader("ارفع ملف Excel أو CSV", type=['xlsx', 'csv'])
     if up:
         df = pd.read_excel(up) if up.name.endswith('xlsx') else pd.read_csv(up)
-        st.data_editor(df, use_container_width=True, height=400)
+        st.data_editor(df, use_container_width=True)
 
 with t2:
-    st.subheader("📈 Professional Dashboards")
+    st.subheader("📊 لوحة التحكم الذكية")
     if up:
-        fig = px.area(df, template="plotly_dark", color_discrete_sequence=['#fbbf24'])
+        fig = px.bar(df, template="plotly_dark", color_discrete_sequence=['#fbbf24'])
         st.plotly_chart(fig, use_container_width=True)
-    else: st.warning("ارفع ملفاً أولاً")
+    else: st.warning("ارفع ملف أولاً")
 
 with t3:
-    st.subheader("📥 تقارير PDF النهائية")
-    if st.button("تجهيز التقرير"):
+    st.subheader("📥 تحميل التقرير النهائي")
+    if st.button("صناعة تقرير PDF"):
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font("Arial", size=15)
-        pdf.cell(200, 10, txt="Smart Analyst Pro Report", ln=1, align='C')
-        pdf_output = pdf.output(dest='S').encode('latin-1')
-        st.download_button("تحميل الآن (PDF)", data=pdf_output, file_name="Report.pdf", mime="application/pdf")
-        st.success("جاهز للتحميل!")
+        pdf.cell(200, 10, txt="Smart Analyst Ultimate Report", ln=1, align='C')
+        pdf_out = pdf.output(dest='S').encode('latin-1')
+        st.download_button("تحميل (PDF)", data=pdf_out, file_name="Report.pdf")
+        st.success("تم التجهيز!")
 
-st.markdown("<p style='text-align: center; padding-top: 20px;'>Certified System | 2026</p>", unsafe_allow_html=True)
+st.markdown("<center>Certified System | 2026</center>", unsafe_allow_html=True)
