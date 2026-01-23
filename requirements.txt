@@ -8,3 +8,4 @@ Pillow
 google-generativeai
 plotly
 xlsxwriter
+fpdf
