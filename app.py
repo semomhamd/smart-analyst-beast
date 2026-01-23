@@ -48,11 +48,11 @@ with col_h1:
     st.markdown(f"""
         <div class='header-container'>
             <div style='display: flex; align-items: center;'>
-                <div class='logo-box'>40833</div>
+                <img src="https://raw.githubusercontent.com/semomhamd/smart-analyst-beast/main/99afc3d2-b6ef-4eda-977f-2fdc4b6621dd.jpg" style="width:80px; margin-right:15px;">
                 <div class='app-title'>Smart Analyst Ultimate</div>
             </div>
         </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
 with col_h2:
     lang = st.selectbox("🌐 اللغة", ["العربية", "English"], label_visibility="collapsed")
