@@ -2,105 +2,93 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import time
-import os
 
-# محاولة استيراد plotly للرسومات الزاهية، وإذا لم توجد نستخدم البديل الافتراضي
-try:
-    import plotly.express as px
-    HAS_PLOTLY = True
-except ImportError:
-    HAS_PLOTLY = False
+# 1. إعدادات الصفحة لدعم الموبايل والكمبيوتر
+st.set_page_config(
+    page_title="Smart Analyst Ultimate",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-# 1. إعدادات الصفحة والتنسيق (Dark Mode Premium)
-st.set_page_config(page_title="Smart Analyst Ultimate", layout="wide")
-
+# 2. الستايل المطور (أيقونات + تنسيق اللوجو + الألوان)
 st.markdown("""
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+    html, body, [class*="css"] { font-family: 'Cairo', sans-serif; text-align: right; direction: rtl; }
     .stApp { background-color: #0d1117; color: #fbbf24; }
-    .brand-container { display: flex; align-items: center; gap: 15px; padding: 10px; }
-    .brand-logo { background: #fbbf24; color: #0d1117; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-size: 22px; }
-    .brand-text { font-size: 30px; font-weight: bold; color: #fbbf24; }
-    .tool-card {
-        background: rgba(255, 255, 255, 0.05); border: 1px solid #30363d;
-        border-radius: 12px; padding: 15px; text-align: center; height: 150px;
-    }
-    .footer-bar {
-        position: fixed; left: 0; bottom: 0; width: 100%;
-        background: #0d1117; color: #fbbf24; text-align: center;
-        padding: 5px; border-top: 1px solid #fbbf24; font-size: 12px;
-    }
+    
+    /* اللوجو والاسم المتناسق */
+    .header-container { display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #161b22; border-radius: 15px; margin-bottom: 25px; border: 1px solid #fbbf24; }
+    .logo-box { background: #fbbf24; color: #0d1117; padding: 10px 20px; border-radius: 10px; font-weight: bold; font-size: 24px; box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3); }
+    .app-title { font-size: clamp(18px, 4vw, 30px); font-weight: bold; color: #fbbf24; margin-right: 15px; }
+    
+    /* أيقونات الأقسام */
+    .section-icon { font-size: 24px; margin-left: 10px; vertical-align: middle; }
+    
+    /* الفوتر */
+    .footer-bar { position: fixed; left: 0; bottom: 0; width: 100%; background: #161b22; color: #fbbf24; text-align: center; padding: 8px; border-top: 1px solid #fbbf24; font-size: 12px; z-index: 1000; }
     </style>
     """, unsafe_allow_html=True)
 
-# 2. الهيدر الاحترافي (اللوجو والأزرار)
-col_brand, col_nav = st.columns([2, 1])
+# 3. نظام الشات الجانبي (اقتراح الحلول والذكاء الاصطناعي)
+with st.sidebar:
+    st.markdown("### 🤖 مساعدك الذكي")
+    st.info("أنا هنا لمساعدتك في تحليل البيانات واقتراح الحلول للأخطاء.")
+    chat_input = st.text_input("اسألني أي شيء عن بياناتك...")
+    if chat_input:
+        with st.spinner("جاري التفكير في حل..."):
+            time.sleep(1)
+            st.write(f"💡 اقتراح: بناءً على سؤالك حول '{chat_input}'، أنصحك بفحص تكرار البيانات في شيت الإكسل المرفوع.")
+    st.divider()
+    st.markdown("#### 📱 وضع الموبايل: نشط")
 
-with col_brand:
-    st.markdown("""
-        <div class='brand-container'>
-            <div class='brand-logo'>40833</div>
-            <div class='brand-text'>Smart Analyst Ultimate</div>
+# 4. الهيدر (اللوجو والأزرار التفاعلية)
+col_h1, col_h2 = st.columns([3, 1])
+with col_h1:
+    st.markdown(f"""
+        <div class='header-container'>
+            <div style='display: flex; align-items: center;'>
+                <div class='logo-box'>40833</div>
+                <div class='app-title'>Smart Analyst Ultimate</div>
+            </div>
         </div>
     """, unsafe_allow_html=True)
 
-with col_nav:
-    c_set, c_lang = st.columns(2)
-    with c_set:
-        st.selectbox("⚙️ الإعدادات", ["الملف الشخصي", "التسجيل", "الثيم"], label_visibility="collapsed")
-    with c_lang:
-        st.selectbox("🌐 اللغة", ["العربية", "English"], label_visibility="collapsed")
+with col_h2:
+    lang = st.selectbox("🌐 اللغة", ["العربية", "English"], label_visibility="collapsed")
+    profile = st.selectbox("⚙️ الحساب", ["الملف الشخصي", "الإعدادات", "خروج"], label_visibility="collapsed")
 
-st.divider()
+# 5. منطقة العمل الرئيسية (الأقسام الملونة بأيقونات واضحة)
+t1, t2, t3 = st.tabs(["📥 مركز الإدخال", "🛠️ منصة الأدوات", "📊 النتائج والداشبورد"])
 
-# 3. منصة الأدوات (العمل المنفرد أو الجماعي)
-st.markdown("### 🛠️ منصة الأدوات الذكية")
-mode = st.toggle("تفعيل المعالجة التلقائية الكاملة (Full Automation)", value=True)
+with t1:
+    st.markdown("### <span class='section-icon'>📂</span> مركز إدخال البيانات الذكي", unsafe_allow_html=True)
+    uploaded_files = st.file_uploader("ارفع الصور (خط يد)، ملفات PDF، أو إكسل", accept_multiple_files=True)
+    if uploaded_files:
+        st.success(f"تم استلام {len(uploaded_files)} ملفات بنجاح.")
 
-if not mode:
-    col_t = st.columns(4)
-    tools = [("Excel Pro", "📈"), ("Power BI", "📊"), ("Python AI", "🐍"), ("Tableau", "🎨")]
-    selected_tools = []
-    for i, (name, icon) in enumerate(tools):
-        with col_t[i]:
-            st.markdown(f"<div class='tool-card'><h1>{icon}</h1><h4>{name}</h4></div>", unsafe_allow_html=True)
-            if st.checkbox(f"استخدام {name}", key=name): selected_tools.append(name)
+with t2:
+    st.markdown("### <span class='section-icon'>🛠️</span> التحكم في الأدوات", unsafe_allow_html=True)
+    auto_mode = st.toggle("تفعيل المعالجة التلقائية الكاملة", value=True)
+    
+    col_tools = st.columns(2)
+    with col_tools[0]:
+        st.checkbox("📈 Excel Pro Engine", value=auto_mode)
+        st.checkbox("✍️ AI OCR (خط اليد)", value=auto_mode)
+    with col_tools[1]:
+        st.checkbox("🐍 Python Analytics", value=auto_mode)
+        st.checkbox("📊 Power BI Dashboard", value=auto_mode)
 
-# 4. مركز إدخال البيانات والمعالجة
-st.markdown("### 📥 مركز إدخال البيانات (خط يد، صور، ملفات)")
-files = st.file_uploader("ارفع الملفات هنا", accept_multiple_files=True)
+with t3:
+    st.markdown("### <span class='section-icon'>📉</span> التقارير والداشبورد", unsafe_allow_html=True)
+    if uploaded_files:
+        st.button("🚀 تحديث النتائج فوراً")
+        # مثال لداشبورد زاهي
+        chart_data = pd.DataFrame(np.random.randn(20, 3), columns=['أرباح', 'مصاريف', 'نمو'])
+        st.line_chart(chart_data)
+        st.download_button("📩 تحميل التقرير للمدير (Excel)", "data", file_name="Report.xlsx")
+    else:
+        st.warning("يرجى رفع ملفات في القسم الأول ليتمكن النظام من عرض النتائج هنا.")
 
-if files:
-    if st.button("🚀 بدء التنفيذ واستخراج التقارير"):
-        with st.status("جاري تشغيل المحركات التحليلية...", expanded=True):
-            time.sleep(1)
-            st.write("✅ تم فحص الملفات...")
-            time.sleep(1)
-            st.write("📊 جاري توليد التقارير للمسؤولين...")
-        
-        st.divider()
-        st.success("✅ تم استخراج شيت إكسل احترافي وداشبورد زاهي")
-        
-        # التقرير الأول: الإكسل
-        df = pd.DataFrame(np.random.randint(100, 1000, size=(10, 4)), columns=['المبيعات', 'المصاريف', 'الصافي', 'النمو'])
-        st.markdown("#### 📂 تقرير الإكسل الجاهز للتقديم")
-        st.dataframe(df, use_container_width=True)
-
-        # الداشبورد الزاهي
-        st.markdown("#### 🎨 الداشبورد التفاعلي (اختر التصميم)")
-        c_type = st.selectbox("شكل الرسم البياني:", ["Bar Chart", "Line Chart", "Area Chart"])
-        
-        if HAS_PLOTLY:
-            if c_type == "Bar Chart": fig = px.bar(df, color_discrete_sequence=['#fbbf24'])
-            elif c_type == "Line Chart": fig = px.line(df)
-            else: fig = px.area(df)
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.warning("يرجى إضافة plotly لملف requirements.txt لرؤية الرسوم الزاهية.")
-            st.line_chart(df)
-
-        # المشاركة
-        st.divider()
-        st.download_button("📄 تحميل التقرير النهائي للمدير", "Report_40833", file_name="Executive_Report.xlsx")
-        st.button("📲 مشاركة عبر واتساب")
-
+# 6. الفوتر الثابت
 st.markdown("<div class='footer-bar'>Smart Analyst Ultimate | Certified System by MIA8444 | 2026</div>", unsafe_allow_html=True)
