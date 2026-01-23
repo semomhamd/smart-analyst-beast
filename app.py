@@ -104,29 +104,29 @@ with t_pdf:
 
 st.markdown("<p style='text-align: center; color: #fbbf24; margin-top: 50px;'>Certified System | Designed for semomohamed | 2026</p>", unsafe_allow_html=True)
 # ابحث عن التبويب الخاص بالتقارير (غالباً t4 أو tab4) وحط الكود ده جواه:
-with t4: # تأكد من اسم التبويب عندك (ممكن يكون t3 أو t4)
-    st.subheader("📥 تحميل التقرير النهائي بدقة عالية")
+with t3:
+    st.subheader("📥 مركز استخراج التقارير النهائية")
+    st.write("اضغط لتوليد ملف PDF احترافي قابل للإرسال")
     
-    if st.button("تجهيز ملف PDF للطباعة"):
+    if st.button("تجهيز التقرير للتحميل"):
         try:
-            # استخدام مكتبة FPDF اللي أنت ضفتها في سطر 8
             pdf = FPDF()
             pdf.add_page()
-            pdf.set_font("Arial", size=15)
-            pdf.cell(200, 10, txt="Smart Analyst Ultimate Pro Report", ln=1, align='C')
+            pdf.set_font("Arial", 'B', 16)
+            pdf.cell(200, 10, txt="Smart Analyst Ultimate Pro", ln=1, align='C')
             pdf.ln(10)
             pdf.set_font("Arial", size=12)
-            pdf.cell(200, 10, txt="This is a certified data analysis report.", ln=2, align='R')
+            pdf.cell(200, 10, txt="Certified Data Analysis Report - 2026", ln=2, align='C')
             
-            # تحويل الملف لبايتات عشان المتصفح يقبله (حل مشكلة الصورة 26)
+            # تصدير الملف بصيغة بايتات متوافقة مع المتصفحات
             pdf_output = pdf.output(dest='S').encode('latin-1')
             
             st.download_button(
-                label="اضغط هنا لتحميل الملف الآن",
+                label="تحميل التقرير الآن (PDF)",
                 data=pdf_output,
                 file_name="Smart_Analyst_Report.pdf",
                 mime="application/pdf"
             )
-            st.success("✅ الملف جاهز الآن! اضغط على الزرار اللي ظهر فوق")
+            st.success("✅ الملف جاهز! اضغط على زر التحميل أعلاه")
         except Exception as e:
-            st.error(f"حدث خطأ في المكتبة: {e}")
+            st.error(f"خطأ تقني: {e}")
