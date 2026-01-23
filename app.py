@@ -104,12 +104,15 @@ with t_pdf:
 
 st.markdown("<p style='text-align: center; color: #fbbf24; margin-top: 50px;'>Certified System | Designed for semomohamed | 2026</p>", unsafe_allow_html=True)
 # ابحث عن التبويب الخاص بالتقارير (غالباً t4 أو tab4) وحط الكود ده جواه:
+# 6. منطقة استخراج التقارير (PDF)
+# استخدمنا t3 لأنك معرفها فوق في السطر 95 كـ "النتائج"
 with t3:
     st.subheader("📥 مركز استخراج التقارير النهائية")
     st.write("اضغط لتوليد ملف PDF احترافي قابل للإرسال")
     
     if st.button("تجهيز التقرير للتحميل"):
         try:
+            # صنع ملف PDF حقيقي باستخدام المكتبة المضافة في سطر 8
             pdf = FPDF()
             pdf.add_page()
             pdf.set_font("Arial", 'B', 16)
@@ -118,7 +121,7 @@ with t3:
             pdf.set_font("Arial", size=12)
             pdf.cell(200, 10, txt="Certified Data Analysis Report - 2026", ln=2, align='C')
             
-            # تصدير الملف بصيغة بايتات متوافقة مع المتصفحات
+            # تصدير الملف بصيغة بايتات (Bytes) عشان المتصفح يفتحه صح
             pdf_output = pdf.output(dest='S').encode('latin-1')
             
             st.download_button(
@@ -130,3 +133,6 @@ with t3:
             st.success("✅ الملف جاهز! اضغط على زر التحميل أعلاه")
         except Exception as e:
             st.error(f"خطأ تقني: {e}")
+
+# 7. الفوتر
+st.markdown("<div style='text-align: center; color: #fbbf24; padding: 20px;'>Smart Analyst Ultimate | Certified System | 2026</div>", unsafe_allow_html=True)
