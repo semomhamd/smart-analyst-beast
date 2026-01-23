@@ -1,94 +1,133 @@
 import streamlit as st
 import pandas as pd
-import easyocr
 import numpy as np
+import easyocr
 from PIL import Image
-from datetime import datetime
+import base64
 
-# 1. نظام اللغات والتوقيع MIA8444
+# 1. إعدادات الهوية البصرية (Smart Analyst)
+st.set_page_config(page_title="Smart Analyst", layout="wide", page_icon="📊")
+
+# ميزة تبديل اللغة
 if 'lang' not in st.session_state:
     st.session_state.lang = 'العربية'
 
 def switch_lang():
     st.session_state.lang = 'English' if st.session_state.lang == 'العربية' else 'العربية'
 
-# نصوص الواجهة الاحترافية
-translations = {
+# قاموس المصطلحات الاحترافي
+texts = {
     'العربية': {
-        'title': "THE BEAST | المنظومة الذكية",
-        'dev': "المصمم المعتمد: MIA8444",
-        'tabs': ["لوحة التحكم", "المختبر المحاسبي", "قارئ خط اليد"],
-        'ocr_btn': "ابدأ قراءة الخط الآن",
-        'sig': "توقيع مصمم التطبيق المعتمد: MIA8444"
+        'title': "Smart Analyst",
+        'tabs': ["لوحة القيادة", "المختبر المالي الاحترافي", "الذكاء البصري (OCR)"],
+        'total': "إجمالي القيمة المضافة",
+        'risk': "مؤشر التقلب (مستوى المخاطر)",
+        'growth': "معدل النمو المحقق",
+        'efficiency': "معامل كفاءة البيانات",
+        'ocr_info': "قم برفع صورة المستند (خط يد أو فاتورة) لتحويلها إلى بيانات رقمية فوراً.",
+        'sig': "توقيع الخبير المعتمد: MIA8444"
     },
     'English': {
-        'title': "THE BEAST | Smart System",
-        'dev': "Certified Designer: MIA8444",
-        'tabs': ["Dashboard", "Accounting Lab", "Handwriting Reader"],
-        'ocr_btn': "Start Reading Now",
-        'sig': "Authorized Designer Signature: MIA8444"
+        'title': "Smart Analyst",
+        'tabs': ["Dashboard", "Pro Financial Lab", "Visual Intelligence (OCR)"],
+        'total': "Total Added Value",
+        'risk': "Volatility Index (Risk Level)",
+        'growth': "Achieved Growth Rate",
+        'efficiency': "Data Efficiency Factor",
+        'ocr_info': "Upload a document image (Handwriting or Invoice) to convert it into digital data.",
+        'sig': "Certified Expert Signature: MIA8444"
     }
 }
-L = translations[st.session_state.lang]
+L = texts[st.session_state.lang]
 
-# 2. التنسيق الجمالي (CSS)
-st.set_page_config(page_title=f"The Beast - {st.session_state.lang}", layout="wide")
-st.markdown("""
+# 2. تصميم الواجهة العالمية (CSS)
+st.markdown(f"""
     <style>
-    .stApp { background-color: #f4f7f6; }
-    .footer-sig { text-align: center; border-top: 2px solid #1E3A8A; padding: 20px; margin-top: 50px; color: #1E3A8A; font-weight: bold; }
-    .stMetric { background: white; border: 1px solid #ddd; border-radius: 10px; padding: 10px; }
+    .stApp {{ background-color: #f8f9fa; }}
+    [data-testid="stHeader"] {{ background: rgba(0,0,0,0); }}
+    .reportview-container .main .block-container {{ padding-top: 2rem; }}
+    .footer {{
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        background-color: white;
+        color: #1E3A8A;
+        text-align: center;
+        padding: 15px;
+        font-weight: bold;
+        border-top: 2px solid #1E3A8A;
+        z-index: 100;
+    }}
+    .stMetric {{
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border: 1px solid #e0e0e0;
+    }}
     </style>
     """, unsafe_allow_html=True)
 
-# الهيدر وزر اللغة
+# الهيدر الاحترافي
 c1, c2 = st.columns([5, 1])
 with c1:
-    st.title(L['title'])
-    st.write(f"🚀 *{L['dev']}*")
+    st.title(f"🚀 {L['title']}")
 with c2:
     st.button("🌐 Switch Language", on_click=switch_lang)
 
 st.divider()
 
-# 3. التبويبات (Tabs)
+# 3. محرك التبويبات الذكي
 t1, t2, t3 = st.tabs(L['tabs'])
 
 with t1:
-    st.success("المنظومة تعمل بكامل طاقتها تحت إشراف MIA8444")
-    col_a, col_b = st.columns(2)
-    col_a.metric("حالة المحرك", "Active / نشط")
-    col_b.metric("إصدار النظام", "V2.5 Pro")
+    st.info("مرحباً بك في منصة Smart Analyst. المحرك يعمل الآن بأقصى طاقة تحليلية.")
+    # عرض اللوجو هنا في الداشبورد
+    st.image("40833.jpg", width=150) # تأكد من رفع ملف اللوجو بنفس الاسم على GitHub
 
 with t2:
     st.header(L['tabs'][1])
-    file = st.file_uploader("ارفع ملف البيانات (Excel/CSV):", type=['xlsx', 'csv'])
+    file = st.file_uploader("ارفع ملف البيانات المالي:", type=['xlsx', 'csv'])
     if file:
         df = pd.read_excel(file) if file.name.endswith('xlsx') else pd.read_csv(file)
-        st.dataframe(df.head(10))
-        # تحليل حسابي سريع
+        st.dataframe(df.head(10), use_container_width=True)
+        
         num_cols = df.select_dtypes(include=[np.number]).columns.tolist()
         if num_cols:
-            target = st.selectbox("اختر العمود المالي:", num_cols)
-            m1, m2 = st.columns(2)
-            m1.metric("الإجمالي (SUM)", f"{df[target].sum():,.2f}")
-            m2.metric("المتوسط (AVG)", f"{df[target].mean():,.2f}")
+            target = st.selectbox("اختر العمود للتحليل العميق:", num_cols)
+            
+            # معادلات محاسبية عليا (مخفية)
+            total = df[target].sum()
+            risk = df[target].std() # الانحراف المعياري
+            growth = ((df[target].iloc[-1] - df[target].iloc[0]) / df[target].iloc[0] * 100) if df[target].iloc[0] != 0 else 0
+            efficiency = (df[target].mean() / df[target].max()) if df[target].max() != 0 else 0
+            
+            # عرض النتائج كأنها تقرير خارج من تحت يد أذكى محاسب
+            m1, m2, m3, m4 = st.columns(4)
+            m1.metric(L['total'], f"{total:,.2f}")
+            m2.metric(L['risk'], f"{risk:,.2f}")
+            m3.metric(L['growth'], f"{growth:.2f}%")
+            m4.metric(L['efficiency'], f"{efficiency:.2%}")
 
 with t3:
     st.header(L['tabs'][2])
-    st.info("ارفع صورة لنص مكتوب بخط اليد (فاتورة أو ملاحظات) لتحويلها إلى نص رقمي.")
-    img_file = st.file_uploader("ارفع الصورة هنا:", type=['jpg', 'png', 'jpeg'])
+    st.markdown(f"*{L['ocr_info']}*")
+    img_file = st.file_uploader("Upload Image", type=['jpg', 'png', 'jpeg'])
     if img_file:
         img = Image.open(img_file)
-        st.image(img, width=400, caption="المستند المرفوع")
-        if st.button(L['ocr_btn']):
-            with st.spinner("الوحش يحلل الخط... برجاء الانتظار قليلاً"):
-                # استدعاء محرك الذكاء الاصطناعي
+        st.image(img, width=400)
+        if st.button("تحليل المستند"):
+            with st.spinner("الوحش يقرأ البيانات الآن..."):
                 reader = easyocr.Reader(['ar', 'en'])
                 result = reader.readtext(np.array(img))
                 final_text = " ".join([res[1] for res in result])
-                st.subheader("📝 النص المستخرج:")
+                st.subheader("📝 النص المستخرج بدقة:")
                 st.text_area("", final_text, height=200)
 
-# 4. التوقيع النهائي
-st.markdown(f'<div class="footer-sig">{L["sig"]}</div>', unsafe_allow_html=True)
+# 4. التوقيع العالمي الثابت في الأسفل
+st.markdown(f"""
+    <div class="footer">
+        Smart Analyst &nbsp; | &nbsp; {L['sig']}
+    </div>
+    """, unsafe_allow_html=True)
