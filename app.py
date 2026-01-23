@@ -2,7 +2,20 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import time
+if 'auth' not in st.session_state:
+    st.session_state.auth = False
 
+if not st.session_state.auth:
+    st.title("🔐 تسجيل الدخول")
+    user = st.text_input("اسم المستخدم")
+    password = st.text_input("كلمة المرور", type="password")
+    if st.button("دخول"):
+        if user == "admin" and password == "1234": # غيرهم براحتك
+            st.session_state.auth = True
+            st.rerun()
+        else:
+            st.error("البيانات غلط")
+    st.stop()
 # 1. إعدادات الصفحة لدعم الموبايل والكمبيوتر
 st.set_page_config(
     page_title="Smart Analyst Ultimate",
