@@ -22,9 +22,12 @@ def check_hashes(password, hashed_text):
     return False
 
 # محاكاة قاعدة بيانات (في المستقبل سنربطها بـ Supabase للأبد)
+# تعديل الجزء الخاص بقاعدة البيانات المؤقتة
 if 'user_db' not in st.session_state:
-    st.session_state.user_db = {"admin": make_hashes("1234")} 
-
+    st.session_state.user_db = {
+        "admin": make_hashes("1234"),
+        "semomohamed": make_hashes("123456") # ضفت لك اسمك هنا والباسورد يدوياً
+    }
 if 'auth' not in st.session_state:
     st.session_state.auth = False
 # ----------------------------------
