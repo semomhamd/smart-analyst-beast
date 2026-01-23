@@ -9,7 +9,7 @@ import time
 st.set_page_config(page_title="Smart Analyst Ultimate", layout="wide")
 
 # 2. إعداد الذكاء الاصطناعي (تأكد من وضع الكود الصحيح هنا)
-genai.configure(api_key="YOUR_API_KEY_HERE")
+genai.configure(api_key="AIzaSyBBiIEEGCzXpv8OcwR9yzLXuQdj_J5n9tA")
 model = genai.GenerativeModel('gemini-pro')
 
 # --- وظائف الأمان والنظام العالمي ---
