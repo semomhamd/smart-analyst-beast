@@ -14,7 +14,7 @@ with st.sidebar:
     st.header("⚙️ لوحة التحكم")
     choice = st.radio("اختر القسم:", ["Dashboard", "Data Analysis"])
 
-# 4. قسم الداشبورد (اللي ظهر معاك في الصورة)
+# 4. قسم الداشبورد (اللي ظهر في صورتك)
 if choice == "Dashboard":
     st.success("صباح الفل يا مدير! ☀️")
     col1, col2, col3 = st.columns(3)
@@ -22,25 +22,31 @@ if choice == "Dashboard":
     col2.metric("المصروفات", "0", "0%")
     col3.metric("صافي الربح", "0", "0%")
 
-# 5. قسم تحليل البيانات (الوحش الحقيقي)
+# 5. قسم تحليل البيانات (ربط الإكسل)
 if choice == "Data Analysis":
     st.header("📊 معالج البيانات الذكي")
-    uploaded_file = st.file_uploader("ارفع ملف الإكسل هنا عشان أحسبلك الـ SUM والـ AVERAGE", type=['xlsx', 'csv'])
+    file = st.file_uploader("ارفع ملف الإكسل (xlsx أو csv):", type=['xlsx', 'csv'])
     
-    if uploaded_file:
-        # قراءة الملف
-        df = pd.read_excel(uploaded_file) if uploaded_file.name.endswith('xlsx') else pd.read_csv(uploaded_file)
-        st.write("✅ تم قراءة الملف بنجاح! إليك أول 5 صفوف:")
+    if file:
+        # قراءة الملف أوتوماتيكياً
+        df = pd.read_excel(file) if file.name.endswith('xlsx') else pd.read_csv(file)
+        st.write("✅ تم قراءة الملف! إليك أول 5 صفوف:")
         st.dataframe(df.head())
         
-        # اختيار العمود اللي فيه الأرقام
-        column = st.selectbox("اختار العمود اللي عايز تحسبه:", df.columns)
+        # استخراج الأعمدة اللي فيها أرقام بس
+        numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
         
-        if column:
-            total_sum = df[column].sum()
-            average_val = df[column].mean()
+        if numeric_cols:
+            col_to_analyze = st.selectbox("اختار العمود عشان أحسبه:", numeric_cols)
             
-            # عرض النتائج بشكل شيك
+            # حساب المعادلات المحاسبية
+            total = df[col_to_analyze].sum()
+            avg = df[col_to_analyze].mean()
+            
+            # عرض النتائج في مربعات شيك
+            st.divider()
             c1, c2 = st.columns(2)
-            c1.metric(f"إجمالي {column} (SUM)", f"{total_sum:,.2f}")
-            c2.metric(f"متوسط {column} (AVERAGE)", f"{average_val:,.2f}")
+            c1.metric(f"إجمالي {col_to_analyze} (SUM)", f"{total:,.2f}")
+            c2.metric(f"متوسط {col_to_analyze} (AVERAGE)", f"{avg:,.2f}")
+        else:
+            st.warning("الملف ده مفيش فيه أرقام عشان أحسبها يا مدير!")
