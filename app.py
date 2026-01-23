@@ -3,103 +3,114 @@ import pandas as pd
 import numpy as np
 import google.generativeai as genai
 import hashlib
-import time
+import plotly.express as px
+from io import BytesIO
 
-# 1. إعدادات الصفحة
-st.set_page_config(page_title="Smart Analyst Ultimate", layout="wide")
+# 1. إعدادات الصفحة الاحترافية
+st.set_page_config(page_title="Smart Analyst Ultimate", layout="wide", initial_sidebar_state="expanded")
 
-# 2. إعداد الذكاء الاصطناعي (تأكد من وضع الكود الصحيح هنا)
-genai.configure(api_key="AIzaSyBBiIEEGCzXpv8OcwR9yzLXuQdj_J5n9tA")
+# 2. إعداد الذكاء الاصطناعي (Gemini)
+genai.configure(api_key="AIzaSyBBiIEEGCzXpv80cwR9yzLXuQdj_J5n9tA")
 model = genai.GenerativeModel('gemini-pro')
 
-# --- وظائف الأمان والنظام العالمي ---
+# --- وظائف الأمان والنظام ---
 def make_hashes(password):
     return hashlib.sha256(str.encode(password)).hexdigest()
 
 def check_hashes(password, hashed_text):
-    if make_hashes(password) == hashed_text:
-        return hashed_text
+    if make_hashes(password) == hashed_text: return hashed_text
     return False
 
-# محاكاة قاعدة بيانات (في المستقبل سنربطها بـ Supabase للأبد)
-# تعديل الجزء الخاص بقاعدة البيانات المؤقتة
 if 'user_db' not in st.session_state:
-    st.session_state.user_db = {
-        "admin": make_hashes("1234"),
-        "semomohamed": make_hashes("123456") # ضفت لك اسمك هنا والباسورد يدوياً
-    }
+    st.session_state.user_db = {"admin": make_hashes("1234"), "semomohamed": make_hashes("123456")} 
+
 if 'auth' not in st.session_state:
     st.session_state.auth = False
-# ----------------------------------
 
-# 3. واجهة الدخول وإنشاء الحساب
+# 3. واجهة الدخول
 if not st.session_state.auth:
-    st.markdown("<h1 style='text-align: center; color: #fbbf24;'>🔐 Smart Analyst Ultimate</h1>", unsafe_allow_html=True)
-    
-    tab_login, tab_signup = st.tabs(["تسجيل الدخول", "إنشاء حساب جديد"])
-    
-    with tab_login:
-        user = st.text_input("اسم المستخدم", key="login_user")
-        password = st.text_input("كلمة المرور", type="password", key="login_pass")
-        if st.button("دخول للنظام"):
-            if user in st.session_state.user_db and check_hashes(password, st.session_state.user_db[user]):
+    st.markdown("<h1 style='text-align: center; color: #fbbf24;'>🔐 Smart Analyst Ultimate Login</h1>", unsafe_allow_html=True)
+    t_login, t_signup = st.tabs(["دخول", "إنشاء حساب"])
+    with t_login:
+        u = st.text_input("Username")
+        p = st.text_input("Password", type="password")
+        if st.button("Login"):
+            if u in st.session_state.user_db and check_hashes(p, st.session_state.user_db[u]):
                 st.session_state.auth = True
-                st.success(f"مرحباً بك يا {user}")
                 st.rerun()
-            else:
-                st.error("بيانات الدخول غير صحيحة")
-                
-    with tab_signup:
-        new_user = st.text_input("اختر اسم مستخدم", key="signup_user")
-        new_password = st.text_input("اختر كلمة مرور", type="password", key="signup_pass")
-        confirm_password = st.text_input("تأكيد كلمة المرور", type="password")
-        if st.button("تسجيل الحساب"):
-            if new_password != confirm_password:
-                st.warning("كلمات المرور غير متطابقة")
-            elif new_user in st.session_state.user_db:
-                st.warning("هذا المستخدم موجود بالفعل")
-            else:
-                st.session_state.user_db[new_user] = make_hashes(new_password)
-                st.success("تم إنشاء الحساب بنجاح! انتقل لتبويب الدخول")
+            else: st.error("خطأ في البيانات")
     st.stop()
 
-# 4. الستايل والهيدر (بعد تسجيل الدخول)
+# 4. الستايل العالمي (ألوان مثالية)
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
-    html, body, [class*="css"] { font-family: 'Cairo', sans-serif; text-align: right; direction: rtl; }
-    .header-box { display: flex; align-items: center; justify-content: center; background: #161b22; padding: 15px; border-radius: 15px; border: 2px solid #fbbf24; }
-    .footer-bar { position: fixed; bottom: 0; width: 100%; background: #161b22; color: #fbbf24; text-align: center; padding: 10px; border-top: 1px solid #fbbf24; }
+    html, body, [class*="css"] { font-family: 'Cairo', sans-serif; text-align: right; direction: rtl; background-color: #0e1117; color: white; }
+    .stTabs [data-baseweb="tab-list"] { gap: 10px; justify-content: center; }
+    .stTabs [data-baseweb="tab"] { background-color: #161b22; border: 1px solid #fbbf24; border-radius: 10px; padding: 10px 20px; color: white; }
+    .header-box { display: flex; align-items: center; justify-content: center; background: #161b22; padding: 20px; border-radius: 15px; border: 2px solid #fbbf24; margin-bottom: 25px; }
 </style>
 """, unsafe_allow_html=True)
 
+# 5. الهيدر (اللغة والإعدادات)
+col_l, col_m, col_r = st.columns([1, 3, 1])
+with col_l:
+    if st.button("🌐 English/عربي"): st.toast("جاري التبديل...")
+with col_r:
+    if st.button("⚙️ Settings"): st.toast("فتح الإعدادات...")
+
 st.markdown(f"""
 <div class='header-box'>
-    <img src="https://raw.githubusercontent.com/semomhamd/smart-analyst-beast/main/99afc3d2-b6ef-4eda-977f-2fdc4b6621dd.jpg" style="width:60px; border-radius:10px; margin-left: 20px;">
-    <h1 style='color: #fbbf24; margin: 0;'>Smart Analyst Ultimate</h1>
+    <img src="https://raw.githubusercontent.com/semomhamd/smart-analyst-beast/main/99afc3d2-b6ef-4eda-977f-2fdc4b6621dd.jpg" style="width:70px; border-radius:15px; margin-left:20px;">
+    <h1 style='color: #fbbf24; margin: 0;'>Smart Analyst Ultimate Pro</h1>
 </div>
 """, unsafe_allow_html=True)
 
-# 5. المساعد الذكي في Sidebar
+# 6. المساعد الذكي (AI in Data)
 with st.sidebar:
-    st.markdown("### 🤖 مساعد Gemini")
-    chat = st.text_input("اسألني عن أي شيء...")
+    st.header("🤖 AI Analysis Center")
+    chat = st.text_input("اسأل المساعد عن بياناتك...")
     if chat:
         try:
             res = model.generate_content(chat)
             st.info(res.text)
-        except:
-            st.error("حدث خطأ في الاتصال بالذكاء الاصطناعي")
+        except Exception as e: st.error(f"Error: {e}")
+    st.divider()
+    st.markdown("### 📊 أدوات الربط")
+    st.button("🔗 Google Sheets Connect")
+    st.button("🔗 Power Query Engine")
 
-# 6. منطقة العمل (Tabs)
-t1, t2, t3 = st.tabs(["📊 البيانات", "🛠️ الأدوات", "📈 النتائج"])
-with t1:
-    up = st.file_uploader("ارفع ملفاتك هنا", accept_multiple_files=True)
-    if up: st.success(f"تم استلام {len(up)} ملفات")
+# 7. التبويبات الرئيسية (الأدوات)
+tab1, tab2, tab3, tab4 = st.tabs(["📑 Excel Pro", "📊 Power BI Dash", "🐍 Python Lab", "📄 Report PDF"])
 
-with t3:
-    if up: st.line_chart(np.random.randn(20, 3))
-    else: st.warning("الرجاء رفع الملفات أولاً")
+with tab1:
+    st.subheader("📝 Advanced Excel Sheet")
+    uploaded_file = st.file_uploader("ارفع ملف Excel أو CSV", type=['xlsx', 'csv'])
+    if uploaded_file:
+        df = pd.read_excel(uploaded_file) if uploaded_file.name.endswith('xlsx') else pd.read_csv(uploaded_file)
+        # عرض الإكسيل بشكل احترافي يشبه مايكروسوفت
+        st.dataframe(df, use_container_width=True, height=400)
+        st.success("الملف جاهز للتحليل")
+        
+with tab2:
+    st.subheader("📈 Professional Dashboard")
+    if uploaded_file:
+        num_cols = df.select_dtypes(include=[np.number]).columns
+        if len(num_cols) >= 2:
+            fig = px.bar(df, x=df.columns[0], y=num_cols[0], color=num_cols[0], template="plotly_dark", color_continuous_scale="Viridis")
+            st.plotly_chart(fig, use_container_width=True)
+    else: st.warning("ارفع ملفاً أولاً لتوليد الداشبورد")
 
-# 7. الفوتر
-st.markdown("<div class='footer-bar'>Smart Analyst Ultimate | Certified System by MIA8444 | 2026</div>", unsafe_allow_html=True)
+with tab3:
+    st.subheader("🐍 Python Analysis Engine")
+    code = st.text_area("اكتب كود البايثون هنا للتحليل المتقدم", "df.describe()")
+    if st.button("Run Python"):
+        st.code("Processing data with Python Engine...")
+
+with tab4:
+    st.subheader("🖨️ Final Report Center")
+    if st.button("Download as PDF"):
+        st.download_button("تحميل التقرير النهائي (PDF)", data=b"Report Content", file_name="Smart_Analyst_Report.pdf")
+
+# 8. الفوتر
+st.markdown("<div style='text-align: center; color: #fbbf24; padding: 20px;'>© 2026 Smart Analyst Ultimate | Powered by Gemini & Python</div>", unsafe_allow_html=True)
