@@ -1,140 +1,115 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import os
 import time
+import os
 
-# 1. إعدادات الصفحة والهوية البصرية
-st.set_page_config(page_title="Smart Analyst Ultimate", layout="wide", page_icon="🤖")
+# 1. إعدادات الهوية والتصميم
+st.set_page_config(page_title="Smart Analyst Ultimate", layout="wide", page_icon="📈")
 
-# إدارة حالة النظام (الثيم واللغة والبيانات)
-if 'theme' not in st.session_state: st.session_state.theme = 'Dark'
-if 'data_connected' not in st.session_state: st.session_state.data_connected = False
-
-t_bg = "#0d1117" if st.session_state.theme == 'Dark' else "#ffffff"
-t_txt = "#fbbf24" if st.session_state.theme == 'Dark' else "#1E3A8A"
-card_bg = "rgba(255, 255, 255, 0.05)" if st.session_state.theme == 'Dark' else "#f0f2f6"
-
-st.markdown(f"""
+# ستايل مخصص لمحاكاة التصميم الاحترافي
+st.markdown("""
     <style>
-    .stApp {{ background-color: {t_bg}; color: {t_txt}; }}
-    .tool-card {{
-        background: {card_bg};
+    .stApp { background-color: #0d1117; color: #fbbf24; }
+    .process-box {
+        background: rgba(255, 255, 255, 0.03);
+        border-left: 5px solid #fbbf24;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 15px;
+    }
+    .metric-card {
+        background: #161b22;
         border: 1px solid #30363d;
-        border-radius: 12px; padding: 15px; text-align: center;
-        margin-bottom: 10px; transition: 0.3s; height: 160px;
-    }}
-    .tool-card:hover {{ border-color: #fbbf24; transform: translateY(-5px); box-shadow: 0 4px 15px rgba(251, 191, 36, 0.2); }}
-    .footer-bar {{
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
+    }
+    .footer-bar {
         position: fixed; left: 0; bottom: 0; width: 100%;
         background: #161b22; color: #fbbf24; text-align: center;
-        padding: 8px; border-top: 1px solid #fbbf24; font-size: 14px; z-index: 100;
-    }}
-    .status-online {{ color: #2ecc71; font-weight: bold; }}
+        padding: 5px; border-top: 1px solid #fbbf24; font-size: 12px;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# 2. الهيدر الاحترافي
-col_logo, col_title, col_nav = st.columns([1, 4, 2])
-
+# 2. الهيدر (بدون أي مسميات خارجية)
+col_logo, col_title = st.columns([1, 6])
 with col_logo:
-    # اللوجو كما طلبت يا صديقي (Wanas Style)
     if os.path.exists("40833.jpg"):
-        st.image("40833.jpg", width=85)
+        st.image("40833.jpg", width=100)
     else:
-        st.markdown(f"<h1 style='color:#fbbf24; margin:0;'>W</h1>", unsafe_allow_html=True)
-
+        st.write("### MIA8444")
 with col_title:
-    st.markdown("<h1 style='margin:0;'>Smart Analyst <span style='color:#fbbf24;'>Ultimate</span></h1>", unsafe_allow_html=True)
-    st.caption("The Integrated AI Ecosystem | Powering Data Decisions")
-
-with col_nav:
-    c_set, c_lang = st.columns(2)
-    with c_set:
-        user_choice = st.selectbox("⚙️ الإعدادات", ["الملف الشخصي", "تبديل الثيم", "عن المطور"])
-        if user_choice == "تبديل الثيم" and st.button("تغيير"):
-            st.session_state.theme = 'Light' if st.session_state.theme == 'Dark' else 'Dark'
-            st.rerun()
-    with c_lang:
-        st.selectbox("🌐 اللغة", ["العربية", "English"])
+    st.markdown("<h1 style='margin:0;'>مركز إدخال ومعالجة البيانات الذكي</h1>", unsafe_allow_html=True)
+    st.caption("نظام التحليل المتكامل: Excel | Power Query | Power BI | Python | Tableau | AI")
 
 st.divider()
 
-# 3. المنظومة الذكية (Tabs)
-tabs = st.tabs(["📊 الداشبورد", "🧼 Smart Cleaner", "📂 AI OCR", "🛠️ الأدوات المتقدمة", "📤 التقارير"])
+# 3. قسم الرفع والمعالجة (المكان المخصص لرفع الملفات)
+st.markdown("### 📥 مركز إدخال البيانات (صور، خط يد، ملفات)")
+uploaded_files = st.file_uploader("ارفع الملفات أو صور الفواتير المكتوبة بخط اليد هنا", 
+                                  type=['jpg', 'png', 'pdf', 'xlsx', 'csv'], 
+                                  accept_multiple_files=True)
 
-with tabs[0]:
-    # رسالة ترحيب مخصصة كما في الـ Saved Info
-    st.markdown(f"### أهلاً بك يا صديقي في مركز التحكم")
-    st.success("🤖 Wanas AI Brain: الحالة متصل | Softr Databases: جاهزة للاستقبال")
+if uploaded_files:
+    st.info(f"تم استقبال {len(uploaded_files)} ملفات. اضغط على الزر أدناه لبدء دورة المعالجة الكاملة.")
     
-    m1, m2, m3, m4 = st.columns(4)
-    m1.metric("إجمالي البيانات المعالجة", "1.2GB", "+15%")
-    m2.metric("دقة الـ AI OCR", "98.5%", "High")
-    m3.metric("التقارير الجاهزة", "14", "PDF")
-    m4.metric("وقت توفير الجهد", "120h", "🔥")
-
-with tabs[1]:
-    st.markdown("### 🧼 Smart Data Cleaner (Python Engine)")
-    st.info("هذا المحرك يقوم بتنظيف البيانات تلقائياً من القيم المفقودة والتكرارات.")
-    uploaded_file = st.file_uploader("ارفع ملف للبدء بالتنظيف الذكي", type=['csv', 'xlsx'])
-    if uploaded_file:
-        with st.spinner("جاري الكشف عن المشاكل في البيانات..."):
-            time.sleep(1.5)
-            st.warning("⚠️ تم اكتشاف 12 قيمة مفقودة و 5 صفوف مكررة.")
-            if st.button("تفعيل التنظيف الذكي"):
-                st.balloons()
-                st.success("تم تنظيف البيانات بنجاح! جاهزة الآن للتحليل عبر Excel Pro.")
-
-with tabs[2]:
-    st.markdown("### ✍️ AI OCR - استخراج البيانات الذكي")
-    files = st.file_uploader("ارفع صور الفواتير أو الجداول الورقية", type=['jpg','png','pdf'], accept_multiple_files=True)
-    if files:
-        st.info(f"تم استقبال {len(files)} ملفات. سيتم تحويلها إلى جداول Excel رقمية.")
-        if st.button("بدء المسح الضوئي"):
-            progress_bar = st.progress(0)
-            for i in range(100):
+    if st.button("🚀 بدء المعالجة الشاملة واستخراج التقارير"):
+        # محاكاة رحلة البيانات كما طلبت يا صديقي بالتسلسل
+        steps = [
+            ("📝 AI OCR", "جاري قراءة خط اليد وتحويله لبيانات رقمية..."),
+            ("📊 Excel Pro", "جاري إنشاء شيت إكسل احترافي بالمعادلات الكاملة..."),
+            ("🔄 Power Query", "جاري تنقية البيانات وعمل الـ ETL..."),
+            ("📈 Power BI", "جاري بناء العلاقات وربط الجداول..."),
+            ("🐍 Python & AI", "جاري تحليل التوقعات واكتشاف الأخطاء بالذكاء الاصطناعي..."),
+            ("🎨 Tableau", "جاري تصميم الداشبورد النهائي بألوان مثالية...")
+        ]
+        
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        
+        for i, (step_name, step_msg) in enumerate(steps):
+            status_text.warning(f"المرحلة {i+1}: {step_name} - {step_msg}")
+            for p in range(100):
                 time.sleep(0.01)
-                progress_bar.progress(i + 1)
-            st.dataframe(pd.DataFrame({"المصدر": [f.name for f in files], "البيانات المستخرجة": ["Invoice_Data", "Table_Data", "Handwritten_Notes"]}))
+                progress_bar.progress((i * 100 + p + 1) // len(steps))
+        
+        status_text.success("✅ تمت المعالجة الكاملة بنجاح! التقارير جاهزة الآن.")
+        st.balloons()
+        
+        # 4. الداشبورد والتقارير في النهاية
+        st.divider()
+        st.markdown("### 📊 الداشبورد الاحترافي (نتائج التحليل)")
+        
+        d1, d2, d3, d4 = st.columns(4)
+        with d1: st.markdown("<div class='metric-card'><h4>الدقة الإجمالية</h4><h2 style='color:#2ecc71;'>99.8%</h2></div>", unsafe_allow_html=True)
+        with d2: st.markdown("<div class='metric-card'><h4>الأخطاء المكتشفة</h4><h2 style='color:#e74c3c;'>3</h2></div>", unsafe_allow_html=True)
+        with d3: st.markdown("<div class='metric-card'><h4>كفاءة العمليات</h4><h2 style='color:#fbbf24;'>مثالية</h2></div>", unsafe_allow_html=True)
+        with d4: st.markdown("<div class='metric-card'><h4>حالة المشروع</h4><h2 style='color:#3498db;'>مستقر</h2></div>", unsafe_allow_html=True)
 
-with tabs[3]:
-    st.markdown("### 🛠️ Professional Toolset")
-    col_tools = st.columns(4)
-    tools = [
-        ("Excel Pro", "Advanced Formulas", "📈"), 
-        ("Power BI", "Dashboards", "📊"), 
-        ("SQL Engine", "Database Sync", "🗄️"), 
-        ("Python ML", "Sales Forecasting", "🐍"),
-        ("Tableau", "Visualizations", "🎨"),
-        ("Google Sheets", "Cloud Sync", "☁️"),
-        ("Power Query", "Data ETL", "🔄"),
-        ("AI Assistant", "Quick Insights", "🧠")
-    ]
-    
-    for i, (name, desc, icon) in enumerate(tools):
-        with col_tools[i % 4]:
-            st.markdown(f"""
-                <div class='tool-card'>
-                    <h2>{icon}</h2>
-                    <h4>{name}</h4>
-                    <p style='font-size:12px;'>{desc}</p>
-                </div>
-            """, unsafe_allow_html=True)
-            if st.button(f"فتح {name}", key=f"btn_{name}"):
-                st.toast(f"جاري ربط {name} بـ Wanas AI Brain...")
+        # عرض عينات من التقارير
+        col_rep1, col_rep2 = st.columns(2)
+        
+        with col_rep1:
+            st.markdown("#### 📂 التقرير الأول: الشيت والداشبورد")
+            st.write("شيت إكسل احترافي تم توليده تلقائياً (بدون أخطاء)")
+            sample_data = pd.DataFrame(np.random.randint(100, 1000, size=(10, 5)), columns=['المبيعات', 'المصاريف', 'الضرائب', 'الصافي', 'النمو'])
+            st.dataframe(sample_data, use_container_width=True)
+            st.line_chart(sample_data)
 
-with tabs[4]:
-    st.markdown("### 📤 Final Report Center")
-    c1, c2 = st.columns(2)
-    with c1:
-        st.markdown("#### استخراج التقرير النهائي")
-        st.button("📄 Generate Certified PDF (MIA8444)")
-    with c2:
-        st.markdown("#### مشاركة سريعة")
-        phone = st.text_input("رقم الواتساب:", placeholder="2010xxxxxxxx")
-        if st.button("📲 إرسال التقرير"):
-            st.info("جاري تشفير البيانات قبل الإرسال...")
+        with col_rep2:
+            st.markdown("#### 📝 التقرير النهائي: تحليل الوضع والأخطاء")
+            st.error("الأخطاء المرصودة: تكرار في مدخلات التاريخ بملف الـ OCR (تمت المعالجة).")
+            st.warning("المقترحات المستقبلية: تفعيل الربط المباشر مع قواعد البيانات لتقليل الإدخال اليدوي.")
+            st.success("الخلاصة: الوضع المالي مستقر مع نمو بنسبة 12% عن الشهر السابق.")
 
-# 4. الفوتر
-st.markdown("<div class='footer-bar'>Smart Analyst Ultimate | Powered by Wanas AI | System User: صديقي </div>", unsafe_allow_html=True)
+        # أزرار الإرسال والتحميل
+        st.divider()
+        c_pdf, c_wa = st.columns(2)
+        with c_pdf:
+            st.button("📄 تحميل كافة التقارير بصيغة PDF (عالية الجودة)")
+        with c_wa:
+            st.button("📲 إرسال التقارير والداشبورد عبر واتساب")
+
+# 5. التوقيع النهائي
+st.markdown("<div class='footer-bar'>Smart Analyst Ultimate | Certified System by MIA8444 | إشراف تقني كامل</div>", unsafe_allow_html=True)
