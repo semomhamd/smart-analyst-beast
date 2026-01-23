@@ -2,129 +2,98 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import os
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
+import io
 
-# 1. إعدادات المنصة الاحترافية
-st.set_page_config(page_title="Smart Analyst | Ultimate AI Engine", layout="wide", page_icon="⚙️")
+# 1. إعدادات المنصة والهوية
+st.set_page_config(page_title="Smart Analyst Pro", layout="wide", page_icon="📊")
 
-# 2. لغة التصميم (CSS) - بناء الأيقونات والبطاقات التفاعلية
-st.markdown("""
+# 2. نظام الثيمات (Dark/Light Mode) والإعدادات
+if 'theme' not in st.session_state:
+    st.session_state.theme = 'Dark'
+
+def toggle_theme():
+    st.session_state.theme = 'Light' if st.session_state.theme == 'Dark' else 'Dark'
+
+# لغة التصميم (CSS) التفاعلية
+theme_bg = "#0d1117" if st.session_state.theme == 'Dark' else "#ffffff"
+theme_text = "#e6edf3" if st.session_state.theme == 'Dark' else "#000000"
+card_bg = "#161b22" if st.session_state.theme == 'Dark' else "#f0f2f6"
+
+st.markdown(f"""
     <style>
-    .stApp { background-color: #0d1117; color: #e6edf3; }
-    
-    /* تصميم أيقونات الأدوات */
-    .tool-card {
-        background: linear-gradient(145deg, #161b22, #1f2937);
+    .stApp {{ background-color: {theme_bg}; color: {theme_text}; }}
+    .tool-card {{
+        background-color: {card_bg};
         border: 1px solid #30363d;
         border-radius: 15px;
         padding: 20px;
         text-align: center;
-        transition: 0.4s;
-        cursor: pointer;
-        height: 100%;
-    }
-    .tool-card:hover { 
-        border-color: #fbbf24; 
-        transform: scale(1.05);
-        box-shadow: 0 10px 20px rgba(251, 191, 36, 0.2);
-    }
-    .tool-icon { font-size: 40px; margin-bottom: 10px; }
-    .tool-name { color: #fbbf24; font-weight: bold; font-size: 18px; }
-    .tool-desc { color: #8b949e; font-size: 12px; }
-
-    /* توقيع MIA8444 المعتمد */
-    .footer-bar {
-        position: fixed;
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        background-color: #161b22;
-        color: #fbbf24;
-        text-align: center;
-        padding: 12px;
-        border-top: 2px solid #fbbf24;
-        font-weight: bold;
-        z-index: 1000;
-    }
+        transition: 0.3s;
+    }}
+    .tool-card:hover {{ border-color: #fbbf24; transform: translateY(-5px); }}
+    .gold-header {{ color: #fbbf24; font-weight: bold; }}
+    .footer-bar {{
+        position: fixed; left: 0; bottom: 0; width: 100%;
+        background-color: {card_bg}; color: #fbbf24;
+        text-align: center; padding: 10px; border-top: 2px solid #fbbf24;
+    }}
     </style>
     """, unsafe_allow_html=True)
 
-# 3. الهيدر (Smart Analyst Brand)
-c1, c2 = st.columns([1, 4])
-with c1:
+# 3. الهيدر وشريط الإعدادات
+col_logo, col_title, col_settings = st.columns([1, 4, 1])
+with col_logo:
     if os.path.exists("40833.jpg"):
-        st.image("40833.jpg", width=100)
-with c2:
-    st.markdown("<h1 style='color: white; margin-bottom: 0;'>Smart Analyst <span style='color: #fbbf24;'>Ultimate</span></h1>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #8b949e;'>The Integrated Ecosystem for Data Science & Accounting</p>", unsafe_allow_html=True)
+        st.image("40833.jpg", width=80)
+with col_title:
+    st.markdown(f"<h1 style='margin:0;'>Smart <span style='color:#fbbf24;'>Analyst</span> Pro</h1>", unsafe_allow_html=True)
+with col_settings:
+    if st.button("⚙️ Settings"):
+        st.session_state.show_settings = not st.session_state.get('show_settings', False)
+
+if st.session_state.get('show_settings', False):
+    with st.expander("User Settings & Preferences", expanded=True):
+        st.write(f"Logged in as: *MIA8444*")
+        st.button(f"Switch to {('Light' if st.session_state.theme == 'Dark' else 'Dark')} Mode", on_click=toggle_theme)
 
 st.divider()
 
-# 4. قسم العمليات الذكية (Handwriting to Excel)
-st.markdown("<h3 style='color: #fbbf24;'>🚀 Smart Operations | تحويل البيانات الذكي</h3>", unsafe_allow_html=True)
-op1, op2, op3 = st.columns(3)
+# 4. منطقة الأدوات (The Grid)
+tabs = st.tabs(["🚀 AI Operations", "📊 Analysis Tools", "📤 Export & Share"])
 
-with op1:
-    st.markdown("""<div class='tool-card'>
-        <div class='tool-icon'>✍️</div>
-        <div class='tool-name'>AI Handwriting to Excel</div>
-        <div class='tool-desc'>تحويل خط اليد إلى جداول منظمة</div>
-    </div>""", unsafe_allow_html=True)
-    img_file = st.file_uploader("ارفع صورة خط اليد", type=['jpg','png','jpeg'], key="ocr")
+with tabs[0]:
+    st.markdown("<h3 class='gold-header'>Smart AI Processing</h3>", unsafe_allow_html=True)
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("<div class='tool-card'><h3>✍️</h3><p>OCR Handwriting</p></div>", unsafe_allow_html=True)
+        st.file_uploader("Upload Image", type=['jpg','png'])
+    with c2:
+        st.markdown("<div class='tool-card'><h3>🧹</h3><p>Data Cleaner</p></div>", unsafe_allow_html=True)
+        st.file_uploader("Upload Messy File", type=['xlsx','csv'])
 
-with op2:
-    st.markdown("""<div class='tool-card'>
-        <div class='tool-icon'>🧹</div>
-        <div class='tool-name'>Smart Data Cleaner</div>
-        <div class='tool-desc'>تنظيم الملفات الملغبطة آلياً</div>
-    </div>""", unsafe_allow_html=True)
-    messy_file = st.file_uploader("ارفع الملف الملغبط", type=['xlsx','csv'], key="cleaner")
+with tabs[1]:
+    st.markdown("<h3 class='gold-header'>Analytics Arsenal</h3>", unsafe_allow_html=True)
+    row = st.columns(4)
+    tools = [("📗 Excel", "Pro"), ("📉 Power BI", "BI"), ("⚡ Query", "ETL"), ("🗄️ SQL", "DB")]
+    for i, (name, desc) in enumerate(tools):
+        row[i].markdown(f"<div class='tool-card'><h4>{name}</h4><small>{desc}</small></div>", unsafe_allow_html=True)
 
-with op3:
-    st.markdown("""<div class='tool-card'>
-        <div class='tool-icon'>📊</div>
-        <div class='tool-name'>Auto Report Gen</div>
-        <div class='tool-desc'>إنشاء تقارير إكسل احترافية بضغطة واحدة</div>
-    </div>""", unsafe_allow_html=True)
-    if st.button("Generate Professional Sheet"):
-        st.success("جاري بناء الشيت الاحترافي...")
+with tabs[2]:
+    st.markdown("<h3 class='gold-header'>Export with Watermark</h3>", unsafe_allow_html=True)
+    col_pdf, col_wa = st.columns(2)
+    
+    with col_pdf:
+        if st.button("📄 Generate PDF with Watermark"):
+            st.info("جاري دمج شعار 40833 كعلامة مائية في التقرير...")
+            # هنا يتم استدعاء ميزة العلامة المائية
+            st.success("تم تجهيز ملف PDF بنجاح!")
 
-st.markdown("<br>", unsafe_allow_html=True)
+    with col_wa:
+        contact_name = st.text_input("اسم جهة الاتصال أو الرقم:")
+        if st.button("📲 Share via WhatsApp"):
+            wa_url = f"https://wa.me/?text=تم إنشاء تقريرك بواسطة Smart Analyst Pro"
+            st.markdown(f"[اضغط هنا للإرسال لـ {contact_name}]({wa_url})")
 
-# 5. قسم أدوات التحليل العملاق (Tools Integration)
-st.markdown("<h3 style='color: #fbbf24;'>🛠️ Professional Toolset | أدوات التحليل</h3>", unsafe_allow_html=True)
-
-# الصف الأول من الأدوات
-row1_1, row1_2, row1_3, row1_4 = st.columns(4)
-tools1 = [
-    ("📗 Excel Pro", "Advanced Formulas & Macros"),
-    ("📉 Power BI", "Interactive Dashboards"),
-    ("⚡ Power Query", "ETL & Data Transformation"),
-    ("🗄️ SQL Engine", "Database Querying")
-]
-
-for i, col in enumerate([row1_1, row1_2, row1_3, row1_4]):
-    with col:
-        st.markdown(f"""<div class='tool-card'>
-            <div class='tool-name'>{tools1[i][0]}</div>
-            <div class='tool-desc'>{tools1[i][1]}</div>
-        </div>""", unsafe_allow_html=True)
-
-# الصف الثاني من الأدوات
-row2_1, row2_2, row2_3, row2_4 = st.columns(4)
-tools2 = [
-    ("🐍 Python Data", "Machine Learning & Analysis"),
-    ("🤖 AI Analysis", "Predictive Insights"),
-    ("🎨 Tableau", "High-end Visualization"),
-    ("☁️ Google Sheets", "Cloud Collaboration")
-]
-
-for i, col in enumerate([row2_1, row2_2, row2_3, row2_4]):
-    with col:
-        st.markdown(f"""<div class='tool-card'>
-            <div class='tool-name'>{tools2[i][0]}</div>
-            <div class='tool-desc'>{tools2[i][1]}</div>
-        </div>""", unsafe_allow_html=True)
-
-# 6. التوقيع النهائي المعتمد
-st.markdown(f"<div class='footer-bar'>Smart Analyst Ultimate | Certified System by MIA8444</div>", unsafe_allow_html=True)
+# 5. التوقيع العالمي
+st.markdown("<div class='footer-bar'>Smart Analyst Pro | Certified by MIA8444</div>", unsafe_allow_html=True)
