@@ -1,112 +1,42 @@
 import streamlit as st
 import pandas as pd
 
-# ==============================
-# إعدادات الصفحة
-# ==============================
 st.set_page_config(
-page_title="Smart Analyst Beast",
-page_icon="🤖",
-layout="wide"
+    page_title="Smart Analyst Beast",
+    page_icon="🤖",
+    layout="wide"
 )
 
-# ==============================
-# العنوان الرئيسي
-# ==============================
-st.markdown(
-"<h1 style='text-align:center; color:#1E3A8A;'>🤖 Smart Analyst Beast</h1>",
-unsafe_allow_html=True
-)
-st.markdown(
-"<h3 style='text-align:center;'>المنظومة الذكية للمحاسبة وتحليل البيانات</h3>",
-unsafe_allow_html=True
-)
+st.title("🤖 Smart Analyst Beast")
+st.subheader("المنظومة الذكية للمحاسبة وتحليل البيانات")
 st.divider()
 
-# ==============================
-# القائمة الجانبية (بدون with)
-# ==============================
 st.sidebar.header("⚙️ لوحة التحكم")
 choice = st.sidebar.radio(
-"اختر القسم:",
-(
-"📊 الداشبورد الصباحي",
-"📂 تحليل الملفات الضخمة",
-"✍️ قارئ الخط اليدوي",
-"📤 إرسال التقارير"
-)
+    "اختر القسم:",
+    ["Dashboard", "Data Analysis"]
 )
 
-# ==============================
-# الداشبورد الصباحي
-# ==============================
-if choice == "📊 الداشبورد الصباحي":
-st.success("☀️ صباح الفل يا مدير")
+if choice == "Dashboard":
+    st.success("☀️ صباح الفل يا مدير")
 
-col1, col2, col3 = st.columns(3)
-col1.metric("إجمالي الإيرادات", "—")
-col2.metric("إجمالي المصروفات", "—")
-col3.metric("صافي الربح", "—")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("إيرادات", "—")
+    col2.metric("مصروفات", "—")
+    col3.metric("صافي الربح", "—")
 
-st.info("📌 هنا هيظهر ملخص ذكي وتنبيهات قريبًا")
+elif choice == "Data Analysis":
+    st.subheader("📂 تحليل الملفات")
 
-# ==============================
-# تحليل الملفات الضخمة
-# ==============================
-elif choice == "📂 تحليل الملفات الضخمة":
-st.subheader("🐲 معالج البيانات العملاق")
+    file = st.file_uploader(
+        "ارفع ملف CSV أو Excel",
+        type=["csv", "xlsx"]
+    )
 
-files = st.file_uploader(
-"ارفع ملفاتك (CSV / Excel):",
-type=["csv", "xlsx"],
-accept_multiple_files=True
-)
+    if file is not None:
+        if file.name.endswith(".csv"):
+            df = pd.read_csv(file)
+        else:
+            df = pd.read_excel(file)
 
-if files:
-st.success(f"🔥 تم استلام {len(files)} ملف")
-
-for file in files:
-st.markdown(f"## 📄 {file.name}")
-
-try:
-if file.name.endswith(".csv"):
-df = pd.read_csv(file)
-else:
-df = pd.read_excel(file)
-
-st.dataframe(df.head())
-
-c1, c2, c3, c4 = st.columns(4)
-c1.metric("عدد الصفوف", df.shape[0])
-c2.metric("عدد الأعمدة", df.shape[1])
-c3.metric("الخانات الفاضية", df.isnull().sum().sum())
-c4.metric("أعمدة رقمية", df.select_dtypes(include='number').shape[1])
-
-with st.expander("📊 ملخص إحصائي"):
-st.dataframe(df.describe())
-
-except Exception as e:
-st.error(f"❌ خطأ في قراءة الملف: {e}")
-
-# ==============================
-# قارئ الخط اليدوي
-# ==============================
-elif choice == "✍️ قارئ الخط اليدوي":
-st.warning("✍️ القسم ده تحت التطوير")
-st.markdown("""
-- رفع صورة إيصال
-- OCR
-- تحويل لقيود محاسبية
-""")
-
-# ==============================
-# إرسال التقارير
-# ==============================
-elif choice == "📤 إرسال التقارير":
-st.info("📤 مركز التقارير الذكية")
-st.markdown("""
-- PDF
-- Email
-- تقارير تلقائية
-- تعليق AI
-""")
+        st.dataframe(df.head())
