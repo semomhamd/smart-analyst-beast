@@ -5,4 +5,4 @@ easyocr
 opencv-python-headless
 numpy
 Pillow
-google-generativea
+google-generativeai
