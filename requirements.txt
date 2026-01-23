@@ -7,3 +7,4 @@ numpy
 Pillow
 google-generativeai
 plotly
+xlsxwriter
