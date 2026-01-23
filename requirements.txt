@@ -1,11 +1,7 @@
 streamlit
 pandas
-openpyxl
-easyocr
-opencv-python-headless
 numpy
-Pillow
 google-generativeai
 plotly
-xlsxwriter
+openpyxl
 fpdf
