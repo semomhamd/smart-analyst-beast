@@ -25,3 +25,27 @@ with st.sidebar:
     st.markdown("---")
     st.write("👤 User: MIA8444")
     st.write("🚀 Version: 2.5.0")
+# نظام الدخول
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False
+
+if not st.session_state.logged_in:
+    st.title("🐉 Smart Analyst Beast")
+    user = st.text_input("Username")
+    pw = st.text_input("Password", type="password")
+    if st.button("Login"):
+        if user == "semomohamed" and pw == "123456":
+            st.session_state.logged_in = True
+            st.rerun()
+        else:
+            st.error("Wrong Data!")
+    st.stop()
+
+# تفعيل AI (Gemini)
+# حط مفتاح الـ API بتاعك مكان الكلمة دي
+API_KEY = "YOUR_API_KEY_HERE"
+if API_KEY != "YOUR_API_KEY_HERE":
+    genai.configure(api_key=API_KEY)
+    model = genai.GenerativeModel("gemini-1.5-flash")
+else:
+    model = None
