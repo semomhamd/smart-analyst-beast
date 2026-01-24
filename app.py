@@ -13,7 +13,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# ================== Login ==================
+# ================== LOGIN ==================
 ADMIN_USER = "semomohamed"
 ADMIN_PASS = "123456"
 
@@ -23,7 +23,6 @@ if 'logged_in' not in st.session_state:
 if not st.session_state.logged_in:
     st.title("🐉 Smart Analyst Beast")
     st.subheader("نظام التحليل المشفر – Production MVP")
-
     with st.form("login_form"):
         user = st.text_input("Username")
         pw = st.text_input("Password", type="password")
@@ -38,9 +37,9 @@ if not st.session_state.logged_in:
     st.stop()
 
 # ================== LOGO ==================
+# رابط Raw صحيح من GitHub أو أي رابط مباشر للصورة
 LOGO_URL = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/99afc3d2-b6ef-4eda-977f-2fdc4b6621dd.jpg"
-st.image(LOGO_URL, width=160)
-
+st.image(LOGO_URL, width=180, caption="Smart Analyst Beast 🐉")
 st.title("🐉 Smart Analyst Beast – Production MVP")
 st.caption("AI‑Powered Data Brain | Copy & Paste Ready")
 
