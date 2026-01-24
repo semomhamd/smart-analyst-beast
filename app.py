@@ -2,34 +2,32 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from datetime import datetime
+from fpdf import FPDF
 import os
+import google.generativeai as genai
 
-# --- 1️⃣ إعدادات الصفحة ---
-st.set_page_config(page_title="Smart Analyst Beast", layout="wide", page_icon="🐉")
+# ================== CONFIG ==================
+st.set_page_config(
+    page_title="Smart Analyst Beast",
+    page_icon="🐉",
+    layout="wide"
+)
 
-# --- 2️⃣ بيانات الدخول ثابتة ---
+# ================== Login ==================
 ADMIN_USER = "semomohamed"
 ADMIN_PASS = "123456"
 
-# --- 3️⃣ اللوجو محلي ---
-LOGO_FILE = "99afc3d2-b6ef-4eda-977f-2fdc4b6621dd.jpg"
-col1, col2, col3 = st.columns([1,2,1])
-with col2:
-    st.image(LOGO_FILE, width=160)
-
-# --- 4️⃣ نظام الدخول ---
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 
 if not st.session_state.logged_in:
-    st.title("🐉 Smart Analyst")
+    st.title("🐉 Smart Analyst Beast")
     st.subheader("نظام التحليل المشفر – Production MVP")
-    
+
     with st.form("login_form"):
         user = st.text_input("Username")
         pw = st.text_input("Password", type="password")
         submit = st.form_submit_button("دخول آمن")
-        
         if submit:
             if user == ADMIN_USER and pw == ADMIN_PASS:
                 st.session_state.logged_in = True
@@ -39,24 +37,36 @@ if not st.session_state.logged_in:
                 st.error("بيانات الدخول غير صحيحة")
     st.stop()
 
-# --- 5️⃣ Smart Data Cleaner ---
-def smart_analyst_cleaner(df):
+# ================== LOGO ==================
+LOGO_URL = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/99afc3d2-b6ef-4eda-977f-2fdc4b6621dd.jpg"
+st.image(LOGO_URL, width=160)
+
+st.title("🐉 Smart Analyst Beast – Production MVP")
+st.caption("AI‑Powered Data Brain | Copy & Paste Ready")
+
+# ================== GEMINI ==================
+API_KEY = os.getenv("GEMINI_API_KEY")
+if API_KEY:
+    genai.configure(api_key=API_KEY)
+    model = genai.GenerativeModel("gemini-1.5-pro")
+else:
+    model = None
+
+# ================== DATA CLEANER ==================
+def smart_cleaner(df):
     logs = []
 
-    # حذف الأعمدة الفارغة
-    initial_cols = df.shape[1]
-    df = df.dropna(how='all', axis=1)
-    if df.shape[1] < initial_cols:
-        logs.append(f"🗑️ حذف {initial_cols - df.shape[1]} عمود فارغ.")
+    before = df.shape[1]
+    df = df.dropna(axis=1, how="all")
+    if df.shape[1] != before:
+        logs.append(f"🧹 حذف {before - df.shape[1]} عمود فاضي")
 
-    # توحيد التواريخ تلقائيًا
     for col in df.columns:
         if 'date' in col.lower() or 'تاريخ' in col:
             original_sample = str(df[col].iloc[0]) if not df[col].empty else ""
             df[col] = pd.to_datetime(df[col], errors='coerce')
-            logs.append(f"📅 توحيد التاريخ في '{col}' (مثال: {original_sample} -> ISO)")
+            logs.append(f"📅 تحويل '{col}' لتاريخ (مثال: {original_sample} -> ISO)")
 
-    # تمييز القيم الشاذة بدون حذف
     num_cols = df.select_dtypes(include=[np.number]).columns
     for col in num_cols:
         Q1 = df[col].quantile(0.25)
@@ -70,90 +80,94 @@ def smart_analyst_cleaner(df):
 
     return df, logs
 
-# --- 6️⃣ Tabs / Main Interface ---
-st.title("🚀 Smart Analyst Beast – Production MVP")
-st.write(f"مرحباً بك يا صديقي | {datetime.now().strftime('%Y-%m-%d')}")
+# ================== PDF EXPORT ==================
+def export_pdf(text):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    for line in text.split("\n"):
+        pdf.multi_cell(0, 8, line)
+    path = f"Smart_Analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+    pdf.output(path)
+    return path
 
-tab1, tab2 = st.tabs(["📂 رفع وإدارة البيانات", "📊 عقل الوحش (AI Explainer)"])
+# ================== TABS ==================
+tab1, tab2, tab3 = st.tabs([
+    "📂 رفع ودمج البيانات",
+    "🧠 عقل الوحش (AI Explainer)",
+    "📄 تصدير PDF"
+])
 
-# --- Tab 1: رفع البيانات ---
+# ---------- TAB 1 ----------
 with tab1:
-    st.subheader("إدارة الملفات المتعددة")
-    uploaded_files = st.file_uploader("ارفع ملفات Excel أو CSV", accept_multiple_files=True)
+    st.subheader("رفع CSV / Excel")
+    uploaded_files = st.file_uploader(
+        "ارفع ملفات Excel أو CSV", type=["csv", "xlsx"], accept_multiple_files=True
+    )
 
     if uploaded_files:
         all_dfs = []
         for file in uploaded_files:
             try:
-                if file.name.endswith(('xlsx', 'xls')):
-                    df = pd.read_excel(file)
-                else:
+                if file.name.endswith(".csv"):
                     df = pd.read_csv(file)
-                
-                df, logs = smart_analyst_cleaner(df)
-                
+                else:
+                    df = pd.read_excel(file)
+
+                df, logs = smart_cleaner(df)
                 with st.expander(f"⚙️ معالجة: {file.name}"):
-                    for log in logs:
-                        st.info(log)
-                    st.success("جاهز للدمج")
-                
+                    for l in logs:
+                        st.info(l)
                 all_dfs.append(df)
             except Exception as e:
                 st.error(f"خطأ في {file.name}: {e}")
 
         if all_dfs:
             st.session_state.master_df = pd.concat(all_dfs, ignore_index=True)
-            st.balloons()
-            st.subheader("📋 قاعدة بيانات الوحش الموحدة")
-            st.data_editor(st.session_state.master_df, use_container_width=True)
+            st.success("🔥 البيانات اتجهزت")
+            st.dataframe(st.session_state.master_df, use_container_width=True)
 
-# --- Tab 2: AI Explainer ---
+# ---------- TAB 2 ----------
 with tab2:
-    st.subheader("عقل الوحش 🧠")
-    if 'master_df' in st.session_state:
-        st.write("البيانات جاهزة للتحليل… اضغط على الزر لتفعيل العقل")
-        if st.button("شغل عقل الوحش 🧠"):
-            st.info("🟢 Gemini AI Analyzer متصل – جاري التشغيل…")
-            try:
-                from openai import OpenAI  # أو Gemini SDK لو متاح
-                client = OpenAI(api_key=os.getenv("GEN_API_KEY"))
-                
-                df = st.session_state.master_df
-                num_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-                sample_analysis = []
-                
-                for col in num_cols:
-                    mean_val = df[col].mean()
-                    max_val = df[col].max()
-                    min_val = df[col].min()
-                    sample_analysis.append(f"📊 العمود '{col}': متوسط={mean_val:.2f}, أقصى={max_val}, أدنى={min_val}")
-                
-                prompt = f"""
-                أنا محلل بيانات ذكي وصديق خبير. عندي تحليل للأعمدة الرقمية كالتالي:
-                {chr(10).join(sample_analysis)}
-                إشرح النتائج بطريقة بسيطة وودودة للمستخدم، مع نصائح عملية.
-                """
-                
-                response = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[{"role":"user","content":prompt}],
-                    temperature=0.7
-                )
-                
-                st.success("✅ عقل الوحش أتم التحليل!")
-                st.write(response.choices[0].message.content)
-                
-            except Exception as e:
-                st.error(f"حصل خطأ في تشغيل AI: {e}")
+    if "master_df" not in st.session_state:
+        st.warning("ارفع بيانات أولاً")
+    elif not model:
+        st.error("⚠️ Gemini API Key مش متظبط")
     else:
-        st.warning("من فضلك ارفع الملفات أولاً في التبويب الأول.")
+        if st.button("🧠 شغل عقل الوحش"):
+            with st.spinner("الوحش بيفكر…"):
+                df_head = st.session_state.master_df.head(50).to_string()
+                prompt = f"""
+                تحليل البيانات دي واديني:
+                - ملخص
+                - أهم الملاحظات
+                - تحذيرات
+                - اقتراحات
+                البيانات:
+                {df_head}
+                """
+                response = model.generate_content(prompt)
+                st.session_state.ai_result = response.text
+                st.success("✅ التحليل جاهز")
 
-# --- PDF Export (MVP Template) ---
-if 'master_df' in st.session_state:
-    if st.button("💾 تصدير PDF (MVP)"):
-        st.info("جاري تجهيز التقرير… (في النسخة القادمة PDF حقيقي مع Logo)")
+        if "ai_result" in st.session_state:
+            st.markdown(st.session_state.ai_result)
 
-# --- Sidebar ---
+# ---------- TAB 3 ----------
+with tab3:
+    if "ai_result" in st.session_state:
+        if st.button("📄 تصدير PDF"):
+            path = export_pdf(st.session_state.ai_result)
+            with open(path, "rb") as f:
+                st.download_button(
+                    "⬇️ تحميل التقرير",
+                    f,
+                    file_name=path
+                )
+    else:
+        st.info("اعمل تحليل AI الأول")
+
+# ================== SIDEBAR ==================
 st.sidebar.markdown("---")
-st.sidebar.write("Powered by Gemini 1.5 | 2026")
-st.sidebar.write("Developed by Smart Analyst")
+st.sidebar.write("🐉 Smart Analyst Beast | MVP")
+st.sidebar.caption("Developed with ❤️ by Smart Analyst")
