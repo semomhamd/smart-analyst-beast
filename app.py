@@ -78,8 +78,8 @@ def smart_analyst_core(df: pd.DataFrame):
 # =====================================================
 # 3. نظام الدخول الآمن
 # =====================================================
-ADMIN_USER = os.getenv("SA_USER")
-ADMIN_PASS = os.getenv("SA_PASS")
+ADMIN_USER = "semomohamed"
+ADMIN_PASS = "123456"
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
