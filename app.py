@@ -49,3 +49,27 @@ if API_KEY != "YOUR_API_KEY_HERE":
     model = genai.GenerativeModel("gemini-1.5-flash")
 else:
     model = None
+# الواجهة الرئيسية
+st.title("🚀 الوحش الذكي")
+t1, t2 = st.tabs(["📂 رفع البيانات", "🧠 عقل الوحش"])
+
+with t1:
+    files = st.file_uploader("ارفع ملفاتك", accept_multiple_files=True)
+    if files:
+        all_dfs = [pd.read_excel(f) if f.name.endswith('xlsx') else pd.read_csv(f) for f in files]
+        st.session_state.master_df = pd.concat(all_dfs, ignore_index=True)
+        st.success("تم الدمج بنجاح!")
+        st.dataframe(st.session_state.master_df.head(10))
+
+with t2:
+    if "master_df" in st.session_state:
+        if st.button("🧠 ابدأ تحليل الذكاء الاصطناعي"):
+            if model:
+                with st.spinner("بيفكر..."):
+                    summary = st.session_state.master_df.describe().to_string()
+                    resp = model.generate_content(f"حلل البيانات دي بالعربي: {summary}")
+                    st.write(resp.text)
+            else:
+                st.error("مفتاح الـ API ناقص!")
+    else:
+        st.warning("ارفع داتا الأول")
