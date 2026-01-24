@@ -77,19 +77,30 @@ with t1:
     st.subheader("إدارة الملفات المتعددة")
     uploaded_files = st.file_uploader("ارفع ملفات Excel أو CSV (يمكنك اختيار أكثر من ملف)", type=['xlsx', 'csv'], accept_multiple_files=True)
     
-    if uploaded_files:
-all_dfs = []
-        for file in uploaded_files:
-            # قراءة الملف
-            df = pd.read_excel(file) if file.name.endswith('xlsx') else pd.read_csv(file)
-            
-            # تفعيل المحرك الاحترافي (Sprint 1)
-            df, logs = smart_analyst_core(df)
-            
-            # عرض سجل العمليات لكل ملف
-            st.success(f"🔍 تم فحص وتنظيف: {file.name}")
-            for log in logs:
-                st.info(log)
+ if uploaded_files:
+            all_dfs = []
+            for file in uploaded_files:
+                # قراءة الملف حسب نوعه
+                if file.name.endswith('xlsx'):
+                    df = pd.read_excel(file)
+                else:
+                    df = pd.read_csv(file)
+                
+                # تفعيل محرك التنظيف الذكي
+                df, logs = smart_analyst_core(df)
+                
+                # عرض سجل العمليات
+                st.success(f"🔍 تم فحص: {file.name}")
+                for log in logs:
+                    st.info(log)
+                
+                all_dfs.append(df)
+
+            # دمج البيانات وعرضها
+            if all_dfs:
+                st.session_state.master_df = pd.concat(all_dfs, ignore_index=True)
+                st.success(f"✅ تم دمج {len(uploaded_files)} ملفات بنجاح!")
+                st.data_editor(st.session_state.master_df, use_container_width=True)
             
             all_dfs.append(df)
 
