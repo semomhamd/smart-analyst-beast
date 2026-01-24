@@ -132,3 +132,23 @@ with t4:
         st.download_button("تحميل التقرير النهائي", data=pdf_bytes, file_name="Smart_Report.pdf", mime="application/pdf")
 
 st.markdown("<hr><center>Certified System | Powered by Gemini 1.5 | 2026</center>", unsafe_allow_html=True)
+def smart_analyst_core(df):
+    cleaning_logs = []
+    # 1. حذف الأعمدة شبه الفارغة
+    df = df.dropna(how='all', axis=1) 
+    cols_to_drop = [col for col in df.columns if df[col].isnull().mean() > 0.95]
+    if cols_to_drop:
+        df = df.drop(columns=cols_to_drop)
+        cleaning_logs.append(f"🗑️ حذفنا أعمدة فاضية خالص: {', '.join(cols_to_drop)}")
+    
+    # 2. كاشف التواريخ (الـ 70% اللي اتفقنا عليها)
+    for col in df.columns:
+        if df[col].dtype == 'object':
+            try:
+                converted = pd.to_datetime(df[col], errors='coerce')
+                if converted.notna().mean() > 0.7:
+                    df[col] = converted
+                    cleaning_logs.append(f"📅 العمود '{col}' اتحول لتاريخ تلقائي.")
+            except: continue
+            
+    return df, cleaning_logs
