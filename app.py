@@ -1,21 +1,21 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import os
 from datetime import datetime
+import os
 
 # --- 1️⃣ إعدادات الصفحة ---
 st.set_page_config(page_title="Smart Analyst Beast", layout="wide", page_icon="🐉")
 
-# --- 2️⃣ بيانات الدخول Production (Environment Variables) ---
-ADMIN_USER = os.getenv("SA_USER", "semomohamed")
-ADMIN_PASS = os.getenv("SA_PASS", "123456")  # للـ MVP التجريبي فقط
+# --- 2️⃣ بيانات الدخول ثابتة ---
+ADMIN_USER = "semomohamed"
+ADMIN_PASS = "123456"
 
-# --- 3️⃣ اللوجو من GitHub ---
-LOGO_URL = "https://raw.githubusercontent.com/username/repo/main/99afc3d2-b6ef-4eda-977f-2fdc4b6621dd.jpg"
+# --- 3️⃣ اللوجو محلي ---
+LOGO_FILE = "99afc3d2-b6ef-4eda-977f-2fdc4b6621dd.jpg"
 col1, col2, col3 = st.columns([1,2,1])
 with col2:
-    st.image(LOGO_URL, width=160)
+    st.image(LOGO_FILE, width=160)
 
 # --- 4️⃣ نظام الدخول ---
 if 'logged_in' not in st.session_state:
