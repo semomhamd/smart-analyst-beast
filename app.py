@@ -74,22 +74,34 @@ t1, t2, t3, t4 = st.tabs([
 # --- التبويب الأول: رفع ملفات متعددة ---
 with t1:
     st.image(EXCEL_ICON, width=50)
-    st.subheader("إدارة الملفات المتعددة")
-uploaded_files = st.file_uploader("ارفع ملفات Excel أو CSV (أكثر من ملف)", accept_multiple_files=True)
+# تبويب رفع الملفات
+        uploaded_files = st.file_uploader("ارفع ملفات Excel أو CSV", accept_multiple_files=True)
 
-if uploaded_files:
-    all_dfs = []
-    for file in uploaded_files:
-        try:
-            # قراءة الملف حسب نوعه (Excel أو CSV)
-            if file.name.endswith('xlsx') or file.name.endswith('xls'):
-                df = pd.read_excel(file)
-            else:
-                df = pd.read_csv(file)
-            
-            # استدعاء المحرك الذكي للتنظيف اللي ضفناه في أول الكود
-            df, logs = smart_analyst_core(df)
-            
+        if uploaded_files:
+            all_dfs = []
+            for file in uploaded_files:
+                try:
+                    if file.name.endswith('xlsx'):
+                        df = pd.read_excel(file)
+                    else:
+                        df = pd.read_csv(file)
+                    
+                    # استدعاء محرك التنظيف
+                    df, logs = smart_analyst_core(df)
+                    
+                    with st.expander(f"📊 معالجة: {file.name}"):
+                        for log in logs:
+                            st.info(log)
+                    
+                    all_dfs.append(df)
+                except Exception as e:
+                    st.error(f"خطأ في {file.name}: {e}")
+
+            if all_dfs:
+                st.session_state.master_df = pd.concat(all_dfs, ignore_index=True)
+                st.balloons()
+                st.subheader("📋 الجدول الموحد")
+                st.data_editor(st.session_state.master_df, use_container_width=True)
             # عرض تقرير العمليات لكل ملف بشكل أنيق داخل Expander
             with st.expander(f"⚙️ تم تجهيز ملف: {file.name}"):
                 for log in logs:
