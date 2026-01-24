@@ -78,17 +78,26 @@ with t1:
     uploaded_files = st.file_uploader("ارفع ملفات Excel أو CSV (يمكنك اختيار أكثر من ملف)", type=['xlsx', 'csv'], accept_multiple_files=True)
     
     if uploaded_files:
-        all_dfs = []
+all_dfs = []
         for file in uploaded_files:
+            # قراءة الملف
             df = pd.read_excel(file) if file.name.endswith('xlsx') else pd.read_csv(file)
-# تفعيل الوحش الصغير
-df, logs = smart_analyst_core(df)
-st.success("✅ المنظف الذكي اشتغل بنجاح!")
-for log in logs: st.info(log) # عشان تشوف هو عمل إيه            all_dfs.append(df)
-            st.write(f"✅ تم دمج: {file.name}")
-        
-        st.session_state.master_df = pd.concat(all_dfs, ignore_index=True)
-        st.success(f"تم دمج {len(uploaded_files)} ملفات بنجاح!")
+            
+            # تفعيل المحرك الاحترافي (Sprint 1)
+            df, logs = smart_analyst_core(df)
+            
+            # عرض سجل العمليات لكل ملف
+            st.success(f"🔍 تم فحص وتنظيف: {file.name}")
+            for log in logs:
+                st.info(log)
+            
+            all_dfs.append(df)
+
+        # دمج البيانات في ذاكرة الوحش (Master Data)
+        if all_dfs:
+            st.session_state.master_df = pd.concat(all_dfs, ignore_index=True)
+            st.success(f"✅ تم دمج {len(uploaded_files)} ملفات بنجاح!")
+            st.data_editor(st.session_state.master_df, use_container_width=True)
         st.data_editor(st.session_state.master_df, use_container_width=True)
 
 # --- التبويب الثاني: الرسم البياني الذكي ---
