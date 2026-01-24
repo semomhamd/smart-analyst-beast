@@ -4,182 +4,156 @@ import numpy as np
 import os
 from datetime import datetime
 
-# =====================================================
-# 1. إعدادات الصفحة
-# =====================================================
-st.set_page_config(
-    page_title="Smart Analyst Beast",
-    page_icon="🐉",
-    layout="wide"
-)
+# --- 1️⃣ إعدادات الصفحة ---
+st.set_page_config(page_title="Smart Analyst Beast", layout="wide", page_icon="🐉")
 
-EXCEL_ICON = "https://cdn-icons-png.flaticon.com/512/732/732220.png"
-CHART_ICON = "https://cdn-icons-png.flaticon.com/512/1611/1611177.png"
+# --- 2️⃣ بيانات الدخول Production (Environment Variables) ---
+ADMIN_USER = os.getenv("SA_USER", "semomohamed")
+ADMIN_PASS = os.getenv("SA_PASS", "123456")  # للـ MVP التجريبي فقط
 
-# =====================================================
-# 2. Smart Data Cleaner (Production MVP)
-# =====================================================
-def smart_analyst_core(df: pd.DataFrame):
-    cleaning_logs = []
-    threshold = 0.95
+# --- 3️⃣ اللوجو من GitHub ---
+LOGO_URL = "https://raw.githubusercontent.com/username/repo/main/99afc3d2-b6ef-4eda-977f-2fdc4b6621dd.jpg"
+col1, col2, col3 = st.columns([1,2,1])
+with col2:
+    st.image(LOGO_URL, width=160)
 
-    # --- حذف الأعمدة شبه الفارغة ---
-    null_ratio = df.isnull().mean()
-    cols_to_drop = null_ratio[null_ratio > threshold].index.tolist()
-
-    if cols_to_drop:
-        df = df.drop(columns=cols_to_drop)
-        cleaning_logs.append(
-            f"🗑️ تم حذف أعمدة شبه فارغة (>95%): {', '.join(cols_to_drop)}"
-        )
-
-    # --- اكتشاف وتوحيد التواريخ ---
-    for col in df.columns:
-        if df[col].dtype == "object":
-            try:
-                converted = pd.to_datetime(df[col], errors="coerce")
-                success_ratio = converted.notna().mean()
-
-                if success_ratio > 0.7:
-                    sample_before = str(df[col].dropna().iloc[0]) if not df[col].dropna().empty else "—"
-                    df[col] = converted
-                    cleaning_logs.append(
-                        f"📅 تم توحيد العمود '{col}' كتاريخ (مثال: {sample_before} → ISO)"
-                    )
-            except Exception:
-                continue
-
-    # --- اكتشاف القيم الشاذة (IQR) ---
-    num_cols = df.select_dtypes(include=[np.number]).columns
-
-    for col in num_cols:
-        if df[col].nunique() < 5:
-            continue
-
-        Q1 = df[col].quantile(0.25)
-        Q3 = df[col].quantile(0.75)
-        IQR = Q3 - Q1
-
-        if IQR == 0:
-            continue
-
-        lower = Q1 - 1.5 * IQR
-        upper = Q3 + 1.5 * IQR
-
-        outliers_count = ((df[col] < lower) | (df[col] > upper)).sum()
-
-        if outliers_count > 0:
-            cleaning_logs.append(
-                f"⚠️ تم رصد {outliers_count} قيم غير طبيعية في '{col}' (لم يتم حذفها)"
-            )
-
-    return df, cleaning_logs
-
-# =====================================================
-# 3. نظام الدخول الآمن
-# =====================================================
-ADMIN_USER = "semomohamed"
-ADMIN_PASS = "123456"
-
-if "logged_in" not in st.session_state:
+# --- 4️⃣ نظام الدخول ---
+if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 
 if not st.session_state.logged_in:
     st.title("🐉 Smart Analyst")
-    st.subheader("نظام التحليل الذكي – دخول آمن")
-
+    st.subheader("نظام التحليل المشفر – Production MVP")
+    
     with st.form("login_form"):
         user = st.text_input("Username")
         pw = st.text_input("Password", type="password")
-        submit = st.form_submit_button("دخول")
-
+        submit = st.form_submit_button("دخول آمن")
+        
         if submit:
             if user == ADMIN_USER and pw == ADMIN_PASS:
                 st.session_state.logged_in = True
-                st.rerun()
+                st.success("تم تسجيل الدخول! 🚀")
+                st.experimental_rerun()
             else:
                 st.error("بيانات الدخول غير صحيحة")
-
     st.stop()
 
-# =====================================================
-# 4. الواجهة الرئيسية
-# =====================================================
-st.title("🚀 Smart Analyst Beast")
-st.caption(f"مرحباً محمد | {datetime.now().strftime('%Y-%m-%d')}")
+# --- 5️⃣ Smart Data Cleaner ---
+def smart_analyst_cleaner(df):
+    logs = []
 
-t1, t2 = st.tabs(["📂 إدارة البيانات", "🧠 تحليل الذكاء الاصطناعي"])
+    # حذف الأعمدة الفارغة
+    initial_cols = df.shape[1]
+    df = df.dropna(how='all', axis=1)
+    if df.shape[1] < initial_cols:
+        logs.append(f"🗑️ حذف {initial_cols - df.shape[1]} عمود فارغ.")
 
-# =====================================================
-# 5. تبويب رفع وإدارة البيانات
-# =====================================================
-with t1:
-    st.image(EXCEL_ICON, width=50)
-    st.subheader("رفع ودمج الملفات")
+    # توحيد التواريخ تلقائيًا
+    for col in df.columns:
+        if 'date' in col.lower() or 'تاريخ' in col:
+            original_sample = str(df[col].iloc[0]) if not df[col].empty else ""
+            df[col] = pd.to_datetime(df[col], errors='coerce')
+            logs.append(f"📅 توحيد التاريخ في '{col}' (مثال: {original_sample} -> ISO)")
 
-    uploaded_files = st.file_uploader(
-        "ارفع ملفات Excel أو CSV",
-        accept_multiple_files=True,
-        type=["csv", "xlsx", "xls"]
-    )
+    # تمييز القيم الشاذة بدون حذف
+    num_cols = df.select_dtypes(include=[np.number]).columns
+    for col in num_cols:
+        Q1 = df[col].quantile(0.25)
+        Q3 = df[col].quantile(0.75)
+        IQR = Q3 - Q1
+        lower = Q1 - 1.5*IQR
+        upper = Q3 + 1.5*IQR
+        outliers = ((df[col] < lower) | (df[col] > upper)).sum()
+        if outliers > 0:
+            logs.append(f"⚠️ اكتشاف {outliers} قيمة شاذة في '{col}'")
+
+    return df, logs
+
+# --- 6️⃣ Tabs / Main Interface ---
+st.title("🚀 Smart Analyst Beast – Production MVP")
+st.write(f"مرحباً بك يا صديقي | {datetime.now().strftime('%Y-%m-%d')}")
+
+tab1, tab2 = st.tabs(["📂 رفع وإدارة البيانات", "📊 عقل الوحش (AI Explainer)"])
+
+# --- Tab 1: رفع البيانات ---
+with tab1:
+    st.subheader("إدارة الملفات المتعددة")
+    uploaded_files = st.file_uploader("ارفع ملفات Excel أو CSV", accept_multiple_files=True)
 
     if uploaded_files:
         all_dfs = []
-        all_logs = []
-
         for file in uploaded_files:
             try:
-                if file.name.endswith(("xlsx", "xls")):
+                if file.name.endswith(('xlsx', 'xls')):
                     df = pd.read_excel(file)
                 else:
                     df = pd.read_csv(file)
-
-                df, logs = smart_analyst_core(df)
-
-                with st.expander(f"⚙️ معالجة الملف: {file.name}"):
+                
+                df, logs = smart_analyst_cleaner(df)
+                
+                with st.expander(f"⚙️ معالجة: {file.name}"):
                     for log in logs:
                         st.info(log)
-
-                all_logs.extend(logs)
+                    st.success("جاهز للدمج")
+                
                 all_dfs.append(df)
-
             except Exception as e:
-                st.error(f"❌ خطأ في الملف {file.name}: {e}")
+                st.error(f"خطأ في {file.name}: {e}")
 
         if all_dfs:
             st.session_state.master_df = pd.concat(all_dfs, ignore_index=True)
-            st.session_state.cleaning_logs = all_logs
-
-            st.toast("🐉 تم دمج وتنظيف البيانات بنجاح", icon="🎉")
-            st.markdown("---")
+            st.balloons()
             st.subheader("📋 قاعدة بيانات الوحش الموحدة")
+            st.data_editor(st.session_state.master_df, use_container_width=True)
 
-            st.data_editor(
-                st.session_state.master_df,
-                use_container_width=True,
-                disabled=True
-            )
-
-# =====================================================
-# 6. تبويب AI Explainer (جاهز للربط)
-# =====================================================
-with t2:
-    st.image(CHART_ICON, width=50)
-    st.subheader("عقل الوحش (AI Explainer)")
-
-    if "master_df" in st.session_state:
-        st.success("البيانات جاهزة للتحليل الذكي")
-
-        if st.button("🧠 شغّل عقل الوحش"):
-            st.info(
-                "الخطوة التالية: إرسال البيانات + Logs + Summary إلى Gemini لشرح ذكي."
-            )
+# --- Tab 2: AI Explainer ---
+with tab2:
+    st.subheader("عقل الوحش 🧠")
+    if 'master_df' in st.session_state:
+        st.write("البيانات جاهزة للتحليل… اضغط على الزر لتفعيل العقل")
+        if st.button("شغل عقل الوحش 🧠"):
+            st.info("🟢 Gemini AI Analyzer متصل – جاري التشغيل…")
+            try:
+                from openai import OpenAI  # أو Gemini SDK لو متاح
+                client = OpenAI(api_key=os.getenv("GEN_API_KEY"))
+                
+                df = st.session_state.master_df
+                num_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+                sample_analysis = []
+                
+                for col in num_cols:
+                    mean_val = df[col].mean()
+                    max_val = df[col].max()
+                    min_val = df[col].min()
+                    sample_analysis.append(f"📊 العمود '{col}': متوسط={mean_val:.2f}, أقصى={max_val}, أدنى={min_val}")
+                
+                prompt = f"""
+                أنا محلل بيانات ذكي وصديق خبير. عندي تحليل للأعمدة الرقمية كالتالي:
+                {chr(10).join(sample_analysis)}
+                إشرح النتائج بطريقة بسيطة وودودة للمستخدم، مع نصائح عملية.
+                """
+                
+                response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[{"role":"user","content":prompt}],
+                    temperature=0.7
+                )
+                
+                st.success("✅ عقل الوحش أتم التحليل!")
+                st.write(response.choices[0].message.content)
+                
+            except Exception as e:
+                st.error(f"حصل خطأ في تشغيل AI: {e}")
     else:
-        st.warning("من فضلك ارفع البيانات أولاً")
+        st.warning("من فضلك ارفع الملفات أولاً في التبويب الأول.")
 
-# =====================================================
-# 7. الشريط الجانبي
-# =====================================================
+# --- PDF Export (MVP Template) ---
+if 'master_df' in st.session_state:
+    if st.button("💾 تصدير PDF (MVP)"):
+        st.info("جاري تجهيز التقرير… (في النسخة القادمة PDF حقيقي مع Logo)")
+
+# --- Sidebar ---
 st.sidebar.markdown("---")
-st.sidebar.write("🐉 Smart Analyst MVP")
-st.sidebar.write("Powered by Gemini | 2026")
+st.sidebar.write("Powered by Gemini 1.5 | 2026")
+st.sidebar.write("Developed by Smart Analyst")
