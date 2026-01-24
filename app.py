@@ -1,219 +1,185 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import google.generativeai as genai
-import hashlib
-import plotly.express as px
-from io import BytesIO
-from fpdf import FPDF
-from PIL import Image
+import os
+from datetime import datetime
 
-# 1. إعدادات الواجهة الملكية والأيقونات
-st.set_page_config(page_title="Smart Analyst Ultimate Pro", page_icon="👑", layout="wide")
+# =====================================================
+# 1. إعدادات الصفحة
+# =====================================================
+st.set_page_config(
+    page_title="Smart Analyst Beast",
+    page_icon="🐉",
+    layout="wide"
+)
 
-# روابط الأيقونات واللوجو (روابط دائمة)
-LOGO_URL = "https://raw.githubusercontent.com/semomhamd/smart-analyst-beast/main/99afc3d2-b6ef-4eda-977f-2fdc4b6621dd.jpg"
 EXCEL_ICON = "https://cdn-icons-png.flaticon.com/512/732/732220.png"
-CHART_ICON = "https://cdn-icons-png.flaticon.com/512/1162/1162456.png"
-OCR_ICON = "https://cdn-icons-png.flaticon.com/512/1055/1055644.png"
-PDF_ICON = "https://cdn-icons-png.flaticon.com/512/337/337946.png"
+CHART_ICON = "https://cdn-icons-png.flaticon.com/512/1611/1611177.png"
 
-# 2. تفعيل الذكاء الاصطناعي (Gemini) - لمعالجة الصور والبيانات
-genai.configure(api_key="AIzaSyBBiIEEGCzXpv80cwR9yzLXuQdj_J5n9tA")
-model = genai.GenerativeModel('gemini-1.5-flash') # نسخة تدعم الصور
+# =====================================================
+# 2. Smart Data Cleaner (Production MVP)
+# =====================================================
+def smart_analyst_core(df: pd.DataFrame):
+    cleaning_logs = []
+    threshold = 0.95
 
-# 3. نظام الأمان والدخول
-if 'auth' not in st.session_state: st.session_state.auth = False
+    # --- حذف الأعمدة شبه الفارغة ---
+    null_ratio = df.isnull().mean()
+    cols_to_drop = null_ratio[null_ratio > threshold].index.tolist()
 
-if not st.session_state.auth:
-    col1, col2, col3 = st.columns([1,2,1])
-    with col2:
-        st.image(LOGO_URL, width=150)
-        st.markdown("<h2 style='text-align: center;'>🔐 نظام التحليل المشفر</h2>", unsafe_allow_html=True)
-        u = st.text_input("Username")
-        p = st.text_input("Password", type="password")
-        if st.button("دخول آمن", use_container_width=True):
-            if u == "semomohamed" and p == "123456":
-                st.session_state.auth = True
+    if cols_to_drop:
+        df = df.drop(columns=cols_to_drop)
+        cleaning_logs.append(
+            f"🗑️ تم حذف أعمدة شبه فارغة (>95%): {', '.join(cols_to_drop)}"
+        )
+
+    # --- اكتشاف وتوحيد التواريخ ---
+    for col in df.columns:
+        if df[col].dtype == "object":
+            try:
+                converted = pd.to_datetime(df[col], errors="coerce")
+                success_ratio = converted.notna().mean()
+
+                if success_ratio > 0.7:
+                    sample_before = str(df[col].dropna().iloc[0]) if not df[col].dropna().empty else "—"
+                    df[col] = converted
+                    cleaning_logs.append(
+                        f"📅 تم توحيد العمود '{col}' كتاريخ (مثال: {sample_before} → ISO)"
+                    )
+            except Exception:
+                continue
+
+    # --- اكتشاف القيم الشاذة (IQR) ---
+    num_cols = df.select_dtypes(include=[np.number]).columns
+
+    for col in num_cols:
+        if df[col].nunique() < 5:
+            continue
+
+        Q1 = df[col].quantile(0.25)
+        Q3 = df[col].quantile(0.75)
+        IQR = Q3 - Q1
+
+        if IQR == 0:
+            continue
+
+        lower = Q1 - 1.5 * IQR
+        upper = Q3 + 1.5 * IQR
+
+        outliers_count = ((df[col] < lower) | (df[col] > upper)).sum()
+
+        if outliers_count > 0:
+            cleaning_logs.append(
+                f"⚠️ تم رصد {outliers_count} قيم غير طبيعية في '{col}' (لم يتم حذفها)"
+            )
+
+    return df, cleaning_logs
+
+# =====================================================
+# 3. نظام الدخول الآمن
+# =====================================================
+ADMIN_USER = os.getenv("SA_USER")
+ADMIN_PASS = os.getenv("SA_PASS")
+
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+
+if not st.session_state.logged_in:
+    st.title("🐉 Smart Analyst")
+    st.subheader("نظام التحليل الذكي – دخول آمن")
+
+    with st.form("login_form"):
+        user = st.text_input("Username")
+        pw = st.text_input("Password", type="password")
+        submit = st.form_submit_button("دخول")
+
+        if submit:
+            if user == ADMIN_USER and pw == ADMIN_PASS:
+                st.session_state.logged_in = True
                 st.rerun()
-            else: st.error("⚠️ بيانات الدخول غير صحيحة")
+            else:
+                st.error("بيانات الدخول غير صحيحة")
+
     st.stop()
 
-# 4. التصميم الاحترافي (CSS)
-st.markdown(f"""
-    <style>
-    .main-card {{ background-color: #1e1e1e; border-radius: 15px; padding: 20px; border: 1px solid #fbbf24; }}
-    .stTabs [data-baseweb="tab-list"] {{ gap: 10px; }}
-    .stTabs [data-baseweb="tab"] {{
-        background-color: #262626; border-radius: 10px; color: white; padding: 10px 20px; border: 1px solid #333;
-    }}
-    .stTabs [aria-selected="true"] {{ background-color: #fbbf24 !important; color: black !important; }}
-    </style>
-    """, unsafe_allow_html=True)
+# =====================================================
+# 4. الواجهة الرئيسية
+# =====================================================
+st.title("🚀 Smart Analyst Beast")
+st.caption(f"مرحباً محمد | {datetime.now().strftime('%Y-%m-%d')}")
 
-# 5. القائمة الجانبية (الأدوات الذكية)
-st.sidebar.image(LOGO_URL, use_container_width=True)
-with st.sidebar:
-    st.markdown("### 🤖 مساعدك الشخصي")
-    user_query = st.text_area("اسأل عن أي شيء في بياناتك أو صورك...")
-    if st.button("إرسال استفسار"):
-        if user_query:
-            try:
-                response = model.generate_content(user_query)
-                st.info(response.text)
-            except: st.error("يرجى التأكد من الـ API Key")
+t1, t2 = st.tabs(["📂 إدارة البيانات", "🧠 تحليل الذكاء الاصطناعي"])
 
-# 6. التبويبات الرئيسية (أيقونات لكل أداة)
-t1, t2, t3, t4 = st.tabs([
-    "📑 رفع الملفات", 
-    "📊 لوحة البيانات", 
-    "📷 فحص الفواتير", 
-    "📥 تقارير PDF"
-])
-
-# --- التبويب الأول: رفع ملفات متعددة ---
+# =====================================================
+# 5. تبويب رفع وإدارة البيانات
+# =====================================================
 with t1:
     st.image(EXCEL_ICON, width=50)
-# تبويب رفع الملفات
-        uploaded_files = st.file_uploader("ارفع ملفات Excel أو CSV", accept_multiple_files=True)
+    st.subheader("رفع ودمج الملفات")
 
-        if uploaded_files:
-            all_dfs = []
-            for file in uploaded_files:
-                try:
-                    if file.name.endswith('xlsx'):
-                        df = pd.read_excel(file)
-                    else:
-                        df = pd.read_csv(file)
-                    
-                    # استدعاء محرك التنظيف
-                    df, logs = smart_analyst_core(df)
-                    
-                    with st.expander(f"📊 معالجة: {file.name}"):
-                        for log in logs:
-                            st.info(log)
-                    
-                    all_dfs.append(df)
-                except Exception as e:
-                    st.error(f"خطأ في {file.name}: {e}")
+    uploaded_files = st.file_uploader(
+        "ارفع ملفات Excel أو CSV",
+        accept_multiple_files=True,
+        type=["csv", "xlsx", "xls"]
+    )
 
-            if all_dfs:
-                st.session_state.master_df = pd.concat(all_dfs, ignore_index=True)
-                st.balloons()
-                st.subheader("📋 الجدول الموحد")
-                st.data_editor(st.session_state.master_df, use_container_width=True)
-            # عرض تقرير العمليات لكل ملف بشكل أنيق داخل Expander
-            with st.expander(f"⚙️ تم تجهيز ملف: {file.name}"):
-                for log in logs:
-                    st.info(log)
-                st.success("تم تنظيف البيانات بنجاح")
-            
-            all_dfs.append(df)
-            
-        except Exception as e:
-            st.error(f"خطأ في قراءة {file.name}: {e}")
+    if uploaded_files:
+        all_dfs = []
+        all_logs = []
 
-    # دمج كل الملفات المرفوعة في جدول واحد رئيسي
-    if all_dfs:
-        st.session_state.master_df = pd.concat(all_dfs, ignore_index=True)
-        st.balloons() # احتفال بالنجاح
-        st.markdown("---")
-        st.subheader("📋 قاعدة بيانات الوحش الموحدة (Master Data)")
-        # عرض الجدول النهائي للمستخدم
-        st.data_editor(st.session_state.master_df, use_container_width=True)
-        if uploaded_files:
-            all_dfs = []
-            for file in uploaded_files:
-                # قراءة الملف حسب نوعه
-                if file.name.endswith('xlsx'):
+        for file in uploaded_files:
+            try:
+                if file.name.endswith(("xlsx", "xls")):
                     df = pd.read_excel(file)
                 else:
                     df = pd.read_csv(file)
-                
-                # تفعيل محرك التنظيف الذكي (الوحش الصغير)
+
                 df, logs = smart_analyst_core(df)
-                
-                # عرض سجل العمليات لكل ملف بشكل احترافي
-                st.success(f"🔍 تم فحص وتنظيف: {file.name}")
-                for log in logs:
-                    st.info(log)
-                
+
+                with st.expander(f"⚙️ معالجة الملف: {file.name}"):
+                    for log in logs:
+                        st.info(log)
+
+                all_logs.extend(logs)
                 all_dfs.append(df)
 
-            # دمج البيانات وعرضها في الجدول الرئيسي
-            if all_dfs:
-                st.session_state.master_df = pd.concat(all_dfs, ignore_index=True)
-                st.balloons() # احتفالاً بالنجاح!
-                st.success(f"✅ تم دمج {len(uploaded_files)} ملفات بنجاح في قاعدة بيانات الوحش")
-                st.data_editor(st.session_state.master_df, use_container_width=True)
-        # دمج البيانات في ذاكرة الوحش (Master Data)
+            except Exception as e:
+                st.error(f"❌ خطأ في الملف {file.name}: {e}")
+
         if all_dfs:
             st.session_state.master_df = pd.concat(all_dfs, ignore_index=True)
-            st.success(f"✅ تم دمج {len(uploaded_files)} ملفات بنجاح!")
-            st.data_editor(st.session_state.master_df, use_container_width=True)
-        st.data_editor(st.session_state.master_df, use_container_width=True)
+            st.session_state.cleaning_logs = all_logs
 
-# --- التبويب الثاني: الرسم البياني الذكي ---
+            st.toast("🐉 تم دمج وتنظيف البيانات بنجاح", icon="🎉")
+            st.markdown("---")
+            st.subheader("📋 قاعدة بيانات الوحش الموحدة")
+
+            st.data_editor(
+                st.session_state.master_df,
+                use_container_width=True,
+                disabled=True
+            )
+
+# =====================================================
+# 6. تبويب AI Explainer (جاهز للربط)
+# =====================================================
 with t2:
     st.image(CHART_ICON, width=50)
-    st.subheader("التحليل البصري المتقدم")
-    if 'master_df' in st.session_state:
-        df = st.session_state.master_df
-        num_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-        if num_cols:
-            col_to_plot = st.selectbox("اختر العمود للتحليل:", num_cols)
-            fig = px.area(df, y=col_to_plot, template="plotly_dark", color_discrete_sequence=['#fbbf24'])
-            st.plotly_chart(fig, use_container_width=True)
-        else: st.error("لا توجد أرقام للرسم البياني")
-    else: st.warning("ارفع الملفات أولاً")
+    st.subheader("عقل الوحش (AI Explainer)")
 
-# --- التبويب الثالث: رفع الصور والفواتير (OCR) ---
-with t3:
-    st.image(OCR_ICON, width=50)
-    st.subheader("فحص الفواتير المكتوبة بخط اليد")
-    invoice_img = st.file_uploader("ارفع صورة الفاتورة أو المستند", type=['jpg', 'jpeg', 'png'])
-    
-    if invoice_img:
-        img = Image.open(invoice_img)
-        st.image(img, caption="الفاتورة المرفوعة", width=400)
-        if st.button("تحليل الفاتورة بالذكاء الاصطناعي"):
-            with st.spinner("جاري استخراج البيانات..."):
-                try:
-                    res = model.generate_content(["قم باستخراج البيانات المالية من هذه الصورة بالتفصيل وتحويلها لجدول", img])
-                    st.success("تم الاستخراج!")
-                    st.markdown(res.text)
-                except Exception as e: st.error(f"خطأ في التحليل: {e}")
+    if "master_df" in st.session_state:
+        st.success("البيانات جاهزة للتحليل الذكي")
 
-# --- التبويب الرابع: استخراج التقرير النهائي ---
-with t4:
-    st.image(PDF_ICON, width=50)
-    st.subheader("توليد التقارير الرسمية")
-    if st.button("إنشاء ملف PDF للطباعة"):
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", 'B', 16)
-        pdf.cell(200, 10, txt="Smart Analyst Ultimate Report", ln=1, align='C')
-        pdf_bytes = pdf.output(dest='S').encode('latin-1')
-        st.download_button("تحميل التقرير النهائي", data=pdf_bytes, file_name="Smart_Report.pdf", mime="application/pdf")
+        if st.button("🧠 شغّل عقل الوحش"):
+            st.info(
+                "الخطوة التالية: إرسال البيانات + Logs + Summary إلى Gemini لشرح ذكي."
+            )
+    else:
+        st.warning("من فضلك ارفع البيانات أولاً")
 
-st.markdown("<hr><center>Certified System | Powered by Gemini 1.5 | 2026</center>", unsafe_allow_html=True)
-def smart_analyst_core(df):
-    cleaning_logs = []
-    # 1. حذف الأعمدة شبه الفارغة
-    df = df.dropna(how='all', axis=1) 
-    cols_to_drop = [col for col in df.columns if df[col].isnull().mean() > 0.95]
-    if cols_to_drop:
-        df = df.drop(columns=cols_to_drop)
-        cleaning_logs.append(f"🗑️ حذفنا أعمدة فاضية خالص: {', '.join(cols_to_drop)}")
-    
-    # 2. كاشف التواريخ (الـ 70% اللي اتفقنا عليها)
-    for col in df.columns:
-        if df[col].dtype == 'object':
-            try:
-                converted = pd.to_datetime(df[col], errors='coerce')
-                if converted.notna().mean() > 0.7:
-                    df[col] = converted
-                    cleaning_logs.append(f"📅 العمود '{col}' اتحول لتاريخ تلقائي.")
-            except: continue
-            
-    return df, cleaning_logs
+# =====================================================
+# 7. الشريط الجانبي
+# =====================================================
+st.sidebar.markdown("---")
+st.sidebar.write("🐉 Smart Analyst MVP")
+st.sidebar.write("Powered by Gemini | 2026")
