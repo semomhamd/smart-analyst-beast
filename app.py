@@ -75,22 +75,40 @@ t1, t2, t3, t4 = st.tabs([
 with t1:
     st.image(EXCEL_ICON, width=50)
     st.subheader("إدارة الملفات المتعددة")
-
-                st.success(f"🔍 تم فحص: {file.name}")
-                for log in logs:
-                    st.info(log)
-                
-                all_dfs.append(df)
-
-            # دمج البيانات وعرضها
-            if all_dfs:
-                st.session_state.master_df = pd.concat(all_dfs, ignore_index=True)
-                st.success(f"✅ تم دمج {len(uploaded_files)} ملفات بنجاح!")
-                st.data_editor(st.session_state.master_df, use_container_width=True)
-            
-            all_dfs.append(df)
 uploaded_files = st.file_uploader("ارفع ملفات Excel أو CSV (أكثر من ملف)", accept_multiple_files=True)
 
+if uploaded_files:
+    all_dfs = []
+    for file in uploaded_files:
+        try:
+            # قراءة الملف حسب نوعه (Excel أو CSV)
+            if file.name.endswith('xlsx') or file.name.endswith('xls'):
+                df = pd.read_excel(file)
+            else:
+                df = pd.read_csv(file)
+            
+            # استدعاء المحرك الذكي للتنظيف اللي ضفناه في أول الكود
+            df, logs = smart_analyst_core(df)
+            
+            # عرض تقرير العمليات لكل ملف بشكل أنيق داخل Expander
+            with st.expander(f"⚙️ تم تجهيز ملف: {file.name}"):
+                for log in logs:
+                    st.info(log)
+                st.success("تم تنظيف البيانات بنجاح")
+            
+            all_dfs.append(df)
+            
+        except Exception as e:
+            st.error(f"خطأ في قراءة {file.name}: {e}")
+
+    # دمج كل الملفات المرفوعة في جدول واحد رئيسي
+    if all_dfs:
+        st.session_state.master_df = pd.concat(all_dfs, ignore_index=True)
+        st.balloons() # احتفال بالنجاح
+        st.markdown("---")
+        st.subheader("📋 قاعدة بيانات الوحش الموحدة (Master Data)")
+        # عرض الجدول النهائي للمستخدم
+        st.data_editor(st.session_state.master_df, use_container_width=True)
         if uploaded_files:
             all_dfs = []
             for file in uploaded_files:
