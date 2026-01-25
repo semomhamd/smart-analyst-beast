@@ -159,9 +159,12 @@ with st.sidebar:
 
     if st.session_state.auth["logged_in"]:
         st.write(f"*{L['welcome']}*: {st.session_state.auth['user']}")
-        if st.button(f"🚪 {L['logout']}"):
-            st.session_state.auth = {"logged_in": False, "user": None, "lang": "ar", "theme": "dark"}
-            st.rerun()
+  if st.button(f"🚪 {L['logout']}"):
+    st.session_state.auth["logged_in"] = False
+    st.session_state.auth["user"] = None
+    st.session_state.auth["lang"] = "ar"
+    st.session_state.auth["theme"] = "dark"
+    st.rerun()      
     else:
         with st.form("auth"):
             email = st.text_input(L["email"])
