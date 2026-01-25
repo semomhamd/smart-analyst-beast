@@ -1,173 +1,79 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from datetime import datetime
 
-# =========================
-# إعداد الصفحة
-# =========================
-st.set_page_config(
-    page_title="Smart Analyst Beast",
-    page_icon="📊",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# ================== 1. إعدادات الصفحة والهوية ==================
+st.set_page_config(page_title="Smart Analyst Beast", page_icon="🐉", layout="wide")
 
-# =========================
-# الحالة (Session State)
-# =========================
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = True
+# تهيئة الحالة
+if 'logged_in' not in st.session_state: st.session_state.logged_in = False
+if 'theme' not in st.session_state: st.session_state.theme = "Dark"
 
-if "lang" not in st.session_state:
-    st.session_state.lang = "ar"
+# ================== 2. محرك الأسلوب (CSS) مع التوقيع الصغير ==================
+def apply_custom_style():
+    bg = "#0E1117" if st.session_state.theme == "Dark" else "#F0F2F6"
+    txt = "white" if st.session_state.theme == "Dark" else "black"
+    accent = "#00C853"
+    
+    st.markdown(f"""
+    <style>
+        .stApp {{ background-color: {bg}; color: {txt}; }}
+        .app-title {{ font-size: 45px; font-weight: 800; color: {accent}; margin-bottom: 0px; text-align: center; }}
+        .app-signature {{ font-size: 14px; font-family: 'Courier New'; color: {txt}; opacity: 0.7; text-align: center; margin-top: -10px; letter-spacing: 2px; }}
+        .welcome-msg {{ color: {accent}; font-size: 18px; font-weight: bold; text-align: center; margin-top: 20px; border: 1px dashed {accent}; padding: 10px; border-radius: 10px; }}
+        [data-testid="stSidebar"] {{ border-right: 1px solid {accent}; }}
+        .stButton>button {{ background-color: {accent}; color: white; border-radius: 12px; font-weight: bold; width: 100%; border: none; }}
+    </style>
+    """, unsafe_allow_input=True)
 
-# =========================
-# اللغة
-# =========================
-LANG = {
-    "ar": {
-        "title": "📊 Smart Analyst Beast",
-        "upload": "📤 رفع الملفات",
-        "dashboard": "📈 لوحة التحكم",
-        "tools": "🧰 أدوات التحليل",
-        "logout": "تسجيل الخروج",
-        "welcome": "صباح الفل يا مدير 😎",
-        "file_hint": "ارفع ملف Excel / CSV / صورة فاتورة",
-        "no_data": "مفيش بيانات لسه",
-        "charts": "📊 الرسوم البيانية",
-        "clean": "🧹 تنظيف البيانات (Power Query)",
-    },
-    "en": {
-        "title": "📊 Smart Analyst Beast",
-        "upload": "📤 Upload Files",
-        "dashboard": "📈 Dashboard",
-        "tools": "🧰 Analysis Tools",
-        "logout": "Logout",
-        "welcome": "Welcome Boss 😎",
-        "file_hint": "Upload Excel / CSV / Invoice Image",
-        "no_data": "No data yet",
-        "charts": "📊 Charts",
-        "clean": "🧹 Data Cleaning (Power Query)",
-    }
-}
+apply_custom_style()
 
-L = LANG[st.session_state.lang]
+# ================== 3. نظام الدخول ==================
+if not st.session_state.logged_in:
+    # اللوجو والعناوين في صفحة الدخول
+    st.markdown("<div class='app-title'>SMART ANALYST BEAST</div>", unsafe_allow_html=True)
+    st.markdown("<div class='app-signature'>by MIA8444</div>", unsafe_allow_html=True)
+    
+    st.image("https://raw.githubusercontent.com/username/repo/branch/99afc3d2-b6ef-4eda-977f-2fdc4b6621dd.jpg", width=180)
+    
+    with st.form("Login Form"):
+        u = st.text_input("Username")
+        p = st.text_input("Password", type="password")
+        if st.form_submit_button("Wake the Beast"):
+            if u == "semomohamed" and p == "123456":
+                st.session_state.logged_in = True
+                st.session_state.current_user = u
+                st.rerun()
+            else: st.error("Access Denied")
+    st.stop()
 
-# =========================
-# الشريط الجانبي
-# =========================
+# ================== 4. Sidebar مع التوقيع الصغير ==================
 with st.sidebar:
-    st.markdown(f"## {L['title']}")
+    st.markdown("<h2 style='text-align:center;'>🐉 BEAST</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center; font-size:12px; opacity:0.6;'>Eng. MIA8444 Signature</p>", unsafe_allow_html=True)
     st.markdown("---")
-
-    menu = st.radio(
-        "القائمة",
-        [L["upload"], L["dashboard"], L["tools"]],
-        label_visibility="collapsed"
-    )
-
+    
+    st.session_state.theme = st.radio("🌗 Mode", ["Dark", "Light"])
     st.markdown("---")
-
-    lang_choice = st.selectbox(
-        "🌍 Language",
-        ["ar", "en"],
-        index=0 if st.session_state.lang == "ar" else 1
-    )
-    st.session_state.lang = lang_choice
-
-    st.markdown("---")
-
-    if st.button(f"🚪 {L['logout']}"):
+    if st.button("Logout"):
         st.session_state.logged_in = False
         st.rerun()
 
-# =========================
-# العنوان
-# =========================
-st.markdown(f"# {L['welcome']}")
+# ================== 5. الواجهة الرئيسية والجملة الديناميكية ==================
+st.markdown("<div class='app-title'>SMART ANALYST BEAST</div>", unsafe_allow_html=True)
+st.markdown("<div class='app-signature'>Designed & Engineered by MIA8444</div>", unsafe_allow_html=True)
 
-# =========================
-# تخزين البيانات
-# =========================
-if "data" not in st.session_state:
-    st.session_state.data = None
+st.markdown(f"<div class='welcome-msg'>\"You don't have to be a data analyst.. Smart Analyst thinks for you\"</div>", unsafe_allow_html=True)
 
-# =========================
-# 📤 رفع الملفات
-# =========================
-if menu == L["upload"]:
-    st.subheader(L["upload"])
-    uploaded_file = st.file_uploader(
-        L["file_hint"],
-        type=["csv", "xlsx"]
-    )
+tabs = st.tabs(["📂 Intake", "🧹 Cleaning", "📊 Analysis", "⭐ Dashboard", "📤 Export"])
 
-    if uploaded_file:
-        if uploaded_file.name.endswith(".csv"):
-            st.session_state.data = pd.read_csv(uploaded_file)
-        else:
-            st.session_state.data = pd.read_excel(uploaded_file)
-
-        st.success("✅ تم تحميل الملف بنجاح")
-        st.dataframe(st.session_state.data.head())
-
-# =========================
-# 📈 لوحة التحكم
-# =========================
-elif menu == L["dashboard"]:
-    st.subheader(L["dashboard"])
-
-    if st.session_state.data is None:
-        st.warning(L["no_data"])
-    else:
-        df = st.session_state.data
-
-        col1, col2, col3 = st.columns(3)
-        col1.metric("عدد الصفوف", df.shape[0])
-        col2.metric("عدد الأعمدة", df.shape[1])
-        col3.metric("القيم الفارغة", df.isna().sum().sum())
-
-        st.markdown("---")
-        st.subheader(L["charts"])
-
-        numeric_cols = df.select_dtypes(include=np.number).columns
-
-        if len(numeric_cols) >= 1:
-            st.line_chart(df[numeric_cols])
-        else:
-            st.info("لا توجد أعمدة رقمية للرسم")
-
-# =========================
-# 🧰 أدوات التحليل
-# =========================
-elif menu == L["tools"]:
-    st.subheader(L["tools"])
-
-    if st.session_state.data is None:
-        st.warning(L["no_data"])
-    else:
-        df = st.session_state.data
-
-        st.markdown(f"### {L['clean']}")
-        if st.button("🧽 حذف الصفوف الفارغة"):
-            df = df.dropna()
-            st.session_state.data = df
-            st.success("تم تنظيف البيانات")
-
-        st.markdown("---")
-
-        st.markdown("### 🔗 أدوات قادمة")
-        st.write("""
-        - 📊 Excel Analytics  
-        - 🔥 Power BI Logic  
-        - 🐍 Python Analysis  
-        - 📉 Tableau Style Charts  
-        - 📄 Google Sheets Sync  
-        - 🤖 AI in Data Analysis  
-        """)
-
-# =========================
-# الفوتر
-# =========================
-st.markdown("---")
-st.caption("🚀 Built with love | Smart Analyst Beast")
+# مثال بسيط للداشبورد الملون تلقائياً
+with tabs[3]:
+    st.subheader("Smart Visualization")
+    df = pd.DataFrame({"Tool": ["Python", "PowerBI", "Excel", "Tableau"], "Power": [95, 85, 80, 75]})
+    fig, ax = plt.subplots()
+    sns.barplot(data=df, x="Tool", y="Power", palette="magma", ax=ax) # باليتة ألوان تلقائية
+    st.pyplot(fig)
