@@ -1,4 +1,4 @@
-Sidebar + توقيعimport streamlit as st
+import streamlit as st
 import pandas as pd
 from PIL import Image
 import requests
