@@ -6,8 +6,12 @@ import power_bi_hub, python_analytics, tableau_connect, ai_vision
 st.set_page_config(page_title="Smart Analyst Beast v3.0", layout="wide")
 
 # الهوية البصرية الاحترافية
-st.markdown("<h1 style='text-align:center; color:#00C853;'>🐉 SMART ANALYST BEAST v3.0</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center; opacity:0.6;'>System Architect: MIA8444</p>", unsafe_allow_html=True)
+# الهوية البصرية الاحترافية مع اللوجو
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    st.image("8888.jpg", width=200)
+    st.markdown("<h1 style='text-align:center; color:#00C853;'>🐉 SMART ANALYST BEAST v3.0</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center; opacity:0.8; font-weight:bold;'>The Ultimate Financial Brain | System Architect: MIA8444</p>", unsafe_allow_html=True)
 
 # نظام التبويبات الشامل
 tabs = st.tabs([
