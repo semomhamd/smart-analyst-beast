@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import ocr_engine as ocr
 import cleaner_pro as clean
-
+import ai_analyst as ai
 # إعدادات الصفحة
 st.set_page_config(page_title="Smart Analyst Beast", layout="wide")
 
