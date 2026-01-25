@@ -1,140 +1,295 @@
+# ============================================================
+# Smart Analyst – Foundation Core
+# Designed & Engineered by MIA8444
+# ============================================================
+
 import streamlit as st
 import pandas as pd
 import numpy as np
-import google.generativeai as genai
 from datetime import datetime
-import io
 
-# ================== 1. إعدادات الواجهة والجماليات ==================
-st.set_page_config(page_title="Smart Analyst Beast", page_icon="🐉", layout="wide")
+# ---------------------------
+# Page Config
+# ---------------------------
+st.set_page_config(
+    page_title="Smart Analyst",
+    page_icon="📊",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-# تهيئة حالة الجلسة (Session State)
-if 'theme' not in st.session_state: st.session_state.theme = 'dark'
-if 'logged_in' not in st.session_state: st.session_state.logged_in = False
+# ---------------------------
+# Session Defaults
+# ---------------------------
+if "auth" not in st.session_state:
+    st.session_state.auth = {
+        "logged_in": False,
+        "user": None,
+        "lang": "ar",
+        "theme": "dark"
+    }
 
-# تحديد الألوان بناءً على الثيم المختار
-if st.session_state.theme == 'dark':
-    bg, txt, card = '#0E1117', 'white', '#1E1E1E'
-else:
-    bg, txt, card = '#F0F2F6', 'black', '#FFFFFF'
+if "users_db" not in st.session_state:
+    # Demo in-memory users DB (قابل للاستبدال بقاعدة بيانات لاحقًا)
+    st.session_state.users_db = {}
 
-# تطبيق الـ CSS المصلح (تم استبدال f-string بطريقة آمنة لتجنب TypeError)
-st.markdown(f"""
-<style>
-    .stApp {{
-        background-color: {bg};
-        color: {txt};
-    }}
-    [data-testid="stSidebar"] {{
-        background-color: {card} !important;
-        border-right: 1px solid #444;
-    }}
-    .stButton>button {{
-        background-color: #00C853;
-        color: white;
-        border-radius: 12px;
-        font-weight: bold;
-        width: 100%;
-        border: none;
-        height: 3em;
-    }}
-    .signature-box {{
-        text-align: center;
-        color: #00C853;
-        font-family: 'Courier New';
-        padding: 10px;
-        border: 1px solid #00C853;
-        border-radius: 10px;
-        margin-top: 20px;
-    }}
-</style>
-""", unsafe_allow_input=True)
+if "data" not in st.session_state:
+    st.session_state.data = None
 
-# ================== 2. القائمة الجانبية (محمد إسماعيل | mai8444) ==================
+# ---------------------------
+# Theme (Dark / Light)
+# ---------------------------
+def apply_theme(theme="dark"):
+    if theme == "dark":
+        st.markdown("""
+        <style>
+        .stApp { background-color: #0E1117; color: #EAEAEA; }
+        [data-testid="stSidebar"] { background-color: #161A22; border-right: 1px solid #2A2F3A; }
+        .stButton>button { background: linear-gradient(135deg,#22c55e,#16a34a); color:#0b1220; border-radius:12px; font-weight:700; border:none; height:3em; }
+        .card { background:#0b1220; border:1px solid #1f2937; border-radius:16px; padding:16px; }
+        .badge { background:#0ea5e9; color:#001018; padding:6px 10px; border-radius:999px; font-weight:700; }
+        .sig { color:#22c55e; border:1px dashed #22c55e; border-radius:12px; padding:10px; text-align:center; }
+        </style>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <style>
+        .stApp { background-color: #F7F7FB; color: #0b1220; }
+        [data-testid="stSidebar"] { background-color: #FFFFFF; border-right: 1px solid #E5E7EB; }
+        .stButton>button { background: linear-gradient(135deg,#22c55e,#16a34a); color:#ffffff; border-radius:12px; font-weight:700; border:none; height:3em; }
+        .card { background:#ffffff; border:1px solid #E5E7EB; border-radius:16px; padding:16px; }
+        .badge { background:#0ea5e9; color:#ffffff; padding:6px 10px; border-radius:999px; font-weight:700; }
+        .sig { color:#16a34a; border:1px dashed #16a34a; border-radius:12px; padding:10px; text-align:center; }
+        </style>
+        """, unsafe_allow_html=True)
+
+apply_theme(st.session_state.auth["theme"])
+
+# ---------------------------
+# i18n (Arabic / English)
+# ---------------------------
+TXT = {
+    "ar": {
+        "app": "Smart Analyst",
+        "login": "تسجيل الدخول",
+        "signup": "إنشاء حساب",
+        "email": "البريد الإلكتروني",
+        "password": "كلمة المرور",
+        "enter": "دخول",
+        "logout": "تسجيل الخروج",
+        "settings": "الإعدادات",
+        "language": "اللغة",
+        "theme": "المظهر",
+        "dark": "داكن",
+        "light": "فاتح",
+        "upload": "رفع البيانات",
+        "clean": "تنظيف البيانات",
+        "analysis": "التحليل",
+        "dashboard": "الداشبورد",
+        "export": "التصدير",
+        "welcome": "مرحباً",
+        "nodata": "لا توجد بيانات — عرض افتراضي",
+        "designed": "Designed & Engineered by MIA8444"
+    },
+    "en": {
+        "app": "Smart Analyst",
+        "login": "Login",
+        "signup": "Sign up",
+        "email": "Email",
+        "password": "Password",
+        "enter": "Enter",
+        "logout": "Logout",
+        "settings": "Settings",
+        "language": "Language",
+        "theme": "Theme",
+        "dark": "Dark",
+        "light": "Light",
+        "upload": "Upload Data",
+        "clean": "Data Cleaning",
+        "analysis": "Analysis",
+        "dashboard": "Dashboard",
+        "export": "Export",
+        "welcome": "Welcome",
+        "nodata": "No data — showing demo",
+        "designed": "Designed & Engineered by MIA8444"
+    }
+}
+
+L = TXT[st.session_state.auth["lang"]]
+
+# ---------------------------
+# Auth Helpers
+# ---------------------------
+def signup(email, password):
+    if email in st.session_state.users_db:
+        return False, "User exists"
+    st.session_state.users_db[email] = {
+        "password": password,
+        "created_at": datetime.utcnow().isoformat(),
+        "prefs": {"lang": "ar", "theme": "dark"}
+    }
+    return True, "Created"
+
+def login(email, password):
+    user = st.session_state.users_db.get(email)
+    if not user or user["password"] != password:
+        return False
+    st.session_state.auth["logged_in"] = True
+    st.session_state.auth["user"] = email
+    st.session_state.auth["lang"] = user["prefs"]["lang"]
+    st.session_state.auth["theme"] = user["prefs"]["theme"]
+    apply_theme(st.session_state.auth["theme"])
+    return True
+
+def save_prefs():
+    u = st.session_state.auth["user"]
+    if u:
+        st.session_state.users_db[u]["prefs"] = {
+            "lang": st.session_state.auth["lang"],
+            "theme": st.session_state.auth["theme"]
+        }
+
+# ---------------------------
+# Sidebar
+# ---------------------------
 with st.sidebar:
-    st.markdown("<h1 style='text-align: center;'>🐲</h1>", unsafe_allow_input=True)
-    st.markdown(f"<div class='signature-box'>Developed by:<br><b>محمد إسماعيل</b><br>mai8444</div>", unsafe_allow_input=True)
+    st.markdown(f"## 📊 {L['app']}")
+    st.markdown(f"<div class='sig'>{L['designed']}</div>", unsafe_allow_html=True)
     st.markdown("---")
-    
-    st.title("⚙️ الإعدادات")
-    theme_choice = st.radio("وضع الشاشة / Mode", ["Dark", "Light"], horizontal=True)
-    if theme_choice.lower() != st.session_state.theme:
-        st.session_state.theme = theme_choice.lower()
-        st.rerun()
-    
+
+    if st.session_state.auth["logged_in"]:
+        st.write(f"*{L['welcome']}*: {st.session_state.auth['user']}")
+        if st.button(f"🚪 {L['logout']}"):
+            st.session_state.auth = {"logged_in": False, "user": None, "lang": "ar", "theme": "dark"}
+            st.rerun()
+    else:
+        with st.form("auth"):
+            email = st.text_input(L["email"])
+            password = st.text_input(L["password"], type="password")
+            c1, c2 = st.columns(2)
+            if c1.form_submit_button(L["login"]):
+                if login(email, password):
+                    st.rerun()
+                else:
+                    st.error("Auth failed")
+            if c2.form_submit_button(L["signup"]):
+                ok, msg = signup(email, password)
+                st.success(msg) if ok else st.error(msg)
+
     st.markdown("---")
-    if st.button("🚪 تسجيل الخروج"):
-        st.session_state.logged_in = False
+    # Settings
+    st.subheader(L["settings"])
+    lang = st.selectbox(L["language"], ["ar", "en"], index=0 if st.session_state.auth["lang"]=="ar" else 1)
+    theme = st.selectbox(L["theme"], ["dark", "light"], index=0 if st.session_state.auth["theme"]=="dark" else 1)
+    if lang != st.session_state.auth["lang"] or theme != st.session_state.auth["theme"]:
+        st.session_state.auth["lang"] = lang
+        st.session_state.auth["theme"] = theme
+        save_prefs()
+        apply_theme(theme)
         st.rerun()
 
-# ================== 3. نظام الدخول الآمن ==================
-if not st.session_state.logged_in:
-    st.title("🐉 Smart Analyst Beast")
-    st.info("نظام التحليل الخاص بـ: محمد إسماعيل (mai8444)")
-    with st.form("login"):
-        u = st.text_input("Username")
-        p = st.text_input("Password", type="password")
-        if st.form_submit_button("دخول آمن"):
-            if u == "semomohamed" and p == "123456":
-                st.session_state.logged_in = True
-                st.rerun()
-            else:
-                st.error("بيانات الدخول غير صحيحة")
+# ---------------------------
+# Guard
+# ---------------------------
+if not st.session_state.auth["logged_in"]:
     st.stop()
 
-# ================== 4. تهيئة الذكاء الاصطناعي (Gemini) ==================
-# ضع مفتاح الـ API الخاص بك هنا
-API_KEY = "YOUR_API_KEY_HERE" 
+# ---------------------------
+# Main Tabs
+# ---------------------------
+tabs = st.tabs([
+    f"📂 {L['upload']}",
+    f"🧹 {L['clean']}",
+    f"📈 {L['analysis']}",
+    f"🧩 {L['dashboard']}",
+    f"📤 {L['export']}",
+])
 
-if API_KEY != "YOUR_API_KEY_HERE":
-    genai.configure(api_key=API_KEY)
-    model = genai.GenerativeModel("gemini-1.5-flash")
-else:
-    model = None
-
-# ================== 5. واجهة العمل الرئيسية ==================
-st.title("🚀 Smart Analyst Beast")
-st.write(f"مرحباً يا *محمد* | التوقيع المعتمد: *mai8444*")
-
-tab1, tab2, tab3 = st.tabs(["📂 استيراد ودمج", "🧠 عقل الوحش", "📥 تصدير"])
-
-# --- Tab 1: رفع ودمج الملفات ---
-with tab1:
-    files = st.file_uploader("ارفع ملفات Excel أو CSV", accept_multiple_files=True, type=['csv', 'xlsx'])
+# ---------------------------
+# Upload
+# ---------------------------
+with tabs[0]:
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    files = st.file_uploader("Upload files (xlsx, csv)", accept_multiple_files=True)
     if files:
-        all_dfs = []
+        dfs = []
         for f in files:
-            try:
-                df = pd.read_excel(f) if f.name.endswith('xlsx') else pd.read_csv(f)
-                all_dfs.append(df)
-                st.toast(f"✅ تم تحميل: {f.name}")
-            except Exception as e: st.error(f"خطأ في الملف: {e}")
-        
-        if all_dfs:
-            st.session_state.master_df = pd.concat(all_dfs, ignore_index=True)
-            st.success("تم دمج البيانات بنجاح!")
-            st.dataframe(st.session_state.master_df.head(20), use_container_width=True)
+            if f.name.lower().endswith(".xlsx"):
+                dfs.append(pd.read_excel(f))
+            elif f.name.lower().endswith(".csv"):
+                dfs.append(pd.read_csv(f))
+        if dfs:
+            st.session_state.data = pd.concat(dfs, ignore_index=True)
+            st.success("Loaded")
+            st.dataframe(st.session_state.data.head())
+    st.markdown("</div>", unsafe_allow_html=True)
 
-# --- Tab 2: تحليل الذكاء الاصطناعي ---
-with tab2:
-    if "master_df" in st.session_state:
-        if st.button("🧠 تشغيل التحليل الذكي"):
-            if model:
-                with st.spinner("الوحش يحلل البيانات لمحمد إسماعيل..."):
-                    summary = st.session_state.master_df.describe().to_string()
-                    prompt = f"حلل البيانات التالية وقدم تقريراً لمحمد إسماعيل (mai8444): {summary}"
-                    response = model.generate_content(prompt)
-                    st.session_state.ai_report = response.text
-            else: st.error("⚠️ يرجى إضافة مفتاح API لتشغيل الذكاء الاصطناعي")
-        
-        if "ai_report" in st.session_state:
-            st.markdown("---")
-            st.markdown(st.session_state.ai_report)
-            st.markdown(f"<p style='text-align: right;'><i>بواسطة: mai8444</i></p>", unsafe_allow_input=True)
-    else: st.warning("يرجى رفع الملفات أولاً")
+# ---------------------------
+# Cleaning (Power Query-like)
+# ---------------------------
+with tabs[1]:
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    if st.session_state.data is None:
+        st.info(L["nodata"])
+    else:
+        df = st.session_state.data.copy()
+        if st.checkbox("Remove duplicates"):
+            df = df.drop_duplicates()
+        if st.checkbox("Fill missing (numeric=0, text='')"):
+            for c in df.columns:
+                if pd.api.types.is_numeric_dtype(df[c]):
+                    df[c] = df[c].fillna(0)
+                else:
+                    df[c] = df[c].fillna("")
+        st.session_state.data = df
+        st.dataframe(df.head())
+    st.markdown("</div>", unsafe_allow_html=True)
 
-# --- Tab 3: تصدير النتائج ---
-with tab3:
-    if "master_df" in st.session_state:
-        csv = st.session_state.master_df.to_csv(index=False).encode('utf-8')
-        st.download_button("⬇️ تحميل الملف الموحد (CSV)", data=csv, file_name="Beast_Data_mai8444.csv")
+# ---------------------------
+# Analysis (Demo)
+# ---------------------------
+with tabs[2]:
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    if st.session_state.data is None:
+        st.info(L["nodata"])
+    else:
+        st.write("Basic describe:")
+        st.write(st.session_state.data.describe(include="all"))
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# ---------------------------
+# Dashboard (Auto demo charts)
+# ---------------------------
+with tabs[3]:
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    if st.session_state.data is None:
+        demo = pd.DataFrame({
+            "Month": ["Jan","Feb","Mar","Apr","May","Jun"],
+            "Value": np.random.randint(50, 200, 6)
+        })
+        st.line_chart(demo.set_index("Month"))
+        st.bar_chart(demo.set_index("Month"))
+    else:
+        df = st.session_state.data.select_dtypes(include=np.number)
+        if not df.empty:
+            st.line_chart(df)
+            st.bar_chart(df)
+        else:
+            st.info("No numeric columns")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# ---------------------------
+# Export
+# ---------------------------
+with tabs[4]:
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    if st.session_state.data is not None:
+        st.download_button(
+            "Download CSV",
+            st.session_state.data.to_csv(index=False).encode("utf-8"),
+            file_name="smart_analyst_export.csv",
+            mime="text/csv"
+        )
+    else:
+        st.info(L["nodata"])
+    st.markdown("</div>", unsafe_allow_html=True)
