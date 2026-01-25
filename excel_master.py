@@ -27,6 +27,18 @@ def run_module():
         st.subheader("📥 Export Enhanced Report")
         if st.button("Generate Professional Excel"):
             st.info("The Beast is applying styles and formatting...")
-            st.download_button("Download Styled Excel", df.to_csv(index=False), "MIA8444_Professional_Report.csv")
-
+          # زرار التحميل المطور لدعم اللغة العربية والواتساب
+        data_to_download = df.to_csv(index=False).encode('utf-8-sig')
+        
+        st.download_button(
+            label="📥 تحميل التقرير بالعربي (Excel)",
+            data=data_to_download,
+            file_name="MIA8444_Report.csv",
+            mime="text/csv"
+        )
+        
+        # إضافة زرار الواتساب (اختياري لو حابب)
+        import urllib.parse
+        msg = urllib.parse.quote("يا وحش! تقرير MIA8444 جاهز للمراجعة.")
+        st.markdown(f'<a href="https://wa.me/?text={msg}" target="_blank">📲 مشاركة عبر واتساب</a>', unsafe_allow_html=True)
     st.caption("Excel Engine v1.0 | MIA8444 Ecosystem")
