@@ -159,9 +159,15 @@ with st.sidebar:
 
     if st.session_state.auth["logged_in"]:
         st.write(f"*{L['welcome']}*: {st.session_state.auth['user']}")
-  if st.button(f"🚪 {L['logout']}"):
-    st.session_state.auth["logged_in"] = False
-    st.session_state.auth["user"] = None
+ with st.sidebar:
+    st.markdown("---")
+
+    if st.button(f"🚪 {L['logout']}"):
+        st.session_state.auth["logged_in"] = False
+        st.session_state.auth["user"] = None
+        st.session_state.auth["lang"] = "ar"
+        st.session_state.auth["theme"] = "dark"
+        st.rerun()
     st.session_state.auth["lang"] = "ar"
     st.session_state.auth["theme"] = "dark"
     st.rerun()      
