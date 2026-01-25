@@ -1,5 +1,4 @@
-import streamlit as st
-def apply_clean(df):
-    st.markdown("### 🧹 Power Query Cleaner")
-    if df is not None:
-        st.success("Ready to clean your data!")
+​import streamlit as st
+​def run_module():
+st.info("🛠️ This tool is under calibration by MIA8444.")
+st.write("The Beast is gathering resources...")
