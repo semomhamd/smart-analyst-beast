@@ -1,4 +1,4 @@
-import streamlit as st
-def run_ocr():
-    st.markdown("### 📸 Beast OCR Engine")
-    st.info("Upload documents to start AI scanning.")
+​import streamlit as st
+​def run_module():
+st.info("🛠️ This tool is under calibration by MIA8444.")
+st.write("The Beast is gathering resources...")
