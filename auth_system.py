@@ -38,5 +38,5 @@ def login_page():
     st.markdown("<br><br><p style='font-size: 12px;'>© 2026 MIA8444 | Beast v3.0</p>", unsafe_allow_html=True)
 
 # التصحيح اللي كان عامل المشكلة (شرطتين تحت بعض)
-if _name_ == "_main_":
+if _name_ == " __main__":
     login_page()
