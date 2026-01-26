@@ -26,7 +26,26 @@ for i, tool in enumerate(tools):
 
 # 4. منطقة العمل (Gemini + ملفات)
 st.markdown("---")
-col_gem, col_file = st.columns(2)
+with col_file:
+    current = st.session_state.get('active_tool', 'Excel') # الأداة اللي اخترتها من فوق
+    st.markdown(f"<h4 style='color:#D4AF37;'>📂 {current}</h4>", unsafe_allow_html=True)
+    
+    # الربط الفعلي: بنقول للتطبيق "لو المستخدم اختار Excel روح افتح ملف excel_master"
+    if current == "Excel":
+        try:
+            import excel_master # استدعاء الملف
+            excel_master.run_excel_app() # تشغيل الوظيفة اللي جواه
+        except Exception as e:
+            st.warning("جاري ربط محرك اكسل... تأكد من وجود دالة run_excel_app في الملف")
+            
+    elif current == "OCR":
+        try:
+            import ocr_engine
+            ocr_engine.run_ocr_app()
+        except Exception as e:
+            st.warning("جاري ربط محرك الـ OCR...")
+            
+    # باقي الأدوات بتشتغل بنفس الطريقةcol_gem, col_file = st.columns(2)
 with col_gem:
     st.markdown("<h4 style='color:#D4AF37;'>🤖 (Gemini AI) المحلل الذكي</h4>", unsafe_allow_html=True)
     st.chat_input("اسأل Gemini عن بياناتك...")
