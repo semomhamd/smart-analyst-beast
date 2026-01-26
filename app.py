@@ -1,6 +1,5 @@
-from auth_system import login_pagimport streamlit as st
-# استدعاء الترسانة كاملة
-import ocr_engine, cleaner_pro, pdf_pro, sql_beast, excel_master
+import ocr_engimport streamlit as st
+from auth_system import login_pageine, cleaner_pro, pdf_pro, sql_beast, excel_master
 import power_bi_hub, python_analytics, tableau_connect, ai_vision
 
 # 1. إعدادات الصفحة والـ Dark Mode الافتراضي
