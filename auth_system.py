@@ -29,6 +29,6 @@ def login_page():
 
     st.markdown("<br><br><p style='font-size: 12px;'>© 2026 MIA8444 | Beast v3.0</p>", unsafe_content_safe=True)
 
-# التصحيح هنا: لازم شرطتين (_) مش شرطة واحدة ()
+# التصحيح النهائي: شرطتين من كل ناحية
 if _name_ == "_main_":
     login_page()
