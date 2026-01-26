@@ -1,7 +1,6 @@
 import streamlit as st
 
 def login_page():
-    # تصميم واجهة MIA8444 الاحترافية
     st.markdown("""
         <style>
         .stApp { background-color: #000000; }
@@ -30,6 +29,6 @@ def login_page():
 
     st.markdown("<br><br><p style='font-size: 12px;'>© 2026 MIA8444 | Beast v3.0</p>", unsafe_content_safe=True)
 
-# هنا كان الخطأ.. لازم شرطتين تحت بعض كدة:
+# التصحيح هنا: لازم شرطتين (_) مش شرطة واحدة ()
 if _name_ == "_main_":
     login_page()
