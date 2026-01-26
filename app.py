@@ -26,7 +26,12 @@ for i, tool in enumerate(tools):
 
 # 4. منطقة العمل (Gemini + ملفات)
 st.markdown("---")
-# --- 4. منطقة العمل (Gemini + ملفات) ---
+# --- 4. منطقة العمل (Gemini + ملفات) ---elif current == "OCR":
+        try:
+            import ocr_engine
+            ocr_engine.run_ocr_app() # استدعاء الأداة الجديدة
+        except Exception as e:
+            st.warning("جاري تجهيز محرك الـ OCR...")
 st.markdown("---")
 col_gem, col_file = st.columns(2)
 
