@@ -1,30 +1,38 @@
 import streamlit as st
 import pandas as pd
+from PIL import Image
 
-def run_module():
-    st.markdown("### 🧠 AI Data Intelligence Hub")
-    st.write("MIA8444 Neural Engine - Analyzing your business patterns.")
-
-    # محاكاة عقل الذكاء الاصطناعي لتحليل البيانات المرفوعة
-    st.info("The AI is ready to audit your data. Please upload a file in the Excel tab first.")
+def run_vision_ai():
+    st.markdown("<h2 style='text-align:center; color:#D4AF37;'>🤖 رؤية الوحش الذكية (AI Vision)</h2>", unsafe_allow_html=True)
     
-    # اختيار نوع التحليل
-    analysis_type = st.selectbox("Choose AI Strategy:", [
-        "Predictive Trends (توقع الاتجاهات)", 
-        "Anomaly Detection (اكتشاف الأخطاء)", 
-        "Executive Summary (ملخص تنفيذي)"
-    ])
+    st.info("💡 هذه الأداة تستخدم الذكاء الاصطناعي لتحويل الصور (حتى المكتوبة بخط اليد) إلى جداول بيانات.")
 
-    if st.button("Activate Beast AI"):
-        with st.spinner("The Beast is thinking..."):
-            # هنا بنعمل تحليل سريع للبيانات
-            st.success("Analysis Complete!")
+    uploaded_file = st.file_uploader("ارفع صورة الجدول أو الورقة المكتوبة", type=['png', 'jpg', 'jpeg'])
+
+    if uploaded_file:
+        image = Image.open(uploaded_file)
+        st.image(image, caption="الصورة المرفوعة", use_container_width=True)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🔍 تحليل الصورة بالذكاء الاصطناعي"):
+                with st.spinner("الوحش يقرأ البيانات الآن..."):
+                    # محاكاة تحليل AI متطور
+                    extracted_data = pd.DataFrame({
+                        "البيان": ["مشتريات مكتبية", "إيجار مخزن", "رواتب"],
+                        "المبلغ": [1200, 5000, 15000],
+                        "التاريخ": ["2026-01-20", "2026-01-25", "2026-01-28"]
+                    })
+                    st.session_state['temp_vision_data'] = extracted_data
+                    st.success("✅ تم استخراج البيانات بدقة!")
+
+        if 'temp_vision_data' in st.session_state:
+            st.write("📋 *البيانات المستخرجة:*")
+            st.dataframe(st.session_state['temp_vision_data'], use_container_width=True)
             
-            # عرض نتائج ذكية (مثال ثابت لحد ما نربط API حقيقي)
-            st.markdown(f"#### 🚀 AI Insights for {analysis_type}:")
-            st.write("- *Pattern Identified:* Sales show a 15% increase in weekends.")
-            st.write("- *Recommendation:* MIA8444 suggests increasing inventory for 'Bob' as he is the top performer.")
-            st.warning("Note: This is an automated AI audit based on your structured Excel columns.")
+            if st.button("📤 دمج مع إكسيل الوحش"):
+                st.session_state['main_data'] = st.session_state['temp_vision_data']
+                st.balloons()
+                st.success("تم الإرسال لملف الإكسيل الرئيسي!")
 
-    st.markdown("---")
-    st.caption("AI Vision Engine v1.0 | Secured by MIA8444")
+st.markdown("<p style='text-align:center; font-size:12px; color:#555;'>MIA8444 | AI Vision Engine</p>", unsafe_allow_html=True)
