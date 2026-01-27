@@ -1,44 +1,61 @@
 import streamlit as st
 import pandas as pd
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+import io
+import urllib.parse
 
-def run_excel_app():
-    # --- السطر السحري للربط ---
-    if 'main_data' not in st.session_state:
-        st.session_state['main_data'] = None
+def export_to_pdf(df):
+    # إنشاء ملف PDF في الذاكرة
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    p.setFont("Helvetica", 12)
+    
+    p.drawString(100, 750, "Smart Analyst Beast - Report (MIA8444)")
+    p.drawString(100, 735, "------------------------------------------")
+    
+    y = 700
+    for index, row in df.head(20).iterrows(): # طباعة أول 20 صف كمثال
+        line = " | ".join([str(item) for item in row.values])
+        p.drawString(50, y, f"{index}: {line}")
+        y -= 20
+        if y < 50: # فتح صفحة جديدة لو الجدول طويل
+            p.showPage()
+            y = 750
+            
+    p.save()
+    buffer.seek(0)
+    return buffer
 
-    st.markdown("### 📊 عمليات الإكسيل الذكية")
+# --- داخل دالة run_excel_app تحت قسم الرسوم البيانية ---
 
-    # 1. لو فيه بيانات جاية من أداة تانية (OCR مثلاً) أو ارفعت هنا قبل كدة
-    if st.session_state['main_data'] is not None:
-        df = st.session_state['main_data']
-        st.success("✅ البيانات محملة وجاهزة للعمليات!")
-        
-        # --- هنا تبدأ "العمليات" اللي إنت عايزها ---
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("عدد الصفوف", df.shape[0])
-        with col2:
-            st.metric("عدد الأعمدة", df.shape[1])
-        with col3:
-            if st.button("🔄 مسح الذاكرة"):
-                st.session_state['main_data'] = None
-                st.rerun()
+st.markdown("---")
+st.write("📤 *مشاركة النتائج (MIA8444):*")
+col_pdf, col_wa = st.columns(2)
 
-        # إظهار العمليات الحسابية
-        st.write("📋 *معاينة وتحليل سريع:*")
-        st.dataframe(df)
-        
-        # عملية حسابية كمثال:
-        if st.checkbox("إظهار الوصف الإحصائي (SUM/AVG)"):
-            st.write(df.describe())
+with col_pdf:
+    # 1. زرار توليد وتحميل PDF
+    pdf_file = export_to_pdf(st.session_state['main_data'])
+    st.download_button(
+        label="📄 تحميل الشيت كـ PDF",
+        data=pdf_file,
+        file_name="MIA8444_Beast_Report.pdf",
+        mime="application/pdf"
+    )
 
-    else:
-        # لو مفيش بيانات، يظهر زرار الرفع أو إنشاء شيت
-        st.warning("الذاكرة فارغة، ارفع ملف أو ابدأ شيت جديد")
-        uploaded_file = st.file_uploader("ارفع ملفك هنا", type=['xlsx', 'csv'])
-        if uploaded_file:
-            if uploaded_file.name.endswith('.csv'):
-                st.session_state['main_data'] = pd.read_csv(uploaded_file)
-            else:
-                st.session_state['main_data'] = pd.read_excel(uploaded_file)
-            st.rerun()
+with col_wa:
+    # 2. زرار المشاركة على الواتساب
+    phone_number = st.text_input("رقم الواتساب (بالكود الدولي)", placeholder="2010xxxxxx")
+    message = f"يا صديقي، إليك تقرير 'الوحش' المستخرج بواسطة تطبيق Smart Analyst. توقيع: MIA8444"
+    
+    # تجهيز اللينك
+    if st.button("📱 مشاركة عبر واتساب"):
+        if phone_number:
+            encoded_msg = urllib.parse.quote(message)
+            wa_url = f"https://wa.me/{phone_number}?text={encoded_msg}"
+            st.markdown(f'<a href="{wa_url}" target="_blank">اضغط هنا لفتح الواتساب وإرسال التقرير ✅</a>', unsafe_allow_html=True)
+        else:
+            st.error("يرجى إدخال رقم الهاتف أولاً!")
+
+# التوقيع النهائي
+st.markdown("<p style='text-align:center; color:#555;'>MIA8444 Signature | Global Sharing Enabled</p>", unsafe_allow_html=True)
