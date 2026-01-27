@@ -69,7 +69,7 @@ with col_tool:
             
     except Exception:
         # لو الملف مش موجود، افتح خانة الرفع فوراً كـ Backup
-        st.file_uploader(f"ارفع ملف {current} يدوياً (المحرك جاري تفعيله):", type=['csv', 'xlsx', 'pdf'], key=f"bk_{current}")
+        st.file_uploader(f"ارفع ملف {current} يدوياً (المحرك جاري تفعيله):", type=['csv', 'xlsx', 'pdf'], key=f"bk_{current}"accept_multiple_files=True)
 
 # 5. التوقيع النهائي
 st.markdown("<br><p style='text-align:center; color:#555;'>MIA8444 Signature | Smart Analyst Beast</p>", unsafe_allow_html=True)
