@@ -1,26 +1,40 @@
 import streamlit as st
 import pandas as pd
+# ملاحظة: سنحتاج مكتبة pdfplumber أو tabula-py لاحقاً للمعالجة المتقدمة
 
-def run_module():
-    st.markdown("### 📄 Beast PDF Reporter")
-    st.write("Engineered by MIA8444 for Professional Documentation.")
-    
-    # مدخلات التقرير
-    report_title = st.text_input("Report Title", "Monthly Financial Summary")
-    report_content = st.text_area("Report Main Content", "Enter the analysis summary here...")
-    
-    uploaded_data = st.file_uploader("Upload Data to include in PDF", type=['csv', 'xlsx'])
-    
-    if st.button("📝 Generate PDF Report"):
-        with st.spinner("The Beast is formatting your document..."):
-            # محاكاة لإنشاء التقرير
-            st.success(f"Report '{report_title}' is ready!")
-            
-            # عرض نموذج لشكل التقرير قبل التحميل
-            st.info("💡 Preview: Your PDF will include the summary and a structured data table.")
-            
-            # زر افتراضي للتحميل (سنقوم بتفعيل المكتبة الحقيقية في التطوير القادم)
-            st.download_button("Download Generated PDF", "PDF Content Placeholder", "report_mia8444.pdf")
+def run_pdf_app():
+    st.markdown("<h2 style='text-align:center; color:#D4AF37;'>📄 محرك استخراج الـ PDF (PDF Pro)</h2>", unsafe_allow_html=True)
 
-    st.markdown("---")
-    st.caption("PDF Engine powered by Beast Analytics Core.")
+    # 1. منطقة رفع ملفات PDF
+    uploaded_pdf = st.file_uploader("ارفع ملفات الـ PDF التي تحتوي على جداول", type=['pdf'], accept_multiple_files=True)
+
+    if uploaded_pdf:
+        st.success(f"تم استلام {len(uploaded_pdf)} ملف PDF. جاهز للتحليل.")
+        
+        # 2. خيارات الاستخراج
+        mode = st.radio("كيف تريد استخراج البيانات؟", ["استخراج الجداول فقط", "استخراج النص بالكامل"])
+
+        if st.button("🚀 بدء المعالجة الذكية"):
+            with st.spinner("الوحش يقوم بتحليل صفحات الـ PDF..."):
+                # مثال لمحاكاة استخراج جدول من PDF
+                pdf_data = {
+                    "رقم الصفحة": [1, 1, 2],
+                    "محتوى الجدول": ["بيانات الموظفين", "المبيعات الشهرية", "المصاريف"],
+                    "الحالة": ["تم الاستخراج", "تم الاستخراج", "تحتاج مراجعة"]
+                }
+                df_pdf = pd.DataFrame(pdf_data)
+                
+                st.write("📊 الجداول المكتشفة:")
+                st.dataframe(df_pdf, use_container_width=True)
+
+                # 3. الربط المركزي بالذاكرة
+                if st.button("📤 إرسال الجداول المستخرجة لمحرر الإكسيل"):
+                    st.session_state['main_data'] = df_pdf
+                    st.balloons()
+                    st.success("تم الربط! روح على أداة Excel هتلاقي البيانات مستنياك.")
+
+    else:
+        st.info("قم برفع ملفات الـ PDF (مثل كشوف الحسابات أو التقارير السنوية) لتحويلها لبيانات قابلة للتعديل.")
+
+# التوقيع MIA8444
+st.markdown("<p style='text-align:center; font-size:12px; color:#555;'>MIA8444 | PDF Processing Engine</p>", unsafe_allow_html=True)
