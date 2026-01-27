@@ -65,7 +65,7 @@ with col_tool:
         else:
             # هنا مساحة الرفع اللي كانت مختفية
             st.markdown(f"*ارفع ملف {current} للبدء:*")
-            st.file_uploader("", type=['csv', 'xlsx', 'pdf'], key=f"up_{current}")
+            st.file_uploader("", type=['csv', 'xlsx', 'pdf'], key=f"up_{current}", accept_multiple_files=True)
             
     except Exception:
         # لو الملف مش موجود، افتح خانة الرفع فوراً كـ Backup
