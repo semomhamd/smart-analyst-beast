@@ -2,63 +2,44 @@ import streamlit as st
 import pandas as pd
 
 def run_cleaner():
-    st.markdown("<h2 style='text-align:center; color:#D4AF37;'>🧹 منظف البيانات (Cleaner Pro)</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center; color:#D4AF37;'>🧹 منظف البيانات الاحترافي (Cleaner Pro)</h2>", unsafe_allow_html=True)
 
-    # التحقق من وجود بيانات في "ذاكرة الوحش"
+    # التحقق من وجود بيانات في الذاكرة المركزية
     if 'main_data' in st.session_state and st.session_state['main_data'] is not None:
         df = st.session_state['main_data']
-        st.success("✅ تم العثور على بيانات في الذاكرة جاهزة للتنظيف.")
+        st.info("✅ البيانات محملة وجاهزة للتنظيف.")
         
-        st.write("📊 معاينة البيانات الحالية:")
+        st.write("📊 معاينة البيانات:")
         st.dataframe(df.head(10), use_container_width=True)
 
         st.markdown("---")
         st.write("🛠️ *أدوات التنظيف السريع:*")
         
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
+        c1, c2, c3 = st.columns(3)
+        with c1:
             if st.button("🗑️ مسح الصفوف الفارغة"):
-                df = df.dropna(how='all')
-                st.session_state['main_data'] = df
+                st.session_state['main_data'] = df.dropna(how='all')
+                st.success("تم مسح الفراغات!")
                 st.rerun()
 
-        with col2:
-            if st.button("✨ مسح التكرارات"):
-                df = df.drop_duplicates()
-                st.session_state['main_data'] = df
+        with c2:
+            if st.button("✨ إزالة التكرارات"):
+                st.session_state['main_data'] = df.drop_duplicates()
+                st.success("تم إزالة المتكرر!")
                 st.rerun()
 
-        with col3:
-            if st.button("📅 توحيد تنسيق التاريخ"):
-                # محاولة تحويل أي عمود فيه كلمة تاريخ لنسخة موحدة
-                for col in df.columns:
-                    if 'تاريخ' in col or 'date' in col.lower():
-                        df[col] = pd.to_datetime(df[col], errors='coerce')
-                st.session_state['main_data'] = df
+        with c3:
+            if st.button("🔢 إصلاح الأرقام"):
+                numeric_df = df.apply(pd.to_numeric, errors='coerce').fillna(0)
+                st.session_state['main_data'] = numeric_df
+                st.success("تم توحيد الأرقام!")
                 st.rerun()
 
         st.markdown("---")
-        # خيارات متقدمة
-        new_col_name = st.text_input("إعادة تسمية الأعمدة (اختياري)", placeholder="الاسم القديم: الاسم الجديد")
-        
-        if st.button("💾 حفظ البيانات المنظفة وإرسالها للأدوات"):
-            st.session_state['main_data'] = df
+        if st.button("💾 اعتماد وحفظ البيانات"):
             st.balloons()
-            st.success("تم تنظيف البيانات بنجاح! جاهزة الآن للتصدير.")
-
+            st.success("تم حفظ النسخة المنظفة بنجاح في ذاكرة الوحش!")
     else:
-        st.warning("⚠️ لا توجد بيانات في الذاكرة حالياً. ارفع ملف في 'إكسيل' أو استخدم الـ 'OCR' أولاً.")
-        
-        # خيار رفع ملف مباشرة في المنظف لو حابب
-        uploaded_file = st.file_uploader("أو ارفع ملف جديد للتنظيف مباشرة هنا", type=['csv', 'xlsx'])
-        if uploaded_file:
-            if uploaded_file.name.endswith('.csv'):
-                df = pd.read_csv(uploaded_file)
-            else:
-                df = pd.read_excel(uploaded_file)
-            st.session_state['main_data'] = df
-            st.rerun()
+        st.warning("⚠️ الذاكرة فارغة. ارفع ملف في 'إكسيل' أولاً.")
 
-# التوقيع MIA8444
 st.markdown("<p style='text-align:center; font-size:12px; color:#555;'>MIA8444 | Data Cleaning Engine</p>", unsafe_allow_html=True)
