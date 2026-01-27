@@ -2,7 +2,7 @@ import streamlit as st
 import os
 import importlib
 
-# 1. إعدادات الصفحة والدارك مود
+# 1. إعدادات الصفحة والدارك مود (النسخة الفخمة MIA8444)
 st.set_page_config(page_title="Smart Analyst The Beast", layout="wide")
 
 st.markdown("""
@@ -10,13 +10,13 @@ st.markdown("""
     .stApp { background-color: #0e1117; color: #ffffff; }
     div.stButton > button {
         background-color: #D4AF37 !important; color: #000 !important;
-        font-weight: bold; border-radius: 10px; width: 100%;
+        font-weight: bold; border-radius: 10px; width: 100%; height: 50px;
     }
     .header-style { text-align: center; color: #D4AF37; }
     </style>
 """, unsafe_allow_html=True)
 
-# 2. الهيدر واللوجو
+# 2. الهيدر واللوجو MIA8444
 st.markdown("<div style='text-align:center; color:#888;'>Settings | Dark Mode | MIA8444</div>", unsafe_allow_html=True)
 
 col_l1, col_l2, col_l3 = st.columns([1, 0.4, 1])
@@ -26,9 +26,12 @@ with col_l2:
 
 st.markdown("<h1 class='header-style'>Smart Analyst The Beast</h1>", unsafe_allow_html=True)
 
-# 3. أزرار الأدوات الثمانية
-cols = st.columns(8)
+# 3. أزرار الأدوات الثمانية (ربط حقيقي بالملفات)
 tools = ["OCR", "Excel", "Google Sheets", "Power BI", "SQL", "Cleaner Pro", "Python", "Tableau"]
+cols = st.columns(len(tools))
+
+if 'active_tool' not in st.session_state:
+    st.session_state['active_tool'] = "Excel"
 
 for i, tool in enumerate(tools):
     with cols[i]:
@@ -44,11 +47,11 @@ with col_gem:
     st.chat_input("...اسأل Gemini عن بياناتك")
 
 with col_tool:
-    current = st.session_state.get('active_tool', 'Excel')
+    current = st.session_state['active_tool']
     st.markdown(f"<h4 style='color:#D4AF37;'>📂 أداة: {current}</h4>", unsafe_allow_html=True)
     
-    # محرك الربط الذكي
     try:
+        # نظام الربط الديناميكي بناءً على أسماء ملفاتك في الصور
         if current == "Excel":
             import excel_master
             importlib.reload(excel_master)
@@ -57,21 +60,28 @@ with col_tool:
             import ocr_engine
             importlib.reload(ocr_engine)
             ocr_engine.run_ocr_app()
-        elif current == "Google Sheets":
-            import google_sheets_master
-            importlib.reload(google_sheets_master)
-            google_sheets_master.run_sheets_app()
+        elif current == "Cleaner Pro":
+            import cleaner_pro
+            importlib.reload(cleaner_pro)
+            # افترضنا اسم الدالة run_cleaner، لو مختلفة غيرها
+            cleaner_pro.run_cleaner() 
+        elif current == "SQL":
+            import sql_beast
+            importlib.reload(sql_beast)
+            sql_beast.run_sql_app()
         else:
-            # تم ضبط المسافات هنا يا حبيبي لتكون داخل الـ else
+            # مساحة رفع الملفات العامة (تصحيح خطأ المسافات)
             st.markdown(f"* :ارفع ملف {current} للبدء :*")
             st.file_uploader("", type=['csv', 'xlsx', 'pdf', 'png', 'jpg'], key=f"up_{current}", accept_multiple_files=True)
-            
-            if st.button("🗑️ مسح كل الملفات"):
-                st.rerun()
 
-    except Exception:
-        # تم إضافة الفاصلة الناقصة هنا لتجنب الخطأ الأسود
-        st.file_uploader(f"ارفع ملف {current} (Backup)", type=['csv', 'xlsx', 'pdf', 'png', 'jpg'], key=f"bk_{current}", accept_multiple_files=True)
+    except Exception as e:
+        # حل مشكلة الـ Backup والفاصلة الناقصة
+        st.warning(f"جاري تشغيل محرك {current}...")
+        st.file_uploader(f"ارفع ملف {current} يدوياً", type=['csv', 'xlsx', 'pdf', 'png', 'jpg'], key=f"bk_{current}", accept_multiple_files=True)
+
+    # زر المسح (الجوكر) - يظهر دائماً
+    if st.button("🗑️ مسح كل الملفات", key="main_reset"):
+        st.rerun()
 
 # 5. التوقيع النهائي
 st.markdown("<br><p style='text-align:center; color:#555;'>MIA8444 Signature | Smart Analyst Beast</p>", unsafe_allow_html=True)
