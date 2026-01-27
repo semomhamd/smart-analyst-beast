@@ -1,6 +1,5 @@
 import streamlit as st
 import os
-import webbrowser
 import importlib
 
 # 1. إعدادات الصفحة والدارك مود
@@ -63,16 +62,16 @@ with col_tool:
             importlib.reload(google_sheets_master)
             google_sheets_master.run_sheets_app()
         else:
-           # هنا مساحة الرفع التي كانت مختفية
-        st.markdown(f"* :ارفع ملف {current} للبدء :")
-        st.file_uploader("", type=['csv', 'xlsx', 'pdf', 'png', 'jpg'], key=f"up_{current}", accept_multiple_files=True)
-        
-        if st.button("🗑️ مسح كل الملفات"):
-            st.rerun()
+            # تم ضبط المسافات هنا يا حبيبي لتكون داخل الـ else
+            st.markdown(f"* :ارفع ملف {current} للبدء :*")
+            st.file_uploader("", type=['csv', 'xlsx', 'pdf', 'png', 'jpg'], key=f"up_{current}", accept_multiple_files=True)
+            
+            if st.button("🗑️ مسح كل الملفات"):
+                st.rerun()
 
-except Exception:
-    # Backup لو الملف مش موجود، افتح خانة الرفع فوراً
-    st.file_uploader(f"ارفع ملف {current} (Backup)", type=['csv', 'xlsx', 'pdf', 'png', 'jpg'], key=f"bk_{current}", accept_multiple_files=True)
+    except Exception:
+        # تم إضافة الفاصلة الناقصة هنا لتجنب الخطأ الأسود
+        st.file_uploader(f"ارفع ملف {current} (Backup)", type=['csv', 'xlsx', 'pdf', 'png', 'jpg'], key=f"bk_{current}", accept_multiple_files=True)
 
-# التوقيع النهائي
+# 5. التوقيع النهائي
 st.markdown("<br><p style='text-align:center; color:#555;'>MIA8444 Signature | Smart Analyst Beast</p>", unsafe_allow_html=True)
