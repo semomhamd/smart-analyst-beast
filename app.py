@@ -1,22 +1,26 @@
 import streamlit as st
 
-# 1. إعداد الصفحة الأساسي
+# 1. إعدادات الصفحة
 st.set_page_config(page_title="Smart Analyst | MIA8444", layout="wide")
 
-# 2. إضافة منطق الدارك واللايت في الواجهة
+# 2. منطق الدارك واللايت (عشان يشتغل فوراً)
 if 'theme' not in st.session_state:
     st.session_state.theme = 'Dark'
 
-# 3. القائمة الجانبية (Sidebar) على اليمين
+# 3. القائمة الجانبية (الإعدادات على اليمين)
 with st.sidebar:
     st.markdown("<h2 style='text-align:right; color:#D4AF37;'>⚙️ الإعدادات</h2>", unsafe_allow_html=True)
     
-    # زرار اللغة
+    # تغيير اللغة
     st.selectbox("🌐 لغة التطبيق", ["العربية", "English"])
     
-    # زرار الدارك واللايت (تعديل مباشر)
-    theme_choice = st.radio("🌓 نمط العرض", ["Dark", "Light"], index=0 if st.session_state.theme == 'Dark' else 1)
-    st.session_state.theme = theme_choice
+    # زرار الدارك واللايت (تصليح العطل)
+    theme_choice = st.radio("🌓 نمط العرض", ["Dark", "Light"], 
+                            index=0 if st.session_state.theme == 'Dark' else 1)
+    
+    if theme_choice != st.session_state.theme:
+        st.session_state.theme = theme_choice
+        st.rerun()
 
     st.markdown("---")
     st.markdown("<h3 style='text-align:right;'>🛠️ الأدوات</h3>", unsafe_allow_html=True)
@@ -25,67 +29,36 @@ with st.sidebar:
         "🧹 Cleaner", "🗄️ SQL", "📄 PDF Pro", 
         "☁️ Sheets", "🐍 Python", "📈 Power BI", "🖼️ Tableau"
     ])
-    
-    st.markdown("---")
-    with st.expander("ℹ️ حول التطبيق"):
-        st.write("Smart Analyst Beast v2.0")
-        st.write("Signature: MIA8444")
-        if st.button("🚪 تسجيل الخروج"):
-            st.session_state['logged_in'] = False
-            st.rerun()
 
-# 4. تنسيق اللوجو والواجهة بناءً على الثيم المختار
-theme_bg = "#000000" if st.session_state.theme == "Dark" else "#ffffff"
-theme_text = "#ffffff" if st.session_state.theme == "Dark" else "#000000"
+# 4. اللوجو الفخم (تصليح الاختفاء)
+theme_bg = "#0e1117" if st.session_state.theme == "Dark" else "#ffffff"
+theme_text = "#D4AF37"
 
 st.markdown(f"""
-    <style>
-    .stApp {{ background-color: {theme_bg}; }}
-    .main-header {{
-        background: linear-gradient(90deg, #000000 0%, #1a1a1a 100%);
-        padding: 30px;
-        border-radius: 15px;
-        border: 3px solid #D4AF37;
-        text-align: center;
-        margin-bottom: 20px;
-        box-shadow: 0px 10px 20px rgba(212, 175, 55, 0.3);
-    }}
-    .logo-title {{ color: #D4AF37; font-size: 55px; font-weight: bold; margin: 0; font-family: sans-serif; }}
-    .logo-sub {{ color: #ffffff; font-size: 18px; letter-spacing: 4px; text-transform: uppercase; }}
-    .sig-text {{ color: #D4AF37; text-align: right; font-weight: bold; font-size: 14px; margin-top: 10px; }}
-    </style>
-    
-    <div class="main-header">
-        <h1 class="logo-title">SMART ANALYST</h1>
-        <p class="logo-sub">The Beast Edition - Intelligent Data Engine</p>
-        <div class="sig-text">MIA8444 Signature</div>
+    <div style="background-color: #000000; padding: 30px; border-radius: 15px; border: 3px solid #D4AF37; text-align: center; margin-bottom: 25px;">
+        <h1 style="color: #D4AF37; font-size: 50px; margin: 0; font-family: 'Arial';">SMART ANALYST</h1>
+        <p style="color: #ffffff; font-size: 15px; letter-spacing: 3px; margin: 5px 0;">THE BEAST EDITION - INTELLIGENT DATA ENGINE</p>
+        <div style="text-align: right; color: #D4AF37; font-size: 12px; font-weight: bold;">MIA8444 Signature</div>
     </div>
 """, unsafe_allow_html=True)
 
-# 5. تشغيل الأدوات
-try:
-    if tool == "📊 إكسيل الوحش":
-        import excel_master; excel_master.run_excel_app()
-    elif tool == "🤖 AI Vision":
-        import ai_vision; ai_vision.run_vision_ai()
-    elif tool == "👁️ OCR":
-        import ocr_engine; ocr_engine.run_ocr_app()
-    elif tool == "🧹 Cleaner":
-        import cleaner_pro; cleaner_pro.run_cleaner()
-    elif tool == "🗄️ SQL":
-        import sql_beast; sql_beast.run_sql_app()
-    elif tool == "📄 PDF Pro":
-        import pdf_pro; pdf_pro.run_pdf_app()
-    elif tool == "☁️ Sheets":
-        import google_sheets_master; google_sheets_master.run_sheets_app()
-    elif tool == "🐍 Python":
-        import python_beast; python_beast.run_python_app()
-    elif tool == "📈 Power BI":
-        import power_bi_pro; power_bi_pro.run_powerbi()
-    elif tool == "🖼️ Tableau":
-        import tableau_expert; tableau_expert.run_tableau()
-except Exception as e:
-    st.error(f"⚠️ تأكد من رفع ملف الأداة: {e}")
+# 5. تشغيل الأدوات مع حماية من الأخطاء (عشان الـ Power BI ميعملش Crash)
+def start_beast():
+    try:
+        if tool == "📊 إكسيل الوحش":
+            import excel_master; excel_master.run_excel_app()
+        elif tool == "🤖 AI Vision":
+            import ai_vision; ai_vision.run_vision_ai()
+        elif tool == "👁️ OCR":
+            import ocr_engine; ocr_engine.run_ocr_app()
+        elif tool == "📈 Power BI":
+            import power_bi_pro; power_bi_pro.run_powerbi()
+        # إضافة باقي الأدوات هنا بنفس الطريقة...
+    except ModuleNotFoundError as e:
+        st.warning(f"⚠️ تنبيه: الملف {e.name} غير مرفوع حالياً. برجاء رفعه لتفعيل الأداة.")
+    except Exception as e:
+        st.error(f"❌ حدث خطأ: {e}")
 
+# تصليح غلطة الصور (الشرطتين _name_)
 if _name_ == "_main_":
-    pass
+    start_beast()
