@@ -62,5 +62,4 @@ def start_beast():
         st.error(f"❌ خطأ غير متوقع: {e}")
 
 # تأكد من كتابة الشرط بهذا الشكل الدقيق (Double Underscore)
-if _name_ == "_main_":
-    start_beast()
+start_beast()
