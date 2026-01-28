@@ -1,39 +1,30 @@
 import streamlit as st
-import pandas as pd
 
 def run_powerbi():
-    st.markdown("<h2 style='text-align:center; color:#F2C811;'>📊 محرك Power BI (The Beast)</h2>", unsafe_allow_html=True)
+    # عنوان الأداة بتنسيق ذهبي فخم
+    st.markdown("<h2 style='text-align:center; color:#D4AF37;'>📈 Power BI Analyst Center</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center; color:#ffffff;'>مركز تحليل وربط تقارير البور بي أي الذكي</p>", unsafe_allow_html=True)
+    
+    st.info("💡 هنا يمكنك ربط تقارير Power BI المنشورة (Embed) لعرضها مباشرة داخل الوحش.")
 
-    if 'main_data' in st.session_state and st.session_state['main_data'] is not None:
-        df = st.session_state['main_data']
-        st.success("✅ البيانات جاهزة للتحليل في Power BI.")
-        
-        st.info("💡 نصيحة: Power BI بيفضل ملفات الـ Excel المنسقة أو الربط المباشر.")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.write("📂 *تحميل البيانات:*")
-            # تحويل البيانات لملف إكسيل في الذاكرة
-            output = pd.ExcelWriter("MIA8444_PowerBI.xlsx", engine='xlsxwriter')
-            df.to_excel(output, index=False, sheet_name='Data')
-            output.close()
-            
-            with open("MIA8444_PowerBI.xlsx", "rb") as f:
-                st.download_button(
-                    label="📥 تحميل ملف Excel لـ Power BI",
-                    data=f,
-                    file_name="MIA8444_PowerBI.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-        
-        with col2:
-            st.write("🔗 *حالة الربط:*")
-            st.code("Direct Query: Enabled\nMIA8444 Signature: Verified", language="text")
+    # خانة إدخال الرابط (URL)
+    report_url = st.text_input("قم بلصق رابط تقرير Power BI (Embed URL) هنا:", 
+                               placeholder="https://app.powerbi.com/view?r=...")
 
-        st.markdown("---")
-        st.write("📋 *نظرة أخيرة على البيانات قبل الاستيراد:*")
-        st.dataframe(df.head(10), use_container_width=True)
-    else:
-        st.warning("⚠️ الذاكرة فارغة. الوحش مستني بياناتك عشان يجهزها للـ Power BI.")
+    if report_url:
+        if "app.powerbi.com" in report_url:
+            st.success("✅ تم التعرف على الرابط، جاري تحميل التقرير...")
+            # عرض التقرير داخل iFrame احترافي
+            st.markdown(f"""
+                <iframe title="PowerBI Report" width="100%" height="600" 
+                src="{report_url}" frameborder="0" allowFullScreen="true">
+                </iframe>
+            """, unsafe_allow_html=True)
+        else:
+            st.error("❌ عذراً، هذا الرابط لا يبدو كرابط Power BI صحيح.")
 
-st.markdown("<p style='text-align:center; font-size:12px; color:#555;'>MIA8444 | Power BI Integration</p>", unsafe_allow_html=True)
+    st.markdown("---")
+    # توقيعك MIA8444 ثابت في كل أداة
+    st.markdown("<p style='text-align:center; font-size:12px; color:#555;'>MIA8444 | Smart Analyst BI Engine</p>", unsafe_allow_html=True)
+
+if _name_ == "_main_":
