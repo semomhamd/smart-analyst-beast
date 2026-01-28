@@ -1,14 +1,17 @@
-import streamlit as st
+[14:12، 2026/1/28] Semo Lamar: logo_path = "8888.jpg"
+if os.path.exists(logo_path):
+    st.image(logo_path, width=120)
+else:
+    st.warning(f"اللوجو مش موجود! تأكد من وجود الملف: {logo_path}")
+[14:29، 2026/1/28] Semo Lamar: import streamlit as st
 import pandas as pd
+from pivottablejs import pivot_ui
 import os
-from core_engine import load_file, clean_df
-from PIL import Image
-import base64
 
-# =================== إعداد الصفحة ===================
+# ================= 1️⃣ إعدادات الصفحة =================
 st.set_page_config(page_title="Smart Analyst Beast", layout="wide")
 
-# =================== الثيم ===================
+# ================= 2️⃣ Theme + اللوجو =================
 if 'theme' not in st.session_state:
     st.session_state.theme = 'Dark'
 
@@ -22,93 +25,137 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# =================== الهيدر ===================
-col_space, col_lang, col_set = st.columns([10, 1.2, 0.8])
+# Header: Logo + Language + Settings
+col_logo, col_space, col_lang, col_set = st.columns([2,6,1,1])
+with col_logo:
+    if os.path.exists("8888.jpg"):
+        st.image("8888.jpg", width=120)
 with col_lang:
     st.button("🌐 AR/EN")
 with col_set:
-    with st.expander("⚙️ الإعدادات"):
-        st.text_input("التسجيل (Email / Phone)")
-        if st.button("تبديل النمط (Light/Dark)"):
+    with st.expander("⚙️ إعدادات"):
+        if st.button("تبديل النمط Light/Dark"):
             st.session_state.theme = 'Light' if st.session_state.theme == 'Dark' else 'Dark'
             st.experimental_rerun()
 
-# =================== اللوجو ===================
-logo_path = "8888.jpg"
-if os.path.exists(logo_path):
-    st.image(logo_path, width=120)
-else:
-    st.warning(f"اللوجو مش موجود! تأكد من وجود الملف: {logo_path}")
-# =================== القائمة الجانبية ===================
+# ================= 3️⃣ القائمة الجانبية =================
 with st.sidebar:
-    st.markdown("---")
-    choice = st.radio("🛠️ الأدوات:", [
-        "🏠 الرئيسية", "📊 Excel Master", "🧹 Power Query", "📈 Power BI", 
-        "🐍 Python Lab", "👁️ OCR Engine", "☁️ Google Sheets", 
-        "🖼️ Tableau", "🗄️ SQL Lab", "🤖 AI Brain (Core)"
+    st.markdown("## 🛠️ الأدوات")
+    choice = st.radio("", [
+        "🏠 الرئيسية",
+        "📊 Excel Master",
+        "🧹 Power Query",
+        "📈 Power BI",
+        "🐍 Python Lab",
+        "👁️ OCR Engine",
+        "☁️ Google Sheets",
+        "🖼️ Tableau",
+        "🗄️ SQL Lab",
+        "🤖 AI Brain (Core)"
     ])
 
-# =================== منطقة العمل ===================
+# ================= 4️⃣ Dataset موحد =================
 if 'dataset' not in st.session_state:
     st.session_state.dataset = pd.DataFrame()
 
-# --- الرئيسية ---
+# ================= 5️⃣ Main Content =================
 if choice == "🏠 الرئيسية":
     st.title("The Ultimate Financial Brain")
+    st.write("مرحباً بك في لوحة تحكم MIA8444")
     uploaded = st.file_uploader("ارفع أي ملف بيانات (Excel/CSV/ODS) هنا", type=['xlsx','csv','ods'])
     if uploaded:
-        try:
-            st.session_state.dataset = load_file(uploaded)
-            st.success("تم رفع الملف وربطه بالترسانة!")
-        except Exception as e:
-            st.error(f"في مشكلة في رفع الملف: {e}")
-
-# --- Excel Master ---
-elif choice == "📊 Excel Master":
-    st.header("📊 Excel Master")
-    df = st.session_state.dataset.copy()
-    if not df.empty:
-        edited_df = st.data_editor(df, num_rows="dynamic")  # إدخال يدوي مباشر
-        st.session_state.dataset = edited_df
-        st.success("تم تحديث البيانات بنجاح!")
-        # زر Export Excel
-        st.download_button(
-            "⬇️ تحميل Shit Excel",
-            data=edited_df.to_excel(index=False),
-            file_name="Edited_Data.xlsx"
-        )
-    else:
-        st.info("ارفع ملف أولًا من الرئيسية")
-
-# --- Power BI ---
-elif choice == "📈 Power BI":
-    st.header("📈 Power BI Simulator")
-    if st.session_state.dataset.empty:
-        st.info("ارفع بيانات أولًا في Excel Master")
-    else:
-        st.bar_chart(st.session_state.dataset.select_dtypes(include='number'))
-
-# --- Python Lab ---
-elif choice == "🐍 Python Lab":
-    st.header("🐍 Python Analytics")
-    if st.session_state.dataset.empty:
-        st.info("ارفع بيانات أولًا")
-    else:
-        st.write(st.session_state.dataset.describe())
-
-# --- AI Brain ---
-elif choice == "🤖 AI Brain (Core)":
-    st.header("🧠 الذكاء الاصطناعي المركزي")
-    question = st.text_input("اسأل الوحش عن بياناتك:", placeholder="اكتب سؤالك هنا...")
-    if st.button("تحليل وإرسال PDF واتساب"):
-        if question.strip():
-            st.success(f"الذكاء الاصطناعي بيحلل: {question}")
+        if uploaded.name.endswith('xlsx') or uploaded.name.endswith('ods'):
+            st.session_state.dataset = pd.read_excel(uploaded)
         else:
-            st.warning("اكتب سؤالك الأول!")
+            st.session_state.dataset = pd.read_csv(uploaded)
+        st.success("تم رفع البيانات وربطها بالترسانة!")
 
-# =================== التوقيع ===================
+elif choice == "📊 Excel Master":
+    st.header("📊 Excel Master - Data Editor")
+    df = st.session_state.dataset.copy()
+
+    if df.empty:
+        st.info("البيانات فارغة، ممكن تبدأ تدخل بيانات يدوي.")
+        # مثال: هيكل بيانات افتراضي
+        df = pd.DataFrame({
+            "Item": [],
+            "Quantity": [],
+            "Price": []
+        })
+
+    # Data Editor تفاعلي
+    df = st.data_editor(df, num_rows="dynamic")
+
+    # أعمدة محسوبة ديناميكي
+    if not df.empty:
+        df['Total'] = df['Quantity'].fillna(0) * df['Price'].fillna(0)
+        df['Discounted'] = df['Total'].apply(lambda x: x*0.9 if x>50 else x)
+        st.markdown("### الأعمدة المحسوبة")
+        st.dataframe(df)
+
+        # مثال SUM/AVERAGE/COUNT
+        st.write(f"*Total Quantity:* {df['Quantity'].sum()}")
+        st.write(f"*Average Price:* {df['Price'].mean()}")
+        st.write(f"*Count of Items:* {df['Item'].count()}")
+
+        # Pivot Table
+        st.markdown("### Pivot Table")
+        pivot_ui(df)  # يفتح نافذة Pivot Table
+
+    # حفظ التغييرات للـ Session
+    st.session_state.dataset = df
+
+elif choice == "🧹 Power Query":
+    st.header("Power Query - Data Cleaning")
+    df = st.session_state.dataset.copy()
+    st.write("هنا ممكن تعمل تنظيف للبيانات، إزالة قيم مكررة، تحويل الأنواع، إلخ...")
+    st.session_state.dataset = df
+
+elif choice == "📈 Power BI":
+    st.header("Power BI Hub - Visualizations")
+    df = st.session_state.dataset.copy()
+    st.write("هنا تقدر تعمل Charts، Graphs، Measures، Filters")
+    st.session_state.dataset = df
+
+elif choice == "🐍 Python Lab":
+    st.header("Python Lab - Advanced Analytics")
+    df = st.session_state.dataset.copy()
+    st.write("هنا ممكن تكتب كود Python لتحليل البيانات والتنبؤات")
+    st.session_state.dataset = df
+
+elif choice == "🗄️ SQL Lab":
+    st.header("SQL Lab - Queries")
+    df = st.session_state.dataset.copy()
+    st.write("هنا ممكن تكتب Queries على البيانات")
+    st.session_state.dataset = df
+
+elif choice == "☁️ Google Sheets":
+    st.header("Google Sheets Sync")
+    df = st.session_state.dataset.copy()
+    st.write("ربط البيانات مع Google Sheets وSync تلقائي")
+    st.session_state.dataset = df
+
+elif choice == "🖼️ Tableau":
+    st.header("Tableau Connector")
+    df = st.session_state.dataset.copy()
+    st.write("ربط البيانات مع Tableau وعرض Dashboards")
+    st.session_state.dataset = df
+
+elif choice == "👁️ OCR Engine":
+    st.header("OCR Engine - Extract from Images")
+    st.write("ارفع صورة والفواتير تتحول لبيانات رقمية")
+    st.session_state.dataset = st.session_state.dataset
+
+elif choice == "🤖 AI Brain (Core)":
+    st.header("AI Brain - Insights & Suggestions")
+    df = st.session_state.dataset.copy()
+    st.text_input("اسأل الوحش عن بياناتك:", placeholder="اكتب سؤالك هنا...")
+    st.write("الذكاء الاصطناعي يحلل البيانات ويقترح Insights / Formulas / Reports")
+    st.session_state.dataset = df
+
+# ================= 6️⃣ Footer =================
 st.markdown(f"""
-    <div class="footer">
-        Property of Smart Analyst Beast | Signature MIA8444 | v1.0
-    </div>
+<div class="footer">
+Property of Smart Analyst Beast | Signature MIA8444 | v1.0
+</div>
 """, unsafe_allow_html=True)
