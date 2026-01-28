@@ -34,12 +34,11 @@ with col_set:
             st.experimental_rerun()
 
 # =================== اللوجو ===================
-logo_path = "المخ/8888.jpg"
+logo_path = "8888.jpg"
 if os.path.exists(logo_path):
     st.image(logo_path, width=120)
 else:
-    st.warning("اللوجو مش موجود! تأكد من المسار.")
-
+    st.warning(f"اللوجو مش موجود! تأكد من وجود الملف: {logo_path}")
 # =================== القائمة الجانبية ===================
 with st.sidebar:
     st.markdown("---")
