@@ -3,144 +3,262 @@ import pandas as pd
 import numpy as np
 import altair as alt
 import duckdb
-from io import BytesIO
 from datetime import datetime
+from io import BytesIO
 
-# ------------------ Page & Theme ------------------
-st.set_page_config(page_title="Smart Analyst Beast", layout="wide")
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Image
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+
+# ======================================================
+# Page Config
+# ======================================================
+st.set_page_config(
+    page_title="Smart Analyst Beast",
+    layout="wide",
+    page_icon="🐉"
+)
+
+# ======================================================
+# Session State
+# ======================================================
 if "theme" not in st.session_state:
     st.session_state.theme = "Dark"
 
-bg_color = "#0e1117" if st.session_state.theme == "Dark" else "#ffffff"
-text_color = "#D4AF37" if st.session_state.theme == "Dark" else "#000000"
+if "lang" not in st.session_state:
+    st.session_state.lang = "AR"
+
+if "dataset" not in st.session_state:
+    st.session_state.dataset = pd.DataFrame()
+
+if "current_view" not in st.session_state:
+    st.session_state.current_view = "Excel"
+
+# ======================================================
+# Theme
+# ======================================================
+bg = "#0e1117" if st.session_state.theme == "Dark" else "#ffffff"
+txt = "#D4AF37" if st.session_state.theme == "Dark" else "#000000"
 
 st.markdown(f"""
 <style>
-.stApp {{ background-color: {bg_color}; color: {text_color}; }}
-.header {{ display: flex; justify-content: space-between; align-items: center; }}
-.footer {{ text-align: center; font-size: 12px; color: #888; padding: 5px; }}
+.stApp {{
+    background-color: {bg};
+    color: {txt};
+}}
+.footer {{
+    text-align:center;
+    font-size:12px;
+    color:#888;
+    margin-top:30px;
+}}
 </style>
 """, unsafe_allow_html=True)
 
-# ------------------ Header ------------------
-cols = st.columns([3, 1, 1])
-with cols[0]:
-    st.image("8888.jpg", width=120)
-with cols[1]:
-    if st.button("🌐 AR/EN"):
-        st.session_state.lang = "EN" if st.session_state.get("lang","AR")=="AR" else "AR"
-with cols[2]:
-    with st.expander("⚙️ Settings"):
-        if st.button("Toggle Theme"):
-            st.session_state.theme = "Light" if st.session_state.theme=="Dark" else "Dark"
-            st.experimental_rerun()
+# ======================================================
+# Header
+# ======================================================
+h1, h2, h3 = st.columns([6,1,1])
 
-# ------------------ Sidebar ------------------
+with h1:
+    try:
+        st.image("8888.jpg", width=120)
+    except:
+        st.markdown("### 🐉 Smart Analyst Beast")
+
+with h2:
+    def toggle_lang():
+        st.session_state.lang = "EN" if st.session_state.lang == "AR" else "AR"
+    st.button("🌐 AR / EN", on_click=toggle_lang)
+
+with h3:
+    with st.popover("⚙️"):
+        def toggle_theme():
+            st.session_state.theme = "Light" if st.session_state.theme=="Dark" else "Dark"
+        st.button("Toggle Theme", on_click=toggle_theme)
+
+# ======================================================
+# Sidebar
+# ======================================================
 tool = st.sidebar.radio(
-    "Tools",
-    ["Excel Grid", "Power BI View", "SQL Lab", "Report Engine"]
+    "🛠️ Tools",
+    ["Excel", "Charts", "SQL", "Report"]
 )
 
-# ------------------ AI Core ------------------
-def ai_core(mode="summary"):
-    if "dataset" not in st.session_state or st.session_state.dataset.empty:
-        return "No data available."
-    df = st.session_state.dataset
-    if mode=="summary":
-        return f"Rows: {df.shape[0]}, Columns: {df.shape[1]}, Numeric Columns: {len(df.select_dtypes(include=np.number).columns)}"
-    elif mode=="columns":
-        return df.columns.tolist()
+st.session_state.current_view = tool
 
-# ------------------ Excel Grid ------------------
-if tool=="Excel Grid":
-    st.header("📋 Excel-Like Grid with Manual Input")
-    
-    uploaded = st.file_uploader("Upload CSV/XLSX", type=["csv","xlsx"])
-    
-    if uploaded:
-        try:
-            if uploaded.name.endswith(".csv"):
-                df = pd.read_csv(uploaded, dtype=object)
-            else:
-                df = pd.read_excel(uploaded, dtype=object)
-            
-            # تحويل الأعمدة التي يمكن تحويلها لتواريخ
-            for col in df.columns:
-                try:
-                    df[col] = pd.to_datetime(df[col])
-                except:
-                    pass
-            
-            st.session_state.dataset = df
-            st.success("Dataset Loaded ✅")
-        except Exception as e:
-            st.error(f"Error loading file: {e}")
-    
-    # إدخال بيانات يدوي
+# ======================================================
+# Helpers
+# ======================================================
+def ai_summary(df: pd.DataFrame) -> str:
+    if df.empty:
+        return "لا توجد بيانات."
+    return f"""
+    عدد الصفوف: {df.shape[0]}
+    عدد الأعمدة: {df.shape[1]}
+    أعمدة رقمية: {len(df.select_dtypes(include=np.number).columns)}
+    """
+
+def generate_pdf(df, title="Smart Analyst Beast"):
+    buffer = BytesIO()
+    styles = getSampleStyleSheet()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+
+    elements = []
+
+    try:
+        elements.append(Image("8888.jpg", width=80, height=80))
+    except:
+        pass
+
+    elements.append(Paragraph(title, styles["Title"]))
+    elements.append(
+        Paragraph(
+            f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            styles["Normal"]
+        )
+    )
+
+    if not df.empty:
+        table_data = [df.columns.tolist()] + df.head(20).astype(str).values.tolist()
+        table = Table(table_data)
+        table.setStyle(TableStyle([
+            ('BACKGROUND',(0,0),(-1,0),colors.gold),
+            ('GRID',(0,0),(-1,-1),0.5,colors.black),
+            ('FONT',(0,0),(-1,0),'Helvetica-Bold')
+        ]))
+        elements.append(table)
+
+    elements.append(Paragraph("Signature: MIA8444", styles["Italic"]))
+
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer
+
+# ======================================================
+# Excel View
+# ======================================================
+if tool == "Excel":
+    st.header("📊 Excel-like Sheet")
+
+    file = st.file_uploader(
+        "ارفع CSV أو Excel (أي نوع بيانات)",
+        type=["csv","xlsx"]
+    )
+
+    if file:
+        if file.name.endswith(".csv"):
+            df = pd.read_csv(file, dtype=str)
+        else:
+            df = pd.read_excel(file, dtype=str)
+
+        st.session_state.dataset = df
+
     if not st.session_state.dataset.empty:
-        st.markdown("### Manual Data Input")
-        edited_df = st.experimental_data_editor(st.session_state.dataset, num_rows="dynamic")
-        st.session_state.dataset = edited_df
+        st.markdown("### ✍️ إدخال وتعديل يدوي")
+        edited = st.data_editor(
+            st.session_state.dataset,
+            num_rows="dynamic",
+            use_container_width=True
+        )
+        st.session_state.dataset = edited
+
         st.markdown("### 🧠 AI Insight")
-        st.write(ai_core("summary"))
+        st.code(ai_summary(edited))
 
-# ------------------ Power BI View ------------------
-elif tool=="Power BI View":
-    st.header("📈 Power BI-Like Dashboard")
-    if "dataset" not in st.session_state or st.session_state.dataset.empty:
-        st.warning("Upload data first")
+# ======================================================
+# Charts View
+# ======================================================
+elif tool == "Charts":
+    st.header("📈 Charts")
+
+    df = st.session_state.dataset
+    if df.empty:
+        st.warning("ارفع بيانات الأول")
     else:
-        df = st.session_state.dataset.copy()
-        numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
-        if numeric_cols:
-            col_x = st.selectbox("X Axis", df.columns)
-            col_y = st.selectbox("Y Axis", numeric_cols)
-            
-            chart_df = df[[col_x, col_y]].dropna()
-            chart_df[col_x] = chart_df[col_x].astype(str)
-            
-            chart = alt.Chart(chart_df).mark_bar(color="#D4AF37").encode(
-                x=alt.X(col_x, sort=None),
-                y=col_y
-            ).properties(width=700, height=400)
-            
+        cols = df.columns.tolist()
+        nums = df.select_dtypes(include=np.number).columns.tolist()
+
+        if not nums:
+            st.warning("لا يوجد أعمدة رقمية")
+        else:
+            x = st.selectbox("X", cols)
+            y = st.selectbox("Y", nums)
+
+            cdf = df[[x,y]].dropna()
+            cdf[x] = cdf[x].astype(str)
+
+            chart = alt.Chart(cdf).mark_bar(color="#D4AF37").encode(
+                x=alt.X(x, sort=None),
+                y=y
+            )
+
             st.altair_chart(chart, use_container_width=True)
-            st.markdown("### 🧠 AI Insight")
-            st.write(ai_core("summary"))
 
-# ------------------ SQL Lab ------------------
-elif tool=="SQL Lab":
+# ======================================================
+# SQL View
+# ======================================================
+elif tool == "SQL":
     st.header("🧪 SQL Lab")
-    if "dataset" not in st.session_state or st.session_state.dataset.empty:
-        st.warning("Upload data first")
+
+    df = st.session_state.dataset
+    if df.empty:
+        st.warning("ارفع بيانات الأول")
     else:
-        df = st.session_state.dataset
-        query = st.text_area("Write SQL Query", "SELECT * FROM df LIMIT 10")
-        if st.button("Run Query"):
+        q = st.text_area(
+            "اكتب SQL",
+            "SELECT * FROM df LIMIT 10"
+        )
+
+        if st.button("Run"):
             try:
-                result = duckdb.query(query).df()
-                st.dataframe(result)
+                res = duckdb.query(q).df()
+                st.dataframe(res)
             except Exception as e:
                 st.error(str(e))
 
-# ------------------ Report Engine ------------------
-elif tool=="Report Engine":
-    st.header("📄 Report Engine")
-    if "dataset" not in st.session_state or st.session_state.dataset.empty:
-        st.warning("Upload data first")
-    else:
-        st.markdown("### Dataset Overview")
-        st.write(ai_core("summary"))
-        st.dataframe(st.session_state.dataset.head(20))
+# ======================================================
+# Report View
+# ======================================================
+elif tool == "Report":
+    st.header("📄 Report")
 
-        # PDF & WhatsApp Placeholder
-        st.markdown("### 📤 Export / WhatsApp")
-        st.button("Export as PDF with Logo & Signature MIA8444")
-        st.button("Share on WhatsApp")
-        
-# ------------------ Footer ------------------
-st.markdown(f"""
+    df = st.session_state.dataset
+    if df.empty:
+        st.warning("ارفع بيانات الأول")
+    else:
+        st.dataframe(df.head(20))
+        st.markdown("### 🧠 AI Summary")
+        st.code(ai_summary(df))
+
+# ======================================================
+# 🔥 Unified Export Button
+# ======================================================
+st.divider()
+st.subheader("📤 مشاركة ذكية")
+
+if st.button("📄 تصدير PDF + جاهز واتساب"):
+    pdf = generate_pdf(
+        st.session_state.dataset,
+        title=f"Smart Analyst Beast – {st.session_state.current_view}"
+    )
+
+    st.success("تم تجهيز الملف ✔️")
+    st.download_button(
+        "⬇️ تحميل PDF",
+        pdf,
+        file_name="Smart_Analyst_Beast.pdf",
+        mime="application/pdf"
+    )
+
+    st.info("جاهز للإرسال على WhatsApp (API لاحقًا)")
+
+# ======================================================
+# Footer
+# ======================================================
+st.markdown("""
 <div class="footer">
-Property of Smart Analyst Beast | Signature MIA8444 | v1.0
+Smart Analyst Beast © | Signature MIA8444
 </div>
 """, unsafe_allow_html=True)
