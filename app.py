@@ -1,8 +1,9 @@
 import streamlit as st
 import pandas as pd
 import os
-from core_engine import load_file, clean_df  # تأكد أن core_engine.py موجود
+from core_engine import load_file, clean_df
 from PIL import Image
+import base64
 
 # =================== إعداد الصفحة ===================
 st.set_page_config(page_title="Smart Analyst Beast", layout="wide")
@@ -49,17 +50,16 @@ with st.sidebar:
     ])
 
 # =================== منطقة العمل ===================
-# الداتا الأساسية
 if 'dataset' not in st.session_state:
     st.session_state.dataset = pd.DataFrame()
 
 # --- الرئيسية ---
 if choice == "🏠 الرئيسية":
     st.title("The Ultimate Financial Brain")
-    uploaded = st.file_uploader("ارفع أي ملف بيانات (Excel/CSV/ODS) هنا", type=['xlsx', 'csv', 'ods'])
+    uploaded = st.file_uploader("ارفع أي ملف بيانات (Excel/CSV/ODS) هنا", type=['xlsx','csv','ods'])
     if uploaded:
         try:
-            st.session_state.dataset = load_file(uploaded)  # من core_engine.py
+            st.session_state.dataset = load_file(uploaded)
             st.success("تم رفع الملف وربطه بالترسانة!")
         except Exception as e:
             st.error(f"في مشكلة في رفع الملف: {e}")
@@ -67,12 +67,17 @@ if choice == "🏠 الرئيسية":
 # --- Excel Master ---
 elif choice == "📊 Excel Master":
     st.header("📊 Excel Master")
-    st.write("يمكنك تعديل البيانات يدويًا كما في Excel")
     df = st.session_state.dataset.copy()
     if not df.empty:
         edited_df = st.data_editor(df, num_rows="dynamic")  # إدخال يدوي مباشر
         st.session_state.dataset = edited_df
         st.success("تم تحديث البيانات بنجاح!")
+        # زر Export Excel
+        st.download_button(
+            "⬇️ تحميل Shit Excel",
+            data=edited_df.to_excel(index=False),
+            file_name="Edited_Data.xlsx"
+        )
     else:
         st.info("ارفع ملف أولًا من الرئيسية")
 
