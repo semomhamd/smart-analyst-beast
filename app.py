@@ -1,107 +1,110 @@
 import streamlit as st
 import pandas as pd
-from core_engine import load_file, clean_df
-import base64
+import os
+from core_engine import load_file, clean_df  # تأكد أن core_engine.py موجود
+from PIL import Image
 
-# ================== إعداد الصفحة ==================
-st.set_page_config(
-    page_title="Smart Analyst Beast",
-    page_icon="🐉",
-    layout="wide"
-)
+# =================== إعداد الصفحة ===================
+st.set_page_config(page_title="Smart Analyst Beast", layout="wide")
 
-# ================== Session State ==================
-if "dataset" not in st.session_state:
+# =================== الثيم ===================
+if 'theme' not in st.session_state:
+    st.session_state.theme = 'Dark'
+
+bg_color = "#0e1117" if st.session_state.theme == 'Dark' else "#ffffff"
+text_color = "#D4AF37" if st.session_state.theme == 'Dark' else "#000000"
+
+st.markdown(f"""
+    <style>
+    .stApp {{ background-color: {bg_color}; color: {text_color}; }}
+    .footer {{ position: fixed; left: 0; bottom: 0; width: 100%; text-align: center; font-size: 12px; color: #888; padding: 5px; background: transparent; }}
+    </style>
+""", unsafe_allow_html=True)
+
+# =================== الهيدر ===================
+col_space, col_lang, col_set = st.columns([10, 1.2, 0.8])
+with col_lang:
+    st.button("🌐 AR/EN")
+with col_set:
+    with st.expander("⚙️ الإعدادات"):
+        st.text_input("التسجيل (Email / Phone)")
+        if st.button("تبديل النمط (Light/Dark)"):
+            st.session_state.theme = 'Light' if st.session_state.theme == 'Dark' else 'Dark'
+            st.experimental_rerun()
+
+# =================== اللوجو ===================
+logo_path = "المخ/8888.jpg"
+if os.path.exists(logo_path):
+    st.image(logo_path, width=120)
+else:
+    st.warning("اللوجو مش موجود! تأكد من المسار.")
+
+# =================== القائمة الجانبية ===================
+with st.sidebar:
+    st.markdown("---")
+    choice = st.radio("🛠️ الأدوات:", [
+        "🏠 الرئيسية", "📊 Excel Master", "🧹 Power Query", "📈 Power BI", 
+        "🐍 Python Lab", "👁️ OCR Engine", "☁️ Google Sheets", 
+        "🖼️ Tableau", "🗄️ SQL Lab", "🤖 AI Brain (Core)"
+    ])
+
+# =================== منطقة العمل ===================
+# الداتا الأساسية
+if 'dataset' not in st.session_state:
     st.session_state.dataset = pd.DataFrame()
 
-if "lang" not in st.session_state:
-    st.session_state.lang = "AR"
-
-# ================== Logo ==================
-st.image("assets/logo.png", width=120)
-
-# ================== Header ==================
-st.markdown("## 🐉 Smart Analyst Beast")
-st.caption("حوّل الداتا لحكاية مفهومة")
-
-# ================== Sidebar ==================
-with st.sidebar:
-    st.markdown("## ⚙️ الإعدادات")
-
-    st.session_state.lang = st.selectbox(
-        "🌍 اللغة",
-        ["AR", "EN"]
-    )
-
-    uploaded = st.file_uploader(
-        "📤 ارفع ملف",
-        type=["xlsx", "xls", "csv"]
-    )
-
+# --- الرئيسية ---
+if choice == "🏠 الرئيسية":
+    st.title("The Ultimate Financial Brain")
+    uploaded = st.file_uploader("ارفع أي ملف بيانات (Excel/CSV/ODS) هنا", type=['xlsx', 'csv', 'ods'])
     if uploaded:
         try:
-            df = load_file(uploaded)
-            st.session_state.dataset = clean_df(df)
-            st.success("تم تحميل الملف ✔️")
+            st.session_state.dataset = load_file(uploaded)  # من core_engine.py
+            st.success("تم رفع الملف وربطه بالترسانة!")
         except Exception as e:
-            st.error(str(e))
+            st.error(f"في مشكلة في رفع الملف: {e}")
 
-# ================== Manual Excel Input ==================
-st.markdown("## ✍️ إدخال يدوي (زي Excel)")
-manual_df = st.data_editor(
-    st.session_state.dataset if not st.session_state.dataset.empty else pd.DataFrame(
-        columns=["Column 1", "Column 2"]
-    ),
-    num_rows="dynamic",
-    use_container_width=True
-)
+# --- Excel Master ---
+elif choice == "📊 Excel Master":
+    st.header("📊 Excel Master")
+    st.write("يمكنك تعديل البيانات يدويًا كما في Excel")
+    df = st.session_state.dataset.copy()
+    if not df.empty:
+        edited_df = st.data_editor(df, num_rows="dynamic")  # إدخال يدوي مباشر
+        st.session_state.dataset = edited_df
+        st.success("تم تحديث البيانات بنجاح!")
+    else:
+        st.info("ارفع ملف أولًا من الرئيسية")
 
-st.session_state.dataset = manual_df
+# --- Power BI ---
+elif choice == "📈 Power BI":
+    st.header("📈 Power BI Simulator")
+    if st.session_state.dataset.empty:
+        st.info("ارفع بيانات أولًا في Excel Master")
+    else:
+        st.bar_chart(st.session_state.dataset.select_dtypes(include='number'))
 
-# ================== Preview ==================
-if not st.session_state.dataset.empty:
-    st.markdown("## 👀 معاينة البيانات")
-    st.dataframe(st.session_state.dataset, use_container_width=True)
+# --- Python Lab ---
+elif choice == "🐍 Python Lab":
+    st.header("🐍 Python Analytics")
+    if st.session_state.dataset.empty:
+        st.info("ارفع بيانات أولًا")
+    else:
+        st.write(st.session_state.dataset.describe())
 
-    cols = st.session_state.dataset.columns.tolist()
+# --- AI Brain ---
+elif choice == "🤖 AI Brain (Core)":
+    st.header("🧠 الذكاء الاصطناعي المركزي")
+    question = st.text_input("اسأل الوحش عن بياناتك:", placeholder="اكتب سؤالك هنا...")
+    if st.button("تحليل وإرسال PDF واتساب"):
+        if question.strip():
+            st.success(f"الذكاء الاصطناعي بيحلل: {question}")
+        else:
+            st.warning("اكتب سؤالك الأول!")
 
-    # ================== Charts ==================
-    st.markdown("## 📊 الرسومات")
-
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        x = st.selectbox("X", cols)
-    with col2:
-        y = st.selectbox("Y", cols)
-    with col3:
-        chart_type = st.selectbox("نوع الرسم", ["Bar", "Line", "Pie"])
-
-    chart_df = st.session_state.dataset[[x, y]].dropna()
-
-    if chart_type == "Bar":
-        st.bar_chart(chart_df.set_index(x))
-    elif chart_type == "Line":
-        st.line_chart(chart_df.set_index(x))
-    elif chart_type == "Pie":
-        st.write("⚠️ Pie محتاج قيم رقمية")
-        st.pyplot(chart_df.groupby(x)[y].sum().plot.pie(autopct="%1.1f%%").figure)
-
-    # ================== Download ==================
-    st.markdown("## 📥 تحميل")
-    csv = chart_df.to_csv(index=False).encode("utf-8")
-    st.download_button(
-        "⬇️ تحميل CSV",
-        csv,
-        "data.csv",
-        "text/csv"
-    )
-
-    # ================== WhatsApp Share ==================
-    st.markdown("## 📤 مشاركة")
-    text = "شوف التحليل ده 🔥"
-    whatsapp_link = f"https://wa.me/?text={text}"
-    st.markdown(f"[📲 مشاركة واتساب]({whatsapp_link})")
-
-else:
-    st.info("⬅️ ابدأ برفع ملف أو إدخال بيانات")
+# =================== التوقيع ===================
+st.markdown(f"""
+    <div class="footer">
+        Property of Smart Analyst Beast | Signature MIA8444 | v1.0
+    </div>
+""", unsafe_allow_html=True)
