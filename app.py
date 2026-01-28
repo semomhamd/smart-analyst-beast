@@ -1,35 +1,68 @@
 import streamlit as st
 
-# إعداد الصفحة
+# 1. إعداد الصفحة الأساسي
 st.set_page_config(page_title="Smart Analyst | MIA8444", layout="wide")
 
-# الواجهة واللوجو (Smart Analyst Beast)
-st.markdown("""
-    <div style="background-color: #000; padding: 20px; border-radius: 15px; border: 2px solid #D4AF37; text-align: center; margin-bottom: 20px;">
-        <h1 style="color: #D4AF37; font-size: 45px; margin: 0;">SMART ANALYST</h1>
-        <p style="color: #fff; font-size: 15px; letter-spacing: 3px;">THE BEAST EDITION</p>
-        <p style="color: #D4AF37; text-align: right; font-weight: bold; margin: 0;">MIA8444</p>
-    </div>
-""", unsafe_allow_html=True)
+# 2. إضافة منطق الدارك واللايت في الواجهة
+if 'theme' not in st.session_state:
+    st.session_state.theme = 'Dark'
 
-# الإعدادات على اليمين (Sidebar)
+# 3. القائمة الجانبية (Sidebar) على اليمين
 with st.sidebar:
-    st.markdown("<h2 style='text-align:right;'>⚙️ الإعدادات</h2>", unsafe_allow_html=True)
-    st.selectbox("🌐 اللغة", ["العربية", "English"])
-    st.radio("🌓 المظهر", ["Dark", "Light"])
+    st.markdown("<h2 style='text-align:right; color:#D4AF37;'>⚙️ الإعدادات</h2>", unsafe_allow_html=True)
+    
+    # زرار اللغة
+    st.selectbox("🌐 لغة التطبيق", ["العربية", "English"])
+    
+    # زرار الدارك واللايت (تعديل مباشر)
+    theme_choice = st.radio("🌓 نمط العرض", ["Dark", "Light"], index=0 if st.session_state.theme == 'Dark' else 1)
+    st.session_state.theme = theme_choice
+
     st.markdown("---")
-    st.markdown("### 🛠️ الأدوات")
+    st.markdown("<h3 style='text-align:right;'>🛠️ الأدوات</h3>", unsafe_allow_html=True)
     tool = st.radio("", [
         "📊 إكسيل الوحش", "🤖 AI Vision", "👁️ OCR", 
         "🧹 Cleaner", "🗄️ SQL", "📄 PDF Pro", 
         "☁️ Sheets", "🐍 Python", "📈 Power BI", "🖼️ Tableau"
     ])
+    
     st.markdown("---")
-    if st.button("🚪 تسجيل الخروج"):
-        st.session_state['logged_in'] = False
-        st.rerun()
+    with st.expander("ℹ️ حول التطبيق"):
+        st.write("Smart Analyst Beast v2.0")
+        st.write("Signature: MIA8444")
+        if st.button("🚪 تسجيل الخروج"):
+            st.session_state['logged_in'] = False
+            st.rerun()
 
-# الربط بالملفات
+# 4. تنسيق اللوجو والواجهة بناءً على الثيم المختار
+theme_bg = "#000000" if st.session_state.theme == "Dark" else "#ffffff"
+theme_text = "#ffffff" if st.session_state.theme == "Dark" else "#000000"
+
+st.markdown(f"""
+    <style>
+    .stApp {{ background-color: {theme_bg}; }}
+    .main-header {{
+        background: linear-gradient(90deg, #000000 0%, #1a1a1a 100%);
+        padding: 30px;
+        border-radius: 15px;
+        border: 3px solid #D4AF37;
+        text-align: center;
+        margin-bottom: 20px;
+        box-shadow: 0px 10px 20px rgba(212, 175, 55, 0.3);
+    }}
+    .logo-title {{ color: #D4AF37; font-size: 55px; font-weight: bold; margin: 0; font-family: sans-serif; }}
+    .logo-sub {{ color: #ffffff; font-size: 18px; letter-spacing: 4px; text-transform: uppercase; }}
+    .sig-text {{ color: #D4AF37; text-align: right; font-weight: bold; font-size: 14px; margin-top: 10px; }}
+    </style>
+    
+    <div class="main-header">
+        <h1 class="logo-title">SMART ANALYST</h1>
+        <p class="logo-sub">The Beast Edition - Intelligent Data Engine</p>
+        <div class="sig-text">MIA8444 Signature</div>
+    </div>
+""", unsafe_allow_html=True)
+
+# 5. تشغيل الأدوات
 try:
     if tool == "📊 إكسيل الوحش":
         import excel_master; excel_master.run_excel_app()
@@ -52,4 +85,7 @@ try:
     elif tool == "🖼️ Tableau":
         import tableau_expert; tableau_expert.run_tableau()
 except Exception as e:
-    st.error(f"تأكد من وجود جميع ملفات الأدوات في المجلد: {e}")
+    st.error(f"⚠️ تأكد من رفع ملف الأداة: {e}")
+
+if _name_ == "_main_":
+    pass
