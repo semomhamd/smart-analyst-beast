@@ -1,9 +1,4 @@
-[14:12، 2026/1/28] Semo Lamar: logo_path = "8888.jpg"
-if os.path.exists(logo_path):
-    st.image(logo_path, width=120)
-else:
-    st.warning(f"اللوجو مش موجود! تأكد من وجود الملف: {logo_path}")
-[14:29، 2026/1/28] Semo Lamar: import streamlit as st
+import streamlit as st
 import pandas as pd
 from pivottablejs import pivot_ui
 import os
@@ -11,7 +6,7 @@ import os
 # ================= 1️⃣ إعدادات الصفحة =================
 st.set_page_config(page_title="Smart Analyst Beast", layout="wide")
 
-# ================= 2️⃣ Theme + اللوجو =================
+# ================= 2️⃣ Theme + اللوجو + Language + Settings =================
 if 'theme' not in st.session_state:
     st.session_state.theme = 'Dark'
 
@@ -38,7 +33,7 @@ with col_set:
             st.session_state.theme = 'Light' if st.session_state.theme == 'Dark' else 'Dark'
             st.experimental_rerun()
 
-# ================= 3️⃣ القائمة الجانبية =================
+# ================= 3️⃣ Sidebar =================
 with st.sidebar:
     st.markdown("## 🛠️ الأدوات")
     choice = st.radio("", [
@@ -54,7 +49,7 @@ with st.sidebar:
         "🤖 AI Brain (Core)"
     ])
 
-# ================= 4️⃣ Dataset موحد =================
+# ================= 4️⃣ Unified Dataset =================
 if 'dataset' not in st.session_state:
     st.session_state.dataset = pd.DataFrame()
 
@@ -73,36 +68,28 @@ if choice == "🏠 الرئيسية":
 elif choice == "📊 Excel Master":
     st.header("📊 Excel Master - Data Editor")
     df = st.session_state.dataset.copy()
-
     if df.empty:
         st.info("البيانات فارغة، ممكن تبدأ تدخل بيانات يدوي.")
-        # مثال: هيكل بيانات افتراضي
         df = pd.DataFrame({
             "Item": [],
             "Quantity": [],
             "Price": []
         })
-
-    # Data Editor تفاعلي
+    # Data Editor تفاعلي مع إدخال يدوي
     df = st.data_editor(df, num_rows="dynamic")
-
-    # أعمدة محسوبة ديناميكي
+    # أعمدة محسوبة
     if not df.empty:
         df['Total'] = df['Quantity'].fillna(0) * df['Price'].fillna(0)
         df['Discounted'] = df['Total'].apply(lambda x: x*0.9 if x>50 else x)
         st.markdown("### الأعمدة المحسوبة")
         st.dataframe(df)
-
-        # مثال SUM/AVERAGE/COUNT
+        # أمثلة SUM, AVERAGE, COUNT
         st.write(f"*Total Quantity:* {df['Quantity'].sum()}")
         st.write(f"*Average Price:* {df['Price'].mean()}")
         st.write(f"*Count of Items:* {df['Item'].count()}")
-
         # Pivot Table
         st.markdown("### Pivot Table")
-        pivot_ui(df)  # يفتح نافذة Pivot Table
-
-    # حفظ التغييرات للـ Session
+        pivot_ui(df)
     st.session_state.dataset = df
 
 elif choice == "🧹 Power Query":
