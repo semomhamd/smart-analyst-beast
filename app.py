@@ -1,264 +1,107 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import altair as alt
-import duckdb
-from datetime import datetime
-from io import BytesIO
+from core_engine import load_file, clean_df
+import base64
 
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Image
-from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
-
-# ======================================================
-# Page Config
-# ======================================================
+# ================== إعداد الصفحة ==================
 st.set_page_config(
     page_title="Smart Analyst Beast",
-    layout="wide",
-    page_icon="🐉"
+    page_icon="🐉",
+    layout="wide"
 )
 
-# ======================================================
-# Session State
-# ======================================================
-if "theme" not in st.session_state:
-    st.session_state.theme = "Dark"
+# ================== Session State ==================
+if "dataset" not in st.session_state:
+    st.session_state.dataset = pd.DataFrame()
 
 if "lang" not in st.session_state:
     st.session_state.lang = "AR"
 
-if "dataset" not in st.session_state:
-    st.session_state.dataset = pd.DataFrame()
+# ================== Logo ==================
+st.image("assets/logo.png", width=120)
 
-if "current_view" not in st.session_state:
-    st.session_state.current_view = "Excel"
+# ================== Header ==================
+st.markdown("## 🐉 Smart Analyst Beast")
+st.caption("حوّل الداتا لحكاية مفهومة")
 
-# ======================================================
-# Theme
-# ======================================================
-bg = "#0e1117" if st.session_state.theme == "Dark" else "#ffffff"
-txt = "#D4AF37" if st.session_state.theme == "Dark" else "#000000"
+# ================== Sidebar ==================
+with st.sidebar:
+    st.markdown("## ⚙️ الإعدادات")
 
-st.markdown(f"""
-<style>
-.stApp {{
-    background-color: {bg};
-    color: {txt};
-}}
-.footer {{
-    text-align:center;
-    font-size:12px;
-    color:#888;
-    margin-top:30px;
-}}
-</style>
-""", unsafe_allow_html=True)
+    st.session_state.lang = st.selectbox(
+        "🌍 اللغة",
+        ["AR", "EN"]
+    )
 
-# ======================================================
-# Header
-# ======================================================
-h1, h2, h3 = st.columns([6,1,1])
+    uploaded = st.file_uploader(
+        "📤 ارفع ملف",
+        type=["xlsx", "xls", "csv"]
+    )
 
-with h1:
-    try:
-        st.image("8888.jpg", width=120)
-    except:
-        st.markdown("### 🐉 Smart Analyst Beast")
+    if uploaded:
+        try:
+            df = load_file(uploaded)
+            st.session_state.dataset = clean_df(df)
+            st.success("تم تحميل الملف ✔️")
+        except Exception as e:
+            st.error(str(e))
 
-with h2:
-    def toggle_lang():
-        st.session_state.lang = "EN" if st.session_state.lang == "AR" else "AR"
-    st.button("🌐 AR / EN", on_click=toggle_lang)
-
-with h3:
-    with st.popover("⚙️"):
-        def toggle_theme():
-            st.session_state.theme = "Light" if st.session_state.theme=="Dark" else "Dark"
-        st.button("Toggle Theme", on_click=toggle_theme)
-
-# ======================================================
-# Sidebar
-# ======================================================
-tool = st.sidebar.radio(
-    "🛠️ Tools",
-    ["Excel", "Charts", "SQL", "Report"]
+# ================== Manual Excel Input ==================
+st.markdown("## ✍️ إدخال يدوي (زي Excel)")
+manual_df = st.data_editor(
+    st.session_state.dataset if not st.session_state.dataset.empty else pd.DataFrame(
+        columns=["Column 1", "Column 2"]
+    ),
+    num_rows="dynamic",
+    use_container_width=True
 )
 
-st.session_state.current_view = tool
+st.session_state.dataset = manual_df
 
-# ======================================================
-# Helpers
-# ======================================================
-def ai_summary(df: pd.DataFrame) -> str:
-    if df.empty:
-        return "لا توجد بيانات."
-    return f"""
-    عدد الصفوف: {df.shape[0]}
-    عدد الأعمدة: {df.shape[1]}
-    أعمدة رقمية: {len(df.select_dtypes(include=np.number).columns)}
-    """
+# ================== Preview ==================
+if not st.session_state.dataset.empty:
+    st.markdown("## 👀 معاينة البيانات")
+    st.dataframe(st.session_state.dataset, use_container_width=True)
 
-def generate_pdf(df, title="Smart Analyst Beast"):
-    buffer = BytesIO()
-    styles = getSampleStyleSheet()
-    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    cols = st.session_state.dataset.columns.tolist()
 
-    elements = []
+    # ================== Charts ==================
+    st.markdown("## 📊 الرسومات")
 
-    try:
-        elements.append(Image("8888.jpg", width=80, height=80))
-    except:
-        pass
+    col1, col2, col3 = st.columns(3)
 
-    elements.append(Paragraph(title, styles["Title"]))
-    elements.append(
-        Paragraph(
-            f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-            styles["Normal"]
-        )
-    )
+    with col1:
+        x = st.selectbox("X", cols)
+    with col2:
+        y = st.selectbox("Y", cols)
+    with col3:
+        chart_type = st.selectbox("نوع الرسم", ["Bar", "Line", "Pie"])
 
-    if not df.empty:
-        table_data = [df.columns.tolist()] + df.head(20).astype(str).values.tolist()
-        table = Table(table_data)
-        table.setStyle(TableStyle([
-            ('BACKGROUND',(0,0),(-1,0),colors.gold),
-            ('GRID',(0,0),(-1,-1),0.5,colors.black),
-            ('FONT',(0,0),(-1,0),'Helvetica-Bold')
-        ]))
-        elements.append(table)
+    chart_df = st.session_state.dataset[[x, y]].dropna()
 
-    elements.append(Paragraph("Signature: MIA8444", styles["Italic"]))
+    if chart_type == "Bar":
+        st.bar_chart(chart_df.set_index(x))
+    elif chart_type == "Line":
+        st.line_chart(chart_df.set_index(x))
+    elif chart_type == "Pie":
+        st.write("⚠️ Pie محتاج قيم رقمية")
+        st.pyplot(chart_df.groupby(x)[y].sum().plot.pie(autopct="%1.1f%%").figure)
 
-    doc.build(elements)
-    buffer.seek(0)
-    return buffer
-
-# ======================================================
-# Excel View
-# ======================================================
-if tool == "Excel":
-    st.header("📊 Excel-like Sheet")
-
-    file = st.file_uploader(
-        "ارفع CSV أو Excel (أي نوع بيانات)",
-        type=["csv","xlsx"]
-    )
-
-    if file:
-        if file.name.endswith(".csv"):
-            df = pd.read_csv(file, dtype=str)
-        else:
-            df = pd.read_excel(file, dtype=str)
-
-        st.session_state.dataset = df
-
-    if not st.session_state.dataset.empty:
-        st.markdown("### ✍️ إدخال وتعديل يدوي")
-        edited = st.data_editor(
-            st.session_state.dataset,
-            num_rows="dynamic",
-            use_container_width=True
-        )
-        st.session_state.dataset = edited
-
-        st.markdown("### 🧠 AI Insight")
-        st.code(ai_summary(edited))
-
-# ======================================================
-# Charts View
-# ======================================================
-elif tool == "Charts":
-    st.header("📈 Charts")
-
-    df = st.session_state.dataset
-    if df.empty:
-        st.warning("ارفع بيانات الأول")
-    else:
-        cols = df.columns.tolist()
-        nums = df.select_dtypes(include=np.number).columns.tolist()
-
-        if not nums:
-            st.warning("لا يوجد أعمدة رقمية")
-        else:
-            x = st.selectbox("X", cols)
-            y = st.selectbox("Y", nums)
-
-            cdf = df[[x,y]].dropna()
-            cdf[x] = cdf[x].astype(str)
-
-            chart = alt.Chart(cdf).mark_bar(color="#D4AF37").encode(
-                x=alt.X(x, sort=None),
-                y=y
-            )
-
-            st.altair_chart(chart, use_container_width=True)
-
-# ======================================================
-# SQL View
-# ======================================================
-elif tool == "SQL":
-    st.header("🧪 SQL Lab")
-
-    df = st.session_state.dataset
-    if df.empty:
-        st.warning("ارفع بيانات الأول")
-    else:
-        q = st.text_area(
-            "اكتب SQL",
-            "SELECT * FROM df LIMIT 10"
-        )
-
-        if st.button("Run"):
-            try:
-                res = duckdb.query(q).df()
-                st.dataframe(res)
-            except Exception as e:
-                st.error(str(e))
-
-# ======================================================
-# Report View
-# ======================================================
-elif tool == "Report":
-    st.header("📄 Report")
-
-    df = st.session_state.dataset
-    if df.empty:
-        st.warning("ارفع بيانات الأول")
-    else:
-        st.dataframe(df.head(20))
-        st.markdown("### 🧠 AI Summary")
-        st.code(ai_summary(df))
-
-# ======================================================
-# 🔥 Unified Export Button
-# ======================================================
-st.divider()
-st.subheader("📤 مشاركة ذكية")
-
-if st.button("📄 تصدير PDF + جاهز واتساب"):
-    pdf = generate_pdf(
-        st.session_state.dataset,
-        title=f"Smart Analyst Beast – {st.session_state.current_view}"
-    )
-
-    st.success("تم تجهيز الملف ✔️")
+    # ================== Download ==================
+    st.markdown("## 📥 تحميل")
+    csv = chart_df.to_csv(index=False).encode("utf-8")
     st.download_button(
-        "⬇️ تحميل PDF",
-        pdf,
-        file_name="Smart_Analyst_Beast.pdf",
-        mime="application/pdf"
+        "⬇️ تحميل CSV",
+        csv,
+        "data.csv",
+        "text/csv"
     )
 
-    st.info("جاهز للإرسال على WhatsApp (API لاحقًا)")
+    # ================== WhatsApp Share ==================
+    st.markdown("## 📤 مشاركة")
+    text = "شوف التحليل ده 🔥"
+    whatsapp_link = f"https://wa.me/?text={text}"
+    st.markdown(f"[📲 مشاركة واتساب]({whatsapp_link})")
 
-# ======================================================
-# Footer
-# ======================================================
-st.markdown("""
-<div class="footer">
-Smart Analyst Beast © | Signature MIA8444
-</div>
-""", unsafe_allow_html=True)
+else:
+    st.info("⬅️ ابدأ برفع ملف أو إدخال بيانات")
