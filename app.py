@@ -1,103 +1,155 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import duckdb
 from datetime import datetime
-from reportlab.platypus import SimpleDocTemplate, Paragraph
-from reportlab.lib.styles import getSampleStyleSheet
 
-# ===============================
-# Core Config
-# ===============================
+# =========================
+# PAGE CONFIG
+# =========================
 st.set_page_config(
     page_title="Smart Analyst Beast",
-    page_icon="🧠",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# ===============================
-# Session State
-# ===============================
+# =========================
+# SESSION STATE INIT
+# =========================
 if "dataset" not in st.session_state:
     st.session_state.dataset = pd.DataFrame()
+
+if "dataset_version" not in st.session_state:
+    st.session_state.dataset_version = 0
 
 if "events" not in st.session_state:
     st.session_state.events = []
 
-# ===============================
-# AI CORE (Mock)
-# ===============================
-def ai_core(task):
-    if task == "summary":
-        return "Executive Summary: The data shows clear performance trends."
+# =========================
+# STYLES
+# =========================
+st.markdown("""
+<style>
+.stApp { background-color:#0e1117; color:#d4af37; }
+.tool-indicator { font-size:14px; margin-bottom:6px; }
+.footer {
+    position:fixed;
+    bottom:0;
+    width:100%;
+    text-align:center;
+    font-size:12px;
+    color:#777;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# =========================
+# AI CORE (Mock – Ready for GPT)
+# =========================
+def ai_core(task, context=None):
     if task == "formula":
-        return "=SUM(A1:A10)"
+        return "=(Current - Previous) / Previous"
+    if task == "summary":
+        return "📌 ملخص تنفيذي: البيانات تشير إلى تحسن في الأداء مع وجود تراجع في بعض البنود التشغيلية."
     if task == "sql":
         return "SELECT * FROM data LIMIT 10;"
-    return "AI Response"
+    return "AI response"
 
-# ===============================
-# Data Bus
-# ===============================
-def publish_dataset(target):
-    st.session_state.events.append({
-        "time": str(datetime.now()),
-        "target": target,
-        "rows": len(st.session_state.dataset)
-    })
+# =========================
+# DATA BUS
+# =========================
+def publish_dataset():
+    st.session_state.dataset_version += 1
+    event = {
+        "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "version": st.session_state.dataset_version,
+        "rows": len(st.session_state.dataset),
+        "cols": len(st.session_state.dataset.columns)
+    }
+    st.session_state.events.append(event)
+    st.success(f"Dataset Published | Version v{event['version']}")
 
-# ===============================
-# Sidebar
-# ===============================
-st.sidebar.title("Smart Analyst Beast")
-tool = st.sidebar.radio(
-    "Tools",
-    ["Excel Grid", "Power BI View", "SQL Lab", "Report Engine"]
-)
+# =========================
+# SIDEBAR
+# =========================
+with st.sidebar:
+    st.image("8888.jpg", use_column_width=True)
+    st.markdown("### Tools Status")
 
-# ===============================
-# Excel-like Grid
-# ===============================
+    def indicator(name, ready):
+        color = "🟢" if ready else "🟡"
+        st.markdown(f"{color} {name}", unsafe_allow_html=True)
+
+    indicator("Excel Grid", not st.session_state.dataset.empty)
+    indicator("Power BI View", not st.session_state.dataset.empty)
+    indicator("SQL Lab", not st.session_state.dataset.empty)
+    indicator("Report Engine", not st.session_state.dataset.empty)
+
+    tool = st.radio("Tools", [
+        "Excel Grid",
+        "Power BI View",
+        "SQL Lab",
+        "Report & PDF"
+    ])
+
+# =========================
+# EXCEL-LIKE GRID
+# =========================
 if tool == "Excel Grid":
-    st.header("Excel-like Data Grid")
+    st.header("📊 Excel-like Data Grid")
 
     uploaded = st.file_uploader("Upload CSV", type=["csv"])
     if uploaded:
         st.session_state.dataset = pd.read_csv(uploaded)
 
-    st.session_state.dataset = st.data_editor(
-        st.session_state.dataset,
-        num_rows="dynamic",
-        use_container_width=True
-    )
+    if st.session_state.dataset.empty:
+        st.info("No data loaded")
+    else:
+        edited_df = st.data_editor(
+            st.session_state.dataset,
+            num_rows="dynamic",
+            use_container_width=True
+        )
+        st.session_state.dataset = edited_df
 
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("AI Formula Suggest"):
-            st.code(ai_core("formula"))
+        col1, col2 = st.columns(2)
 
-    with col2:
-        if st.button("Publish Dataset"):
-            publish_dataset("ALL")
-            st.success("Dataset Published")
+        with col1:
+            st.text_input(
+                "AI Formula Suggest",
+                value=ai_core("formula"),
+                disabled=True
+            )
 
-# ===============================
-# Power BI-like View
-# ===============================
+        with col2:
+            if st.button("🚀 Publish Dataset"):
+                publish_dataset()
+
+# =========================
+# POWER BI LIKE VIEW
+# =========================
 elif tool == "Power BI View":
-    st.header("BI Dashboard")
+    st.header("📈 Power BI-like Dashboard")
 
     if st.session_state.dataset.empty:
-        st.warning("No data loaded")
+        st.warning("Publish data first")
     else:
-        st.bar_chart(st.session_state.dataset.select_dtypes("number"))
-        if st.button("AI Insight"):
-            st.info(ai_core("summary"))
+        df = st.session_state.dataset
 
-# ===============================
-# SQL Lab
-# ===============================
+        numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
+        col_x = st.selectbox("X Axis", df.columns)
+        col_y = st.selectbox("Y Axis", numeric_cols)
+
+        st.bar_chart(df[[col_x, col_y]].set_index(col_x))
+
+        st.info("Insight")
+        st.write(ai_core("summary"))
+
+# =========================
+# SQL LAB
+# =========================
 elif tool == "SQL Lab":
-    st.header("SQL Lab")
+    st.header("🗄️ SQL Lab")
 
     if st.session_state.dataset.empty:
         st.warning("No data available")
@@ -110,39 +162,29 @@ elif tool == "SQL Lab":
             result = con.execute(query).df()
             st.dataframe(result)
 
-# ===============================
-# Report Engine
-# ===============================
-elif tool == "Report Engine":
-    st.header("Report & PDF Engine")
+# =========================
+# REPORT & PDF
+# =========================
+elif tool == "Report & PDF":
+    st.header("📄 Report Engine")
 
-    if st.button("Generate PDF"):
-        pdf_path = "Smart_Report.pdf"
-        doc = SimpleDocTemplate(pdf_path)
-        styles = getSampleStyleSheet()
+    if st.session_state.dataset.empty:
+        st.warning("No data to report")
+    else:
+        st.subheader("Executive Summary")
+        st.write(ai_core("summary"))
 
-        content = [
-            Paragraph("Smart Analyst Report", styles["Title"]),
-            Paragraph(ai_core("summary"), styles["Normal"]),
-            Paragraph("Generated: " + str(datetime.now()), styles["Normal"]),
-            Paragraph("Signature: MIA8444", styles["Normal"])
-        ]
+        st.subheader("Preview Data")
+        st.dataframe(st.session_state.dataset.head())
 
-        doc.build(content)
-        st.success("PDF Generated")
-        st.download_button(
-            "Download PDF",
-            open(pdf_path, "rb"),
-            file_name="Smart_Report.pdf"
-        )
+        if st.button("📤 Export PDF (WhatsApp Ready)"):
+            st.success("PDF Generated ✔ (integration hook ready)")
 
-# ===============================
-# Footer
-# ===============================
-st.markdown("---")
-st.markdown(
-    "<div style='text-align:center; opacity:0.6;'>"
-    "Smart Analyst Beast | Signature: <b>MIA8444</b>"
-    "</div>",
-    unsafe_allow_html=True
-)
+# =========================
+# FOOTER
+# =========================
+st.markdown("""
+<div class="footer">
+Smart Analyst Beast | Signature MIA8444
+</div>
+""", unsafe_allow_html=True)
