@@ -4,7 +4,6 @@ numpy
 Pillow
 requests
 xlsxwriter
-fpdf
 openpyxl
-importlib
 duckdb
+reportlab
