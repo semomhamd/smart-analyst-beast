@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-from pivottablejs import pivot_ui
 import os
 
 # ================= 1️⃣ إعدادات الصفحة =================
@@ -59,7 +58,7 @@ if choice == "🏠 الرئيسية":
     st.write("مرحباً بك في لوحة تحكم MIA8444")
     uploaded = st.file_uploader("ارفع أي ملف بيانات (Excel/CSV/ODS) هنا", type=['xlsx','csv','ods'])
     if uploaded:
-        if uploaded.name.endswith('xlsx') or uploaded.name.endswith('ods'):
+        if uploaded.name.endswith(('xlsx','ods')):
             st.session_state.dataset = pd.read_excel(uploaded)
         else:
             st.session_state.dataset = pd.read_csv(uploaded)
@@ -70,74 +69,34 @@ elif choice == "📊 Excel Master":
     df = st.session_state.dataset.copy()
     if df.empty:
         st.info("البيانات فارغة، ممكن تبدأ تدخل بيانات يدوي.")
-        df = pd.DataFrame({
-            "Item": [],
-            "Quantity": [],
-            "Price": []
-        })
-    # Data Editor تفاعلي مع إدخال يدوي
+        df = pd.DataFrame({"Item": [], "Quantity": [], "Price": []})
+
     df = st.data_editor(df, num_rows="dynamic")
-    # أعمدة محسوبة
+
     if not df.empty:
         df['Total'] = df['Quantity'].fillna(0) * df['Price'].fillna(0)
         df['Discounted'] = df['Total'].apply(lambda x: x*0.9 if x>50 else x)
         st.markdown("### الأعمدة المحسوبة")
         st.dataframe(df)
+
         # أمثلة SUM, AVERAGE, COUNT
         st.write(f"*Total Quantity:* {df['Quantity'].sum()}")
         st.write(f"*Average Price:* {df['Price'].mean()}")
         st.write(f"*Count of Items:* {df['Item'].count()}")
-        # Pivot Table
+
+        # Pivot Table مباشر بدون مكتبة خارجية
         st.markdown("### Pivot Table")
-        pivot_ui(df)
+        if st.button("اعرض Pivot Table"):
+            pivot = pd.pivot_table(df, index='Item', values=['Quantity','Total'], aggfunc={'Quantity':'sum','Total':'sum'})
+            st.dataframe(pivot)
+
     st.session_state.dataset = df
 
-elif choice == "🧹 Power Query":
-    st.header("Power Query - Data Cleaning")
+# بقية الأدوات
+else:
+    st.header(f"{choice} - تحت التطوير")
+    st.write("ستظهر هنا كل الميزات المتقدمة لاحقاً...")
     df = st.session_state.dataset.copy()
-    st.write("هنا ممكن تعمل تنظيف للبيانات، إزالة قيم مكررة، تحويل الأنواع، إلخ...")
-    st.session_state.dataset = df
-
-elif choice == "📈 Power BI":
-    st.header("Power BI Hub - Visualizations")
-    df = st.session_state.dataset.copy()
-    st.write("هنا تقدر تعمل Charts، Graphs، Measures، Filters")
-    st.session_state.dataset = df
-
-elif choice == "🐍 Python Lab":
-    st.header("Python Lab - Advanced Analytics")
-    df = st.session_state.dataset.copy()
-    st.write("هنا ممكن تكتب كود Python لتحليل البيانات والتنبؤات")
-    st.session_state.dataset = df
-
-elif choice == "🗄️ SQL Lab":
-    st.header("SQL Lab - Queries")
-    df = st.session_state.dataset.copy()
-    st.write("هنا ممكن تكتب Queries على البيانات")
-    st.session_state.dataset = df
-
-elif choice == "☁️ Google Sheets":
-    st.header("Google Sheets Sync")
-    df = st.session_state.dataset.copy()
-    st.write("ربط البيانات مع Google Sheets وSync تلقائي")
-    st.session_state.dataset = df
-
-elif choice == "🖼️ Tableau":
-    st.header("Tableau Connector")
-    df = st.session_state.dataset.copy()
-    st.write("ربط البيانات مع Tableau وعرض Dashboards")
-    st.session_state.dataset = df
-
-elif choice == "👁️ OCR Engine":
-    st.header("OCR Engine - Extract from Images")
-    st.write("ارفع صورة والفواتير تتحول لبيانات رقمية")
-    st.session_state.dataset = st.session_state.dataset
-
-elif choice == "🤖 AI Brain (Core)":
-    st.header("AI Brain - Insights & Suggestions")
-    df = st.session_state.dataset.copy()
-    st.text_input("اسأل الوحش عن بياناتك:", placeholder="اكتب سؤالك هنا...")
-    st.write("الذكاء الاصطناعي يحلل البيانات ويقترح Insights / Formulas / Reports")
     st.session_state.dataset = df
 
 # ================= 6️⃣ Footer =================
