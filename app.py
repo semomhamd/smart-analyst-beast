@@ -1,75 +1,66 @@
 import streamlit as st
 import pandas as pd
-import os
+from PIL import Image
 
-# إعدادات الصفحة الفخمة
+# استيراد موديولات الوحش المخصصة
+from cleaner_pro import run_cleaner
+from ai_analyst import run_analysis
+from excel_master import run_excel_pro
+from sql_beast import run_sql_beast
+from google_sheets_master import connect_gsheets
+from pdf_pro import export_report
+
+# 1. إعدادات الهوية واللوجو MIA8444 [cite: 2026-01-26, 2026-01-28]
 st.set_page_config(page_title="Smart Analyst Beast PRO", layout="wide")
 
-# 1. نظام الـ Theme وبصمة MIA8444
-if 'theme' not in st.session_state:
-    st.session_state.theme = 'Dark'
-
-# 2. القاعدة الموحدة (Unified Dataset) - أهم نقطة في خطتك [cite: 2026-01-17]
-if 'main_data' not in st.session_state:
-    st.session_state.main_data = pd.DataFrame()
-
-# Sidebar: الترسانة الكاملة
+# إظهار اللوجو وترس الإعدادات وزر اللغة [cite: 2026-01-15]
 with st.sidebar:
-    st.title("🦁 Beast Control Tower")
-    choice = st.radio("الترسانة التقنية:", [
+    try:
+        logo = Image.open("8888.jpg")
+        st.image(logo, use_container_width=True)
+    except:
+        st.title("🦁 Beast Analyst")
+    
+    col1, col2 = st.columns(2)
+    with col1: st.button("🌐 EN/AR")
+    with col2: st.button("⚙️ Settings")
+    
+    st.markdown("---")
+    choice = st.radio("الترسانة الذكية:", [
         "🏠 Data Hub (Home)",
         "🧹 Power Query (Cleaner)",
         "📊 Excel Master PRO",
-        "📈 Power BI Dashboard",
-        "🎨 Tableau Engine",
-        "🗄️ SQL & Google Sheets",
-        "🐍 Python Lab",
+        "🗄️ SQL & Cloud Memory",
         "🧠 AI Data Scientist",
         "📄 Final Report Center"
     ])
-    st.markdown("---")
-    st.write(f"Verified by: *MIA8444*") # توقيعك
+    st.info("Verified by: MIA8444")
 
-# ================= 3. تفعيل الأدوات (Phase 1 & 2) =================
+# 2. الذاكرة الموحدة (The Unified Memory) [cite: 2026-01-16]
+if 'main_data' not in st.session_state:
+    st.session_state.main_data = pd.DataFrame()
 
-# --- Home: مركز استقبال البيانات ---
+# 3. توجيه الأوامر للملفات المنفصلة
 if choice == "🏠 Data Hub (Home)":
-    st.subheader("📥 مركز البيانات الموحد")
-    uploaded = st.file_uploader("ارفع ملف Excel أو CSV أو اربط API", type=['xlsx', 'csv'])
+    st.subheader("📥 مركز استقبال البيانات")
+    uploaded = st.file_uploader("ارفع ملف Excel أو CSV", type=['xlsx', 'csv'])
     if uploaded:
-        df = pd.read_excel(uploaded) if uploaded.name.endswith('xlsx') else pd.read_csv(uploaded)
-        st.session_state.main_data = df
-        st.success("تم شحن 'ذاكرة الوحش' بالبيانات! 🔥")
+        st.session_state.main_data = pd.read_excel(uploaded) if uploaded.name.endswith('xlsx') else pd.read_csv(uploaded)
+        st.success("البيانات الآن في ذاكرة الوحش! 🔥")
 
-# --- Excel Master: حل مشكلة الـ Traceback ---
+elif choice == "🧹 Power Query (Cleaner)":
+    run_cleaner() # استدعاء من ملف cleaner_pro.py
+
 elif choice == "📊 Excel Master PRO":
-    if not st.session_state.main_data.empty:
-        df = st.data_editor(st.session_state.main_data, num_rows="dynamic")
-        
-        # حماية من الـ Traceback بذكاء MIA8444
-        try:
-            # نتأكد إن الأعمدة أرقام قبل أي عملية حسابية
-            c1 = pd.to_numeric(df.iloc[:, 1], errors='coerce').fillna(0)
-            c2 = pd.to_numeric(df.iloc[:, 2], errors='coerce').fillna(0)
-            df["Total"] = c1 * c2
-            st.metric("Total Revenue", f"{df['Total'].sum():,.2f}")
-        except:
-            st.warning("برجاء التأكد من أن الأعمدة المختارة تحتوي على أرقام.")
-        st.session_state.main_data = df
-    else:
-        st.warning("ارفع بياناتك الأول يا ملك!")
+    run_excel_pro() # استدعاء من ملف excel_master.py
 
-# --- AI Data Scientist: تفعيل الـ Insights الحقيقية ---
+elif choice == "🗄️ SQL & Cloud Memory":
+    tab1, tab2 = st.tabs(["SQL Connector", "Google Sheets"])
+    with tab1: run_sql_beast()
+    with tab2: connect_gsheets()
+
 elif choice == "🧠 AI Data Scientist":
-    st.subheader("🤖 تحليل الذكاء الاصطناعي")
-    if not st.session_state.main_data.empty:
-        if st.button("Generate Pro Insights"):
-            # هنا بنادي على الموديول اللي في ai_analyst.py
-            st.write("### 🔍 رؤية الوحش للبيانات:")
-            numeric_cols = st.session_state.main_data.select_dtypes('number')
-            st.info(f"أعلى قيمة تم رصدها هي {numeric_cols.max().max()} في عمود {numeric_cols.max().idxmax()}")
-            # التقرير بيكمل بناءً على الذكاء الاصطناعي
-    else:
-        st.error("الوحش محتاج بيانات عشان يحلل!")
+    run_analysis(st.session_state.main_data) # استدعاء من ملف ai_analyst.py
 
-# باقي الأدوات (SQL, Power BI, Tableau) بتشتغل بنفس المنطق الموحد
+elif choice == "📄 Final Report Center":
+    export_report()
