@@ -1,14 +1,5 @@
 streamlit
 pandas
-numpy
-Pillow
-requests
-xlsxwriter
 openpyxl
-duckdb
-reportlab
-altair
-pivottablejs
-sqlalchemy
-install
-pip
+Pillow
+gspread
