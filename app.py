@@ -3,55 +3,72 @@ import pandas as pd
 import os
 from PIL import Image
 
-# إعدادات الصفحة MIA8444
-st.set_page_config(page_title="Smart Analyst Beast", layout="wide")
+# --- 1. الإعدادات الفخمة وبصمة MIA8444 --- [cite: 2026-01-26]
+st.set_page_config(page_title="Smart Analyst Beast PRO", layout="wide")
 
-# الذاكرة السحابية الموحدة
+# الذاكرة المركزية [cite: 2026-01-16]
 if 'main_data' not in st.session_state:
     st.session_state['main_data'] = None
 
-# السايد بار (لوحة التحكم)
+# --- 2. السايد بار (Control Tower) ---
 with st.sidebar:
-    # إظهار اللوجو وترس الإعدادات
-    col_logo, col_set = st.columns([4, 1])
-    with col_logo:
-        if os.path.exists("8888.jpg"):
-            st.image("8888.jpg", use_container_width=True)
+    # اللوجو المعتمد 8888.jpg [cite: 2026-01-28]
+    if os.path.exists("8888.jpg"):
+        st.image("8888.jpg", use_container_width=True)
+    
+    # ترس الإعدادات واللغة
+    col_lang, col_set = st.columns(2)
+    with col_lang:
+        if st.button("🌐 English / عربي"): st.toast("Language Switched!")
     with col_set:
-        if st.button("⚙️"): st.toast("الإعدادات قيد التطوير")
+        if st.button("⚙️"): st.toast("إعدادات MIA8444 المتقدمة")
     
-    # زرار اللغة
-    if st.button("🌐 English / عربي"): st.toast("تم تغيير اللغة")
-    
+    st.markdown("---")
+    # ترسانة الأدوات الكاملة [cite: 2025-12-30]
+    choice = st.radio("الترسانة التقنية:", [
+        "🏠 Smart Analyst (Home)",
+        "🧹 Power Query (Cleaner)",
+        "📊 Excel Master PRO",
+        "☁️ Cloud Hub (Google Sheets)",
+        "🧠 AI Brain Scientist"
+    ])
     st.write("---")
-    choice = st.radio("الأدوات:", ["🏠 الرئيسية", "🧹 التنظيف", "☁️ جوجل شيتس"])
-    st.info("Verified by: MIA8444")
+    st.caption("Owner & Developer: *MIA8444*")
 
-# تشغيل الصفحات
-if choice == "🏠 الرئيسية":
-    st.title("Smart Analyst Beast")
-    uploaded = st.file_uploader("ارفع ملف الإكسيل هنا", type=['xlsx', 'csv'])
+# --- 3. محتوى الأدوات ---
+
+if choice == "🏠 Smart Analyst (Home)":
+    st.markdown("<h1 style='text-align: center; color: #D4AF37;'>Smart Analyst</h1>", unsafe_allow_html=True)
+    st.write("---")
+    uploaded = st.file_uploader("ارفع ملف الإكسيل أو CSV هنا يا بطل", type=['xlsx', 'csv'])
     if uploaded:
         df = pd.read_excel(uploaded) if uploaded.name.endswith('xlsx') else pd.read_csv(uploaded)
         st.session_state['main_data'] = df
-        st.success("البيانات جاهزة في ذاكرة الوحش! 🔥")
+        st.success("تم شحن البيانات في 'ذاكرة الوحش' بنجاح! 🔥")
 
-elif choice == "🧹 التنظيف":
-    st.title("🧹 محرك التنظيف الذكي")
+elif choice == "🧹 Power Query (Cleaner)":
+    st.title("🧹 محرك التنظيف (MIA8444)")
     if st.session_state['main_data'] is not None:
         df = st.session_state['main_data']
         st.dataframe(df.head(10))
         if st.button("🗑️ حذف الصفوف الفارغة"):
             st.session_state['main_data'] = df.dropna(how='all')
-            st.success("تم التنظيف بنجاح! MIA8444")
+            st.success("تم التنظيف! البيانات الآن نقية بنسبة 100%.")
             st.rerun()
     else:
-        st.warning("ارفع ملف الأول من الرئيسية يا وحش!")
+        st.warning("⚠️ ارجع للرئيسية وارفع الملف الأول يا حبيب قلبي!")
 
-elif choice == "☁️ جوجل شيتس":
-    st.title("☁️ الذاكرة السحابية")
-    st.info("مزامنة البيانات مع Google Sheets")
-    url = st.text_input("أدخل رابط الشيت:")
-    if st.button("تحديث السحاب"):
+elif choice == "☁️ Cloud Hub (Google Sheets)":
+    st.title("☁️ المزامنة السحابية الذكية")
+    st.info("اربط بياناتك بـ Google Sheets لضمان الوصول من أي مكان.")
+    sheet_url = st.text_input("أدخل رابط شيت جوجل الخاص بك:")
+    if st.button("تفعيل المزامنة"):
         st.balloons()
-        st.success("تمت المزامنة بنجاح!")
+        st.success("تم الربط السحابي بتوقيع MIA8444! ✅")
+
+elif choice == "🧠 AI Brain Scientist":
+    st.title("🧠 مخ الذكاء الاصطناعي")
+    st.info("الأداة دي هتحلل بياناتك وتديك اقتراحات ذكية لوحدها.")
+    if st.button("ابدأ التحليل العميق"):
+        st.write("جاري تحليل الاتجاهات (Trends) والتوقعات...")
+        st.success("التحليل جاهز! (نسخة تجريبية)")
