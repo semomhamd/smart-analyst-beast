@@ -1,68 +1,148 @@
-import streamlit as st import pandas as pd import os
+import streamlit as st
+import pandas as pd
+import os
 
-================= 1. إعدادات الصفحة =================
-
+# إعدادات الصفحة
 st.set_page_config(page_title="Smart Analyst Beast", layout="wide")
 
-================= 2. Theme + اللوجو + Language + Settings =================
+# Theme
+if 'theme' not in st.session_state:
+    st.session_state.theme = 'Dark'
 
-if 'theme' not in st.session_state: st.session_state.theme = 'Dark'
-
-bg_color = "#0e1117" if st.session_state.theme == 'Dark' else "#ffffff" text_color = "#D4AF37" if st.session_state.theme == 'Dark' else "#000000"
-
-st.markdown(f""" <style> .stApp {{ background-color: {bg_color}; color: {text_color}; }} .footer {{ position: fixed; left: 0; bottom: 0; width: 100%; text-align: center; font-size: 12px; color: #888; padding: 5px; background: transparent; }} </style> """, unsafe_allow_html=True)
-
-Header: Logo + Language + Settings
-
-col_logo, col_space, col_lang, col_set = st.columns([2,6,1,1]) with col_logo: if os.path.exists("8888.jpg"): st.image("8888.jpg", width=120) with col_lang: st.button("AR/EN") with col_set: with st.expander("إعدادات"): if st.button("تبديل النمط Light/Dark"): st.session_state.theme = 'Light' if st.session_state.theme == 'Dark' else 'Dark' st.experimental_rerun()
-
-================= 3. Sidebar =================
-
-with st.sidebar: st.markdown("## الأدوات") choice = st.radio("", [ "الرئيسية", "Excel Master", "Power Query", "Power BI", "Python Lab", "OCR Engine", "Google Sheets", "Tableau", "SQL Lab", "AI Brain (Core)" ])
-
-================= 4. Unified Dataset =================
-
-if 'dataset' not in st.session_state: st.session_state.dataset = pd.DataFrame()
-
-================= 5. Main Content =================
-
-if choice == "الرئيسية": st.title("The Ultimate Financial Brain") st.write("مرحباً بك في لوحة تحكم MIA8444") uploaded = st.file_uploader("ارفع أي ملف بيانات هنا", type=['xlsx','csv','ods']) if uploaded: if uploaded.name.endswith(('xlsx','ods')): st.session_state.dataset = pd.read_excel(uploaded) else: st.session_state.dataset = pd.read_csv(uploaded) st.success("تم رفع البيانات وربطها بالترسانة!")
-
-elif choice == "Excel Master": st.header("Excel Master - Data Editor") df = st.session_state.dataset.copy() if df.empty: st.info("البيانات فارغة، ممكن تبدأ تدخل بيانات يدوي.") df = pd.DataFrame({"Item": [], "Quantity": [], "Price": []})
-
-df = st.data_editor(df, num_rows="dynamic")
-
-if not df.empty:
-    df['Total'] = df['Quantity'].fillna(0) * df['Price'].fillna(0)
-    df['Discounted'] = df['Total'].apply(lambda x: x*0.9 if x>50 else x)
-    st.markdown("### الأعمدة المحسوبة")
-    st.dataframe(df)
-    st.write(f"Total Quantity: {df['Quantity'].sum()}")
-    st.write(f"Average Price: {df['Price'].mean()}")
-    st.write(f"Count of Items: {df['Item'].count()}")
-
-    st.markdown("### Pivot Table")
-    if st.button("اعرض Pivot Table"):
-        pivot = pd.pivot_table(df, index='Item', values=['Quantity','Total'], aggfunc={'Quantity':'sum','Total':'sum'})
-        st.dataframe(pivot)
-
-st.session_state.dataset = df
-
-elif choice == "Power BI": st.header("Power BI Dashboard") df = st.session_state.dataset.copy() if df.empty: st.info("ارفع بيانات في الصفحة الرئيسية عشان تولد داشبورد") else: if st.button("Generate Dashboard"): st.subheader("Sales Overview") st.line_chart(df[['Quantity','Total']]) st.bar_chart(df.groupby('Item')['Total'].sum())
-
-elif choice == "Python Lab": st.header("Python Lab") df = st.session_state.dataset.copy() code = st.text_area("اكتب كود Python هنا") if st.button("Run Code"): try: exec(code) except Exception as e: st.error(f"Error: {e}")
-
-elif choice == "AI Brain (Core)": st.header("AI Brain - Insights") df = st.session_state.dataset.copy() if df.empty: st.info("ارفع بيانات في الصفحة الرئيسية عشان تولد Insights") else: if st.button("Generate Insights"): top_item = df.groupby('Item')['Total'].sum().idxmax() max_total = df['Total'].max() min_total = df['Total'].min() st.write(f"الأعلى مبيعًا: {top_item}") st.write(f"أكبر قيمة: {max_total}") st.write(f"أقل قيمة: {min_total}")
-
-باقي الأدوات تحت التطوير
-
-else: st.header(f"{choice} - تحت التطوير") df = st.session_state.dataset.copy() st.session_state.dataset = df
-
-================= 6. Footer =================
+bg_color = "#0e1117" if st.session_state.theme == 'Dark' else "#ffffff"
+text_color = "#D4AF37" if st.session_state.theme == 'Dark' else "#000000"
 
 st.markdown(f"""
-
-<div class="footer">
-Property of Smart Analyst Beast | Signature MIA8444 | v1.0
-</div>
+<style>
+.stApp {{ background-color: {bg_color}; color: {text_color}; }}
+</style>
 """, unsafe_allow_html=True)
+
+
+# Header
+col_logo, col_space, col_lang, col_set = st.columns([2,6,1,1])
+
+with col_logo:
+    if os.path.exists("8888.jpg"):
+        st.image("8888.jpg", width=120)
+
+with col_set:
+    if st.button("Toggle Theme"):
+        st.session_state.theme = 'Light' if st.session_state.theme == 'Dark' else 'Dark'
+        st.rerun()
+
+
+# Sidebar
+with st.sidebar:
+    choice = st.radio("الأدوات", [
+        "Home",
+        "Excel Master",
+        "Power BI",
+        "Python Lab",
+        "AI Brain"
+    ])
+
+
+# Dataset موحد
+if 'dataset' not in st.session_state:
+    st.session_state.dataset = pd.DataFrame()
+
+
+# ================= Home =================
+if choice == "Home":
+
+    st.title("Smart Analyst Beast")
+
+    uploaded = st.file_uploader(
+        "ارفع ملف Excel أو CSV",
+        type=['xlsx', 'csv']
+    )
+
+    if uploaded:
+
+        if uploaded.name.endswith('xlsx'):
+            df = pd.read_excel(uploaded)
+        else:
+            df = pd.read_csv(uploaded)
+
+        st.session_state.dataset = df
+        st.success("تم رفع البيانات بنجاح 🔥")
+
+
+
+# ================= Excel =================
+elif choice == "Excel Master":
+
+    df = st.session_state.dataset.copy()
+
+    if df.empty:
+        st.warning("ارفع بيانات الأول من الصفحة الرئيسية")
+    else:
+
+        df = st.data_editor(df, num_rows="dynamic")
+
+        df["Total"] = df.iloc[:,1] * df.iloc[:,2]
+
+        st.write("### Summary")
+
+        st.write("Total =", df["Total"].sum())
+        st.write("Average =", df["Total"].mean())
+
+        if st.button("Create Pivot"):
+            pivot = pd.pivot_table(
+                df,
+                index=df.columns[0],
+                values="Total",
+                aggfunc="sum"
+            )
+            st.dataframe(pivot)
+
+        st.session_state.dataset = df
+
+
+
+# ================= Dashboard =================
+elif choice == "Power BI":
+
+    df = st.session_state.dataset.copy()
+
+    if df.empty:
+        st.warning("ارفع بيانات الأول")
+    else:
+
+        st.subheader("Dashboard")
+
+        st.line_chart(df.select_dtypes('number'))
+        st.bar_chart(df.groupby(df.columns[0]).sum())
+
+
+
+# ================= Python =================
+elif choice == "Python Lab":
+
+    code = st.text_area("اكتب كود Python")
+
+    if st.button("Run"):
+        try:
+            exec(code)
+        except Exception as e:
+            st.error(e)
+
+
+
+# ================= AI =================
+elif choice == "AI Brain":
+
+    df = st.session_state.dataset.copy()
+
+    if df.empty:
+        st.warning("ارفع بيانات الأول")
+    else:
+
+        if st.button("Generate Insights"):
+
+            numeric = df.select_dtypes('number')
+
+            st.write("أكبر رقم:", numeric.max().max())
+            st.write("أصغر رقم:", numeric.min().min())
+            st.write("المتوسط العام:", numeric.mean().mean())
