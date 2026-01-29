@@ -8,3 +8,4 @@ openpyxl
 duckdb
 reportlab
 altair
+pivottablejs
