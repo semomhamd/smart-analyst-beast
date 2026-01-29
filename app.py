@@ -1,86 +1,60 @@
 import streamlit as st
 import pandas as pd
-import os
-from ai_analyst import run_analysis # ربطنا مخ ابننا هنا
+# استيراد الأدوات المتقدمة من الملفات اللي جهزناها
+from cleaner_pro import run_cleaner
+from ai_analyst import run_analysis
+from sql_beast import connect_sql # لربط الـ SQL
 
-# إعدادات الصفحة
-st.set_page_config(page_title="Smart Analyst Beast", layout="wide")
+# 1. إعداد قاعدة البيانات الموحدة (Unified Dataset)
+if 'main_data' not in st.session_state:
+    st.session_state['main_data'] = pd.DataFrame()
 
-# Theme Setup
-if 'theme' not in st.session_state:
-    st.session_state.theme = 'Dark'
-
-bg_color = "#0e1117" if st.session_state.theme == 'Dark' else "#ffffff"
-text_color = "#D4AF37" if st.session_state.theme == 'Dark' else "#000000"
-
-st.markdown(f"""
-<style>
-.stApp {{ background-color: {bg_color}; color: {text_color}; }}
-.stButton>button {{ background-color: #D4AF37; color: black; border-radius: 10px; }}
-</style>
-""", unsafe_allow_html=True)
-
-# Header
-col_logo, col_space, col_set = st.columns([2,6,1])
-with col_logo:
-    if os.path.exists("8888.jpg"):
-        st.image("8888.jpg", width=120)
-
-with col_set:
-    if st.button("🌓 Toggle"):
-        st.session_state.theme = 'Light' if st.session_state.theme == 'Dark' else 'Dark'
-        st.rerun()
-
-# Sidebar
+# 2. تصميم Sidebar الاحترافي
 with st.sidebar:
-    st.title("🛠️ لوحة التحكم")
-    choice = st.radio("الأدوات", ["Home", "Excel Master", "Power BI", "Python Lab", "AI Brain"])
-    st.markdown("---")
-    st.write(f"Sign: *MIA8444*") # بصمتك الفخمة
-
-# Dataset الموحد
-if 'dataset' not in st.session_state:
-    st.session_state.dataset = pd.DataFrame()
-
-# ================= Home =================
-if choice == "Home":
     st.title("🦁 Smart Analyst Beast")
-    uploaded = st.file_uploader("ارفع ملف Excel أو CSV", type=['xlsx', 'csv'])
+    st.info("You don't have to be a data analyst.. Smart Analyst thinks for you") # شعارنا [cite: 2026-01-24]
+    
+    choice = st.selectbox("اختر أداة التحليل:", [
+        "🏠 Home (Data Hub)",
+        "🧹 Power Query (Cleaner)",
+        "📊 Excel Master",
+        "📈 Power BI Dashboard",
+        "🎨 Tableau Connect",
+        "🔗 Google Sheets & SQL",
+        "🐍 Python Lab",
+        "🧠 AI Brain Insights",
+        "📄 Final Report Center"
+    ])
+    st.markdown(f"<h6 style='text-align: center;'>Sign: MIA8444</h6>", unsafe_allow_html=True) # بصمتك [cite: 2026-01-26]
+
+# ================= 3. تنفيذ الوحدات (Phase 1 & 2) =================
+
+if "Home" in choice:
+    st.subheader("📥 مركز استقبال البيانات (Data Lake)")
+    uploaded = st.file_uploader("ارفع ملفك (Excel/CSV)", type=['xlsx', 'csv'])
     if uploaded:
-        df = pd.read_excel(uploaded) if uploaded.name.endswith('xlsx') else pd.read_csv(uploaded)
-        st.session_state.dataset = df
-        st.success("تم رفع البيانات بنجاح.. جاهزين للاكتساح! 🔥")
+        st.session_state['main_data'] = pd.read_excel(uploaded) if uploaded.name.endswith('xlsx') else pd.read_csv(uploaded)
+        st.success("البيانات دخلت المعمل بنجاح! 🔥")
 
-# ================= Excel Master (التصليح هنا) =================
-elif choice == "Excel Master":
-    df = st.session_state.dataset.copy()
-    if df.empty:
-        st.warning("ارفع بيانات الأول من الصفحة الرئيسية")
+elif "Power Query" in choice:
+    # نداء لملف الـ Cleaner المطور اللي صلحناه سوا
+    run_cleaner()
+
+elif "Power BI" in choice or "Tableau" in choice:
+    st.subheader(f"📊 واجهة {choice}")
+    if not st.session_state['main_data'].empty:
+        df = st.session_state['main_data']
+        # هنا بنعرض الـ Charts التفاعلية بـ Plotly أو Streamlit Charts
+        st.bar_chart(df.select_dtypes(include='number'))
     else:
-        st.subheader("📝 محرر البيانات الذكي")
-        df = st.data_editor(df, num_rows="dynamic")
-        
-        # تصليح الـ Traceback: نأكد إن الأعمدة أرقام قبل الضرب
-        try:
-            col1_vals = pd.to_numeric(df.iloc[:, 1], errors='coerce').fillna(0)
-            col2_vals = pd.to_numeric(df.iloc[:, 2], errors='coerce').fillna(0)
-            df["Total"] = col1_vals * col2_vals
-            
-            st.write("### 📊 ملخص الأرقام")
-            c1, c2 = st.columns(2)
-            c1.metric("إجمالي المبالغ", f"{df['Total'].sum():,.2f}")
-            c2.metric("متوسط العمليات", f"{df['Total'].mean():,.2f}")
-        except Exception as e:
-            st.error(f"يا وحش فيه مشكلة في الحسابات: {e}")
+        st.warning("فين البيانات يا وحش؟ ارفعها من الـ Home الأول.")
 
-        st.session_state.dataset = df
+elif "AI Brain" in choice:
+    # نداء لمخ الذكاء الاصطناعي
+    run_analysis(st.session_state['main_data'])
 
-# ================= AI Brain (تفعيل المخ) =================
-elif choice == "AI Brain":
-    if st.session_state.dataset.empty:
-        st.warning("ارفع بيانات الأول")
-    else:
-        # استدعاء الوظيفة اللي عملناها في ملف ai_analyst.py
-        run_analysis(st.session_state.dataset) 
-
-# باقي الأقسام (Power BI & Python) بتشتغل عادي بنفس المنطق
+elif "Google Sheets & SQL" in choice:
+    st.subheader("🔗 ربط المصادر الخارجية")
+    db_url = st.text_input("ادخل رابط SQL أو Google Sheet")
+    if st.button("Connect"):
+        st.info("جاري الربط مع 'The Beast's Memory'...") # فلسفة الذاكرة [cite: 2026-01-24]
