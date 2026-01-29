@@ -11,3 +11,4 @@ altair
 pivottablejs
 sqlalchemy
 install
+pip
