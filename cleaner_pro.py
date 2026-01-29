@@ -29,12 +29,14 @@ def run_cleaner():
                 st.rerun()
 
         with c3:
-            if st.button("🔢 إصلاح الأرقام"):
-                numeric_df = df.apply(pd.to_numeric, errors='coerce').fillna(0)
-                st.session_state['main_data'] = numeric_df
-                st.success("تم توحيد الأرقام!")
-                st.rerun()
-
+           if st.button("📊 إصلاح الأرقام"):
+    df = st.session_state['main_data'].copy()
+    # هنا بنقول لابننا: حول بس الأعمدة اللي تنفع أرقام وسيب النصوص
+    for col in df.columns:
+        df[col] = pd.to_numeric(df[col], errors='ignore') 
+    st.session_state['main_data'] = df
+    st.success("✅ الأرقام اتظبطت يا وحش وتوقيعك MIA8444 منور!")
+    st.rerun()
         st.markdown("---")
         if st.button("💾 اعتماد وحفظ البيانات"):
             st.balloons()
