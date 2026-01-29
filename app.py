@@ -29,7 +29,7 @@ with st.sidebar:
 
 # تشغيل الصفحات
 if choice == "🏠 الرئيسية":
-    st.title("مرحباً بك يا حبيب قلبي")
+    st.title("Smart Analyst Beast")
     uploaded = st.file_uploader("ارفع ملف الإكسيل هنا", type=['xlsx', 'csv'])
     if uploaded:
         df = pd.read_excel(uploaded) if uploaded.name.endswith('xlsx') else pd.read_csv(uploaded)
