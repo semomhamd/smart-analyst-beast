@@ -1,66 +1,47 @@
 import streamlit as st
 import pandas as pd
 import os
-from PIL import Image
 
-# 1. إعدادات فخمة تليق بيك
-st.set_page_config(page_title="Smart Analyst Beast PRO", layout="wide")
+# 1. إعدادات الصفحة والذاكرة
+st.set_page_config(page_title="Smart Analyst Beast", layout="wide")
 
-# 2. الذاكرة السحابية (عشان ابننا ما ينساش أبداً) [cite: 2026-01-16]
 if 'main_data' not in st.session_state:
     st.session_state['main_data'] = None
 
-# 3. القائمة الجانبية (بصمة MIA8444) [cite: 2026-01-26]
+# 2. القائمة الجانبية (Sidebar)
 with st.sidebar:
-    # إظهار اللوجو [cite: 2026-01-28]
+    st.header("🦁 لوحة التحكم")
+    # التأكد من وجود اللوجو في نفس الفولدر [cite: 2026-01-28]
     if os.path.exists("8888.jpg"):
-        st.image("8888.jpg", use_container_width=True)
+        st.image("8888.jpg")
     
-    # ترس الإعدادات واللغة
-    c1, c2 = st.columns(2)
-    with c1: st.button("🌐 EN/AR")
-    with c2: st.button("⚙️ Settings")
-    
-    st.markdown("---")
-    # كل الأدوات اللي طلبتها في مكان واحد
-    choice = st.radio("ترسانة الأدوات:", [
-        "🏠 الصفحة الرئيسية (Home)",
-        "🧹 تنظيف البيانات (Cleaner)",
-        "📊 محرك الإكسيل (Excel Master)",
-        "☁️ جوجل شيتس (Google Sheets)",
-        "🧠 الذكاء الاصطناعي (AI Brain)"
-    ])
+    choice = st.radio("اختر الأداة:", ["🏠 الرئيسية", "🧹 التنظيف", "☁️ جوجل شيتس"])
     st.write("---")
-    st.write("MIA8444 | ملك البيانات")
+    st.write("Verified by: *MIA8444*")
 
-# 4. تشغيل الأدوات
-if choice == "🏠 الصفحة الرئيسية (Home)":
-    st.title("🦁 Smart Analyst Beast")
-    st.subheader("مرحباً بك يا حبيب قلبي في معملك الخاص")
-    uploaded = st.file_uploader("ارفع الملف هنا", type=['xlsx', 'csv'])
+# 3. تشغيل الصفحات
+if choice == "🏠 الرئيسية":
+    st.title("مرحباً بك")
+    uploaded = st.file_uploader("ارفع ملف الإكسيل هنا", type=['xlsx', 'csv'])
     if uploaded:
         df = pd.read_excel(uploaded) if uploaded.name.endswith('xlsx') else pd.read_csv(uploaded)
         st.session_state['main_data'] = df
-        st.success("البيانات في الذاكرة دلوقتي، يالا بينا نشتغل!")
+        st.success("تم رفع البيانات بنجاح! روح لصفحة التنظيف دلوقتي.")
 
-elif choice == "🧹 تنظيف البيانات (Cleaner)":
+elif choice == "🧹 التنظيف":
     st.title("🧹 محرك التنظيف الذكي")
     if st.session_state['main_data'] is not None:
         df = st.session_state['main_data']
         st.dataframe(df.head(10))
-        if st.button("مسح الصفوف الفاضية"):
-            st.session_state['main_data'] = df.dropna()
-            st.success("تم التنظيف يا وحش!")
+        if st.button("حذف الصفوف الفارغة"):
+            st.session_state['main_data'] = df.dropna(how='all')
+            st.success("تم التنظيف يا بطل! MIA8444")
             st.rerun()
     else:
-        st.warning("ارفع ملف الأول من الـ Home")
+        st.warning("ارفع ملف الأول من الصفحة الرئيسية")
 
-elif choice == "☁️ جوجل شيتس (Google Sheets)":
-    st.title("☁️ محرك جوجل السحابي")
-    st.info("🔗 مزامنة البيانات بين 'الوحش' وبين حسابك.")
-    sheet_url = st.text_input("أدخل رابط شيت جوجل:")
-    if st.button("مزامنة الآن"):
-        st.balloons()
-        st.success("تمت المزامنة بنجاح بتوقيع MIA8444!")
-
-# ... وهكذا لكل أداة
+elif choice == "☁️ جوجل شيتس":
+    st.title("☁️ جوجل شيتس Master")
+    url = st.text_input("حط رابط الشيت هنا:")
+    if st.button("سحب البيانات"):
+        st.info("جاري المزامنة السحابية... (MIA8444)")
