@@ -1,88 +1,152 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import os
 
-# --- 1. إعدادات الهوية والسمة MIA8444 --- [cite: 2026-01-26]
-st.set_page_config(page_title="Smart Analyst Beast PRO", layout="wide", initial_sidebar_state="expanded")
+# -------------------------------------------------------
+# هويتك هي الأساس          MIA8444
+# -------------------------------------------------------
+st.set_page_config(page_title="Smart Analyst Beast", layout="wide")
 
-# محرك الذاكرة الموحد [cite: 2026-01-16]
-if 'data' not in st.session_state: st.session_state['data'] = None
-if 'theme' not in st.session_state: st.session_state['theme'] = 'Dark'
+# الذاكرة اللي بتحفظ تعبك
+if 'db' not in st.session_state:
+    st.session_state['db'] = None
 
-# --- 2. السايد بار (لوحة التحكم الاحترافية) ---
+# -------------------------------------------------------
+# السايد بار (الترسانة الحقيقية)
+# -------------------------------------------------------
 with st.sidebar:
-    if os.path.exists("8888.jpg"):
-        st.image("8888.jpg", use_container_width=True) # اللوجو الخاص بك [cite: 2026-01-28]
-    
-    st.markdown("### 🛠️ ترسانة الأدوات")
-    menu = st.radio("اختر سلاحك:", [
-        "🏠 الرئيسية (Home)", 
-        "📄 شيت المعادلات (Manual)", 
-        "🧹 منظف البيانات (Cleaner)", 
-        "🧠 المحلل الذكي (AI)", 
-        "📊 الرسوم البيانية (Charts)",
-        "☁️ جوجل شيتس (Cloud)",
-        "📑 تصدير التقارير (Export)",
-        "⚙️ الإعدادات (Settings)"
+    st.title("🦁 MIA8444 Beast")
+    tool = st.radio("الترسانة:", [
+        "🏠 الرئيسية",
+        "📄 الشيت الذكي",
+        "🧹 المنظف",
+        "🧠 الذكاء الاصطناعي",
+        "📊 الرسوم",
+        "☁️ السحابة",
+        "📑 التصدير",
+        "⚙️ الإعدادات"
     ])
-    
     st.write("---")
-    # تبديل اللغة والثيم
-    col_l, col_t = st.columns(2)
-    with col_l: st.button("🌐 EN/AR")
-    with col_t: 
-        if st.button("🌙/☀️"): 
-            st.session_state['theme'] = 'Light' if st.session_state['theme'] == 'Dark' else 'Dark'
-    
-    st.caption(f"Verified by: *MIA8444*")
+    st.caption("النسخة الفخمة النهائية – 2026")
 
-# --- 3. تشغيل الـ 8 أدوات (واحدة واحدة وبذكاء) ---
+# -------------------------------------------------------
+# الصفحات الرئيسية
+# -------------------------------------------------------
+if tool == "🏠 الرئيسية":
+    st.header("مرحباً بك يا حبيب قلبي [cite: 2026-01-27]")
+    st.markdown("ارفع ملفك (csv أو excel) وهنبدأ الشغل الفوري 🚀")
 
-if menu == "🏠 الرئيسية (Home)":
-    st.markdown("<h1 style='text-align: center;'>Smart Analyst</h1>", unsafe_allow_html=True)
-    st.write("### 'لا داعي لأن تكون محلل بيانات.. المحلل الذكي يفكر بدلاً منك' [cite: 2026-01-24]")
-    uploaded = st.file_uploader("ارفع ملفك (Excel/CSV)", type=['xlsx', 'csv'])
-    if uploaded:
-        st.session_state['data'] = pd.read_excel(uploaded) if uploaded.name.endswith('xlsx') else pd.read_csv(uploaded)
-        st.success("تم ترويض البيانات بنجاح! 🔥")
+    up = st.file_uploader("ارفع ملفك هنا", type=["csv", "xlsx", "xls"])
+    if up is not None:
+        try:
+            if up.name.lower().endswith(('.xlsx', '.xls')):
+                st.session_state['db'] = pd.read_excel(up)
+            else:
+                st.session_state['db'] = pd.read_csv(up)
+            st.success("تم ترويض الملف بنجاح! ✅")
+            st.dataframe(st.session_state['db'].head(5))
+        except Exception as e:
+            st.error(f"حصل خطأ أثناء قراءة الملف: {e}")
 
-elif menu == "📄 شيت المعادلات (Manual)":
-    st.title("📝 محرك المعادلات اليدوي (Duo Engine)")
-    st.info("اكتب معادلاتك يدوي أو عدل البيانات المرفوعة.")
-    df_to_use = st.session_state['data'] if st.session_state['data'] is not None else pd.DataFrame([['',0,0]], columns=['البيان','الكمية','السعر'])
-    
-    edited = st.data_editor(df_to_use, num_rows="dynamic", use_container_width=True)
-    
-    if st.button("⚡ تطبيق معادلات الإكسيل"):
-        # محرك حساب تلقائي (الكمية * السعر) [cite: 2025-11-13]
-        if 'الكمية' in edited.columns and 'السعر' in edited.columns:
-            edited['الإجمالي'] = pd.to_numeric(edited['الكمية'], errors='coerce') * pd.to_numeric(edited['السعر'], errors='coerce')
-        st.session_state['data'] = edited
-        st.success("تم تحديث الحسابات بتوقيع MIA8444!")
+# -------------------------------------------------------
+elif tool == "📄 الشيت الذكي":
+    st.header("📝 محرك المعادلات (Duo)")
 
-elif menu == "🧠 المحلل الذكي (AI)":
-    st.title("🧠 مخ الذكاء الاصطناعي (AI Brain)")
-    if st.session_state['data'] is not None:
-        df = st.session_state['data']
-        if st.button("بدأ التحليل العميق"):
-            # حماية من خطأ UFuncNoLoopError
-            num_df = df.select_dtypes(include=[np.number])
-            st.write(f"📊 عدد السجلات: {len(df)}")
-            if not num_df.empty:
-                st.metric("أعلى قيمة مكتشفة", f"{num_df.max().max():,.2f}")
-                st.balloons()
-    else: st.warning("ارفع ملف الأول يا وحش!")
+    # لو مفيش بيانات → شيت فاضي افتراضي
+    if st.session_state['db'] is None:
+        default_data = pd.DataFrame([['', 0, 0]], columns=['الصنف', 'الكمية', 'السعر'])
+        st.info("ما فيش بيانات محملة بعد، جرب الشيت الفاضي ده:")
+    else:
+        default_data = st.session_state['db']
 
-elif menu == "🧹 منظف البيانات (Cleaner)":
-    st.title("🧹 المنظف الاحترافي")
-    if st.session_state['data'] is not None:
-        if st.button("حذف الصفوف الفارغة"):
-            st.session_state['data'] = st.session_state['data'].dropna(how='all')
-            st.success("تم تنظيف البيانات! MIA8444")
-    else: st.warning("لا توجد بيانات لتنظيفها.")
+    # الجدول التفاعلي
+    edited_df = st.data_editor(
+        default_data,
+        num_rows="dynamic",
+        use_container_width=True,
+        column_config={
+            "الكمية": st.column_config.NumberColumn(min_value=0, step=1),
+            "السعر": st.column_config.NumberColumn(min_value=0.0, format="%.2f"),
+        }
+    )
 
-# باقي الأدوات (Charts, Cloud, Export, Settings) يتم تفعيلها بنفس الطريقة..
-else:
-    st.title(f"🛠️ {menu}")
-    st.info("هذه الأداة قيد التفعيل النهائي لضمان أعلى أداء.")
+    if st.button("⚡ تشغيل كل دوال الإكسيل", type="primary"):
+        try:
+            edited_df['الإجمالي'] = (
+                pd.to_numeric(edited_df['الكمية'], errors='coerce') *
+                pd.to_numeric(edited_df['السعر'], errors='coerce')
+            ).fillna(0)
+            st.session_state['db'] = edited_df
+            st.success("المعادلات اشتغلت يا وحش! MIA8444")
+            st.balloons()
+            st.dataframe(edited_df)
+        except Exception as e:
+            st.error(f"مشكلة في الحسابات: {e}")
+
+# -------------------------------------------------------
+elif tool == "🧠 الذكاء الاصطناعي":
+    st.header("🧠 مخ الذكاء الاصطناعي")
+
+    if st.session_state.get('db') is None:
+        st.error("فين الملف؟ ارفع ملف في الصفحة الرئيسية الأول.")
+    else:
+        df = st.session_state['db']
+
+        # تنظيف واختيار الأعمدة الرقمية بأمان
+        numeric_df = df.apply(pd.to_numeric, errors='coerce')
+        numeric_cols = numeric_df.select_dtypes(include=np.number).columns
+
+        if len(numeric_cols) == 0:
+            st.warning("ما فيش أعمدة رقمية صالحة في الجدول حاليًا.")
+        else:
+            # ─────────────── التلات اقتراحات ───────────────
+            max_val = numeric_df[numeric_cols].max().max()
+            total_qty = df.get('الكمية', pd.Series(dtype=float)).sum()
+            avg_price = df.get('السعر', pd.Series(dtype=float)).mean()
+
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+                if pd.notna(max_val):
+                    st.metric("أكبر قيمة", f"{max_val:,.2f}")
+                else:
+                    st.metric("أكبر قيمة", "—")
+
+            with col2:
+                st.metric("إجمالي الكميات", f"{total_qty:,.0f}")
+
+            with col3:
+                if pd.notna(avg_price):
+                    st.metric("متوسط السعر", f"{avg_price:,.2f}")
+                else:
+                    st.metric("متوسط السعر", "—")
+
+            st.markdown("---")
+            st.caption("يمكن توسيع الصفحة دي بسهولة (أكثر الأصناف تكرارًا، إجمالي المبيعات، إلخ)")
+
+# -------------------------------------------------------
+# باقي الصفحات (placeholder حاليًا – يمكن تطويرها لاحقًا)
+# -------------------------------------------------------
+elif tool == "🧹 المنظف":
+    st.header("🧹 منظف البيانات")
+    st.info("قريبًا... (إزالة التكرارات، تعبئة القيم الناقصة، تنظيف النصوص)")
+
+elif tool == "📊 الرسوم":
+    st.header("📊 الرسوم البيانية")
+    st.info("قريبًا... (بار، خط، دائرة، heatmap)")
+
+elif tool == "☁️ السحابة":
+    st.header("☁️ التخزين السحابي")
+    st.info("قريبًا... (Google Drive / Dropbox / S3)")
+
+elif tool == "📑 التصدير":
+    st.header("📑 تصدير النتائج")
+    st.info("قريبًا... (Excel, CSV, PDF)")
+
+elif tool == "⚙️ الإعدادات":
+    st.header("⚙️ الإعدادات")
+    st.info("قريبًا... (تغيير الثيم، اللغة، إلخ)")
+
+# Footer بسيط
+st.markdown("---")
+st.caption("MIA8444 Smart Analyst Beast – كل الحقوق محفوظة © 2026")
