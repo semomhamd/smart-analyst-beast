@@ -1,87 +1,84 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.express as px
 
-# --- 1. إعدادات الهوية MIA8444 --- [cite: 2026-01-26]
-st.set_page_config(page_title="Smart Analyst", layout="wide")
+# محاولة تشغيل المكتبات بأمان عشان الزهق يخلص
+try:
+    import plotly.express as px
+    CHART_READY = True
+except:
+    CHART_READY = False
 
-# محرك الذاكرة الموحد لربط كل الصفحات ببعضها [cite: 2026-01-16]
-if 'db' not in st.session_state: st.session_state['db'] = None
-if 'lang' not in st.session_state: st.session_state['lang'] = 'Arabic'
+# --- إعدادات الهوية MIA8444 --- [cite: 2026-01-26]
+st.set_page_config(page_title="Smart Analyst Beast", layout="wide")
 
-# --- 2. السايد بار (ترسانة MIA8444 الموحدة) ---
+# محرك الذاكرة عشان البيانات ما تضيعش وأنت بتنقل بين الأدوات [cite: 2026-01-16]
+if 'main_data' not in st.session_state:
+    st.session_state['main_data'] = None
+
+# --- السايد بار (ترسانة الأدوات الـ 8) ---
 with st.sidebar:
     st.title("🦁 Smart Analyst")
-    tool = st.radio("الترسانة الموحدة:", [
+    tool = st.radio("اختر سلاحك:", [
         "🏠 الرئيسية", "📄 الشيت الذكي", "🧹 المنظف", 
         "🧠 الذكاء الاصطناعي", "📊 الرسوم البيانية", "⚙️ الإعدادات"
     ])
     st.write("---")
-    
-    # زر مشاركة واتساب الفوري [جديد]
-    whatsapp_url = "https://wa.me/?text=" + "بص على تطبيق Smart Analyst Beast بتوقيع MIA8444!"
-    st.markdown(f'<a href="{whatsapp_url}" target="_blank" style="text-decoration:none;"><button style="width:100%; background-color:#25D366; color:white; border:none; padding:10px; border-radius:5px;">SHARE WHATSAPP</button></a>', unsafe_allow_width=True)
-    
-    st.caption("MIA8444 - النسخة الفخمة 2026")
+    # تصليح كود الواتساب اللي كان عامل مشكلة في الصورة (55f98c54)
+    st.markdown(f'<a href="https://wa.me/" target="_blank"><button style="width:100%; border-radius:10px; background-color:#25D366; color:white;">SHARE WHATSAPP</button></a>', unsafe_allow_html=True)
+    st.caption("Signature: MIA8444")
 
-# --- 3. تشغيل المحركات المترابطة ---
+# --- تشغيل الأدوات ---
 
-# أ. الصفحة الرئيسية (استلام البيانات)
 if tool == "🏠 الرئيسية":
     st.header("Smart Analyst Beast")
-    st.subheader("مرحباً بك يا حبيب قلبي")
-    up = st.file_uploader("ارفع ملفك (CSV/Excel)", type=["csv", "xlsx"])
-    if up:
-        st.session_state['db'] = pd.read_excel(up) if up.name.endswith('xlsx') else pd.read_csv(up)
-        st.success("تم شحن البيانات في ذاكرة الوحش! ✅")
+    st.subheader("مرحباً بك يا حبيب قلبي") # [cite: 2026-01-27]
+    file = st.file_uploader("ارفع ملف البيانات (Excel/CSV)", type=['xlsx', 'csv'])
+    if file:
+        df = pd.read_excel(file) if file.name.endswith('xlsx') else pd.read_csv(file)
+        st.session_state['main_data'] = df
+        st.success("البيانات دخلت عرين الأسد! ✅")
 
-# ب. الشيت الذكي (التعديل يحفظ فوراً)
 elif tool == "📄 الشيت الذكي":
     st.header("📝 محرك المعادلات (Duo)")
-    if st.session_state['db'] is not None:
-        # الربط: نعدل البيانات المحفوظة أصلاً [cite: 2026-01-25]
-        edited = st.data_editor(st.session_state['db'], num_rows="dynamic", use_container_width=True)
-        if st.button("حفظ وتحديث المحرك"):
-            st.session_state['db'] = edited
+    if st.session_state['main_data'] is not None:
+        # الربط: أي تعديل هنا بيسمع في الرسوم والـ AI [cite: 2026-01-25]
+        updated_df = st.data_editor(st.session_state['main_data'], num_rows="dynamic", use_container_width=True)
+        if st.button("⚡ حفظ التعديلات"):
+            st.session_state['main_data'] = updated_df
             st.balloons()
-            st.success("تم الربط بنجاح! الرسوم والذكاء هيقرأوا التعديلات دي.")
-    else: st.warning("ارفع ملف في الرئيسية أولاً.")
+    else: st.info("ارفع ملف من صفحة الرئيسية أولاً.")
 
-# ج. الذكاء الاصطناعي (مفعل بالكامل)
 elif tool == "🧠 الذكاء الاصطناعي":
     st.header("🧠 مخ الذكاء الاصطناعي (AI Analysis)")
-    if st.session_state['db'] is not None:
-        df = st.session_state['db']
-        nums = df.select_dtypes(include=[np.number])
-        c1, c2 = st.columns(2)
-        with c1: st.metric("إجمالي السجلات", len(df))
-        with c2: 
-            if not nums.empty: st.metric("أعلى قيمة مسجلة", f"{nums.max().max():,.2f}")
-        st.info("الذكاء الاصطناعي يحلل البيانات المحدثة من 'الشيت الذكي' حالياً.")
-    else: st.error("لا توجد بيانات للتحليل.")
+    if st.session_state['main_data'] is not None:
+        df = st.session_state['main_data']
+        # حل مشكلة الـ UFunc في الصورة (fada2d) بتصفية الأرقام فقط
+        numeric_df = df.select_dtypes(include=[np.number])
+        col1, col2 = st.columns(2)
+        col1.metric("عدد السجلات", len(df))
+        if not numeric_df.empty:
+            col2.metric("أعلى قيمة مالية", f"{numeric_df.max().max():,.2f}")
+        st.write("تم تحليل البيانات المحدثة بتوقيع MIA8444.")
+    else: st.warning("لا توجد بيانات للتحليل.")
 
-# د. الرسوم البيانية (مفعلة وتفاعلية)
 elif tool == "📊 الرسوم البيانية":
     st.header("📊 مركز التحليل البصري")
-    if st.session_state['db'] is not None:
-        df = st.session_state['db']
+    if not CHART_READY:
+        st.error("مكتبة الرسوم ناقصة! تأكد من وجود plotly في ملف requirements.txt")
+    elif st.session_state['main_data'] is not None:
+        df = st.session_state['main_data']
         numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
         if numeric_cols:
-            x_col = st.selectbox("المحور الأفقي:", df.columns)
-            y_col = st.selectbox("المحور الرأسي (أرقام):", numeric_cols)
-            chart_type = st.selectbox("نوع الرسم:", ["Bar Chart", "Line Chart", "Pie Chart"])
-            
-            if chart_type == "Bar Chart": fig = px.bar(df, x=x_col, y=y_col, title="تحليل MIA8444")
-            elif chart_type == "Line Chart": fig = px.line(df, x=x_col, y=y_col)
-            else: fig = px.pie(df, names=x_col, values=y_col)
-            
+            x_ax = st.selectbox("اختر المحور الأفقي:", df.columns)
+            y_ax = st.selectbox("اختر محور الأرقام:", numeric_cols)
+            fig = px.bar(df, x=x_ax, y=y_ax, title="تحليل الوحش الذكي")
             st.plotly_chart(fig, use_container_width=True)
-    else: st.warning("ارفع بياناتك أولاً.")
+        else: st.warning("الملف لا يحتوي على أرقام لرسمها!")
+    else: st.error("البيانات غير موجودة.")
 
-# هـ. الإعدادات واللغة
 elif tool == "⚙️ الإعدادات":
     st.header("⚙️ إعدادات الوحش")
-    st.session_state['lang'] = st.selectbox("لغة التطبيق:", ["Arabic", "English"], index=0 if st.session_state['lang']=='Arabic' else 1)
-    st.radio("سمة التطبيق (Theme):", ["Light", "Dark"])
-    st.success(f"تم ضبط الإعدادات على {st.session_state['lang']}")
+    st.selectbox("لغة التطبيق:", ["العربية", "English"])
+    st.toggle("الوضع الليلي (MIA8444)")
+    st.success("الإعدادات محفوظة.")
