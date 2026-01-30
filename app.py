@@ -1,89 +1,88 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import os
 
-# --- 1. الهوية الفخمة MIA8444 --- [cite: 2026-01-26]
-st.set_page_config(page_title="Smart Analyst Beast PRO", layout="wide")
+# --- 1. إعدادات الهوية والسمة MIA8444 --- [cite: 2026-01-26]
+st.set_page_config(page_title="Smart Analyst Beast PRO", layout="wide", initial_sidebar_state="expanded")
 
-# الذاكرة المركزية الموحدة (بتحفظ الملف المرفوع أو الشيت اليدوي) [cite: 2026-01-16]
-if 'main_data' not in st.session_state:
-    st.session_state['main_data'] = None
+# محرك الذاكرة الموحد [cite: 2026-01-16]
+if 'data' not in st.session_state: st.session_state['data'] = None
+if 'theme' not in st.session_state: st.session_state['theme'] = 'Dark'
 
-# --- 2. السايد بار (مركز التحكم) ---
+# --- 2. السايد بار (لوحة التحكم الاحترافية) ---
 with st.sidebar:
     if os.path.exists("8888.jpg"):
-        st.image("8888.jpg", use_container_width=True) # اللوجو بتاعك [cite: 2026-01-28]
-    st.markdown("---")
-    choice = st.radio("ترسانة الأدوات:", [
-        "🏠 Smart Analyst (Home)",
-        "📄 شيت يدوي ومعادلات (Manual/Duo)",
-        "🧠 AI Brain Scientist"
+        st.image("8888.jpg", use_container_width=True) # اللوجو الخاص بك [cite: 2026-01-28]
+    
+    st.markdown("### 🛠️ ترسانة الأدوات")
+    menu = st.radio("اختر سلاحك:", [
+        "🏠 الرئيسية (Home)", 
+        "📄 شيت المعادلات (Manual)", 
+        "🧹 منظف البيانات (Cleaner)", 
+        "🧠 المحلل الذكي (AI)", 
+        "📊 الرسوم البيانية (Charts)",
+        "☁️ جوجل شيتس (Cloud)",
+        "📑 تصدير التقارير (Export)",
+        "⚙️ الإعدادات (Settings)"
     ])
+    
     st.write("---")
-    st.success("✅ المرحلة 1: الشيت اليدوي")
-    st.success("🚀 المرحلة 2: محرك الدوال")
-    st.caption("Signature: *MIA8444*")
+    # تبديل اللغة والثيم
+    col_l, col_t = st.columns(2)
+    with col_l: st.button("🌐 EN/AR")
+    with col_t: 
+        if st.button("🌙/☀️"): 
+            st.session_state['theme'] = 'Light' if st.session_state['theme'] == 'Dark' else 'Dark'
+    
+    st.caption(f"Verified by: *MIA8444*")
 
-# --- 3. تشغيل الأدوات ---
+# --- 3. تشغيل الـ 8 أدوات (واحدة واحدة وبذكاء) ---
 
-# الصفحة الرئيسية (رفع ملفات الإكسيل)
-if choice == "🏠 Smart Analyst (Home)":
+if menu == "🏠 الرئيسية (Home)":
     st.markdown("<h1 style='text-align: center;'>Smart Analyst</h1>", unsafe_allow_html=True)
-    uploaded = st.file_uploader("ارفع ملف الإكسيل هنا يا وحش", type=['xlsx', 'csv'])
+    st.write("### 'لا داعي لأن تكون محلل بيانات.. المحلل الذكي يفكر بدلاً منك' [cite: 2026-01-24]")
+    uploaded = st.file_uploader("ارفع ملفك (Excel/CSV)", type=['xlsx', 'csv'])
     if uploaded:
-        df = pd.read_excel(uploaded) if uploaded.name.endswith('xlsx') else pd.read_csv(uploaded)
-        st.session_state['main_data'] = df
-        st.success("تم شحن الملف في الذاكرة! 🔥")
+        st.session_state['data'] = pd.read_excel(uploaded) if uploaded.name.endswith('xlsx') else pd.read_csv(uploaded)
+        st.success("تم ترويض البيانات بنجاح! 🔥")
 
-# صفحة الشيت اليدوي والحسابات (الضرب والمجموع والمتوسط) [cite: 2025-11-13]
-elif choice == "📄 شيت يدوي ومعادلات (Manual/Duo)":
-    st.title("📝 محرك البيانات والمعادلات")
+elif menu == "📄 شيت المعادلات (Manual)":
+    st.title("📝 محرك المعادلات اليدوي (Duo Engine)")
+    st.info("اكتب معادلاتك يدوي أو عدل البيانات المرفوعة.")
+    df_to_use = st.session_state['data'] if st.session_state['data'] is not None else pd.DataFrame([['',0,0]], columns=['البيان','الكمية','السعر'])
     
-    # لو الذاكرة فاضية نفتح شيت جديد
-    if st.session_state['main_data'] is None:
-        st.session_state['main_data'] = pd.DataFrame(
-            [['', 0, 0, 0]], 
-            columns=['البيان', 'الكمية', 'السعر', 'الإجمالي']
-        )
+    edited = st.data_editor(df_to_use, num_rows="dynamic", use_container_width=True)
     
-    # أداة التعديل (Editor) [cite: 2026-01-25]
-    edited_df = st.data_editor(
-        st.session_state['main_data'], 
-        num_rows="dynamic", 
-        use_container_width=True
-    )
-    
-    if st.button("⚡ تنفيذ الدوال وحفظ"):
-        try:
-            # تحويل البيانات لأرقام عشان نتفادى خطأ Traceback
-            for col in ['الكمية', 'السعر']:
-                if col in edited_df.columns:
-                    edited_df[col] = pd.to_numeric(edited_df[col], errors='coerce').fillna(0)
-            
-            # دالة الضرب التلقائي
-            if 'الكمية' in edited_df.columns and 'السعر' in edited_df.columns:
-                edited_df['الإجمالي'] = edited_df['الكمية'] * edited_df['السعر']
-            
-            st.session_state['main_data'] = edited_df
-            st.success("تم الحفظ وتحديث الحسابات! MIA8444")
-            
-            # عرض الدوال المجمعة (SUM/AVG) [cite: 2025-11-13]
-            st.markdown("---")
-            c1, c2 = st.columns(2)
-            if 'الإجمالي' in edited_df.columns:
-                c1.metric("مجموع الإجمالي (SUM)", f"{edited_df['الإجمالي'].sum():,.2f}")
-                c2.metric("متوسط السعر (AVG)", f"{edited_df['السعر'].mean():,.2f}")
-        except Exception as e:
-            st.error(f"خطأ في الحسابات: {e}")
+    if st.button("⚡ تطبيق معادلات الإكسيل"):
+        # محرك حساب تلقائي (الكمية * السعر) [cite: 2025-11-13]
+        if 'الكمية' in edited.columns and 'السعر' in edited.columns:
+            edited['الإجمالي'] = pd.to_numeric(edited['الكمية'], errors='coerce') * pd.to_numeric(edited['السعر'], errors='coerce')
+        st.session_state['data'] = edited
+        st.success("تم تحديث الحسابات بتوقيع MIA8444!")
 
-# صفحة الذكاء الاصطناعي [cite: 2026-01-25]
-elif choice == "🧠 AI Brain Scientist":
-    st.title("🧠 مخ الذكاء الاصطناعي")
-    if st.session_state['main_data'] is not None:
-        df = st.session_state['main_data']
-        if st.button("ابدأ التحليل العميق"):
-            st.write(f"### تقرير MIA8444 لعدد {len(df)} سجل:")
-            st.info("الوحش قام بتحليل الأرقام وجاهز لاستخراج الأنماط.")
-            st.balloons()
-    else:
-        st.warning("⚠️ ارفع ملف أو اكتب في الشيت الأول!")
+elif menu == "🧠 المحلل الذكي (AI)":
+    st.title("🧠 مخ الذكاء الاصطناعي (AI Brain)")
+    if st.session_state['data'] is not None:
+        df = st.session_state['data']
+        if st.button("بدأ التحليل العميق"):
+            # حماية من خطأ UFuncNoLoopError
+            num_df = df.select_dtypes(include=[np.number])
+            st.write(f"📊 عدد السجلات: {len(df)}")
+            if not num_df.empty:
+                st.metric("أعلى قيمة مكتشفة", f"{num_df.max().max():,.2f}")
+                st.balloons()
+    else: st.warning("ارفع ملف الأول يا وحش!")
+
+elif menu == "🧹 منظف البيانات (Cleaner)":
+    st.title("🧹 المنظف الاحترافي")
+    if st.session_state['data'] is not None:
+        if st.button("حذف الصفوف الفارغة"):
+            st.session_state['data'] = st.session_state['data'].dropna(how='all')
+            st.success("تم تنظيف البيانات! MIA8444")
+    else: st.warning("لا توجد بيانات لتنظيفها.")
+
+# باقي الأدوات (Charts, Cloud, Export, Settings) يتم تفعيلها بنفس الطريقة..
+else:
+    st.title(f"🛠️ {menu}")
+    st.info("هذه الأداة قيد التفعيل النهائي لضمان أعلى أداء.")
