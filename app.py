@@ -1,101 +1,103 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.express as px
 
-# --- 1. نظام الترجمة (الحقيقي) ---
+# --- 1. إعدادات الصفحة والهوية MIA8444 [cite: 2026-01-26] ---
+st.set_page_config(page_title="Smart Analyst Beast", page_icon="🦁", layout="wide")
+
+# تهيئة مخزن البيانات واللغة [cite: 2026-01-16]
+if 'db' not in st.session_state: st.session_state['db'] = None
+if 'lang' not in st.session_state: st.session_state['lang'] = "العربية"
+if 'theme' not in st.session_state: st.session_state['theme'] = "Dark"
+
+# قاموس اللغات (نظام ترجمة حقيقي) [cite: 2026-01-09]
 texts = {
     "العربية": {
-        "title": "Smart Analyst Beast",
         "slogan": "You don't have to be a data analyst.. Smart Analyst thinks for you",
-        "menu": ["🏠 الرئيسية", "📄 الشيت الذكي", "🧠 الذكاء الاصطناعي", "📊 الرسوم البيانية", "⚙️ الإعدادات"],
-        "gen_btn": "🚀 توليد ملف الوحش (20,000 صف)",
-        "save_btn": "💾 حفظ البيانات",
-        "login": "تسجيل الدخول",
-        "theme_label": "وضع الأبيض والأسود",
-        "lang_label": "اختر اللغة"
+        "menu": ["🏠 الرئيسية", "📄 الشيت الذكي", "📊 الرسوم البيانية", "⚙️ الإعدادات"],
+        "gen_btn": "🚀 توليد ملف الوحش للاختبار (الآلاف من الصفوف)",
+        "upload": "ارفع ملفك الآن لتبدأ الترويض",
+        "success": "تم رفع البيانات بنجاح!"
     },
     "English": {
-        "title": "Smart Analyst Beast",
         "slogan": "You don't have to be a data analyst.. Smart Analyst thinks for you",
-        "menu": ["🏠 Home", "📄 Smart Sheet", "🧠 AI Analyst", "📊 Charts", "⚙️ Settings"],
-        "gen_btn": "🚀 Generate Beast File (20,000 Rows)",
-        "save_btn": "💾 Save Data",
-        "login": "Login",
-        "theme_label": "B&W Mode",
-        "lang_label": "Select Language"
+        "menu": ["🏠 Home", "📄 Smart Sheet", "📊 Charts", "⚙️ Settings"],
+        "gen_btn": "🚀 Generate Beast File (Stress Test)",
+        "upload": "Upload your file to start taming",
+        "success": "Data uploaded successfully!"
     }
 }
 
-# --- 2. الإعدادات والذاكرة ---
-st.set_page_config(page_title="Smart Analyst Beast", page_icon="🦁", layout="wide")
+T = texts[st.session_state['lang']]
 
-if 'lang' not in st.session_state: st.session_state['lang'] = "العربية"
-if 'db' not in st.session_state: st.session_state['db'] = None
-if 'theme' not in st.session_state: st.session_state['theme'] = "Dark"
-
-T = texts[st.session_state['lang']] # القاموس النشط
-
-# --- 3. محرك الثيم (حقيقي) ---
+# تطبيق ثيم الأبيض والأسود [cite: 2026-01-24]
 if st.session_state['theme'] == "White & Black":
     st.markdown("""<style>
         .stApp { background-color: white !important; color: black !important; }
-        p, h1, h2, h3, span, label { color: black !important; }
-        .stButton>button { background-color: black !important; color: white !important; border-radius: 10px; }
+        p, h1, h2, h3, label, span { color: black !important; }
+        .stButton>button { background-color: black !important; color: white !important; }
     </style>""", unsafe_allow_html=True)
 
-# --- 4. السايد بار ---
+# --- 2. السايد بار بتوقيعك MIA8444 [cite: 2026-01-26] ---
 with st.sidebar:
-    st.title("🦁 MIA8444")
+    # عرض اللوجو 8888.jpg [cite: 2026-01-28]
+    try:
+        st.image("8888.jpg", use_column_width=True)
+    except:
+        st.title("🦁 Smart Analyst")
+    
     st.write("---")
-    choice = st.radio("Menu:", T["menu"])
+    choice = st.radio("القائمة:", T["menu"])
     st.write("---")
-    st.caption("Developed by MIA8444")
+    st.caption("Signature: MIA8444")
 
-# --- 5. الصفحات ---
+# --- 3. الصفحات وتطوير الميزات ---
 
-if choice in [T["menu"][0]]: # الرئيسية
-    col1, col2, col3 = st.columns([1, 4, 1])
-    with col2:
-        st.markdown(f"<h1 style='text-align: center;'>{T['title']}</h1>", unsafe_allow_html=True)
-        st.markdown(f"<p style='text-align: center; font-size: 20px;'>{T['slogan']}</p>", unsafe_allow_html=True)
-        st.write("---")
-        
-        if st.button(T["gen_btn"]):
-            with st.spinner('Beast is Loading...'):
-                df = pd.DataFrame(np.random.randn(20000, 10), columns=[f'Data_{i}' for i in range(10)])
-                st.session_state['db'] = df
-                st.balloons()
-                st.success("20,000 Rows Generated!")
+if choice == T["menu"][0]: # الرئيسية
+    st.header("Smart Analyst Beast")
+    st.subheader(T["slogan"]) # الجملة الاحترافية [cite: 2026-01-24]
+    st.write("---")
+    
+    # ميزة مولد الملفات للاختبار [اليوم الثاني في الخطة]
+    st.markdown("### 🧪 معمل اختبار الوحش")
+    if st.button(T["gen_btn"]):
+        with st.spinner('جاري توليد آلاف الصفوف...'):
+            # توليد 10,000 صف و 20 عمود لاختبار التحمل
+            test_df = pd.DataFrame(np.random.randint(0, 1000, size=(10000, 20)),
+                                  columns=[f'Metric_{i}' for i in range(20)])
+            st.session_state['db'] = test_df
+            st.balloons()
+            st.success("تم شحن الوحش بـ 10,000 صف! اذهب للشيت الذكي الآن.")
 
-        file = st.file_uploader("Upload CSV/Excel", type=['xlsx', 'csv'])
-        if file:
-            st.session_state['db'] = pd.read_excel(file) if file.name.endswith('xlsx') else pd.read_csv(file)
+    up = st.file_uploader(T["upload"], type=["csv", "xlsx"])
+    if up:
+        st.session_state['db'] = pd.read_excel(up) if up.name.endswith('xlsx') else pd.read_csv(up)
+        st.success(T["success"])
 
-elif choice in [T["menu"][1]]: # الشيت الذكي
+elif choice == T["menu"][1]: # الشيت الذكي
     st.header(T["menu"][1])
     if st.session_state['db'] is not None:
-        if st.button(T["save_btn"]):
-            st.toast("Data Saved Locally ✅")
         st.data_editor(st.session_state['db'], use_container_width=True)
-    else: st.info("No data found.")
+    else:
+        st.info("ارفع ملف أو ولد بيانات من الرئيسية.")
 
-elif choice in [T["menu"][4]]: # الإعدادات
-    st.header(T["menu"][4])
+elif choice == T["menu"][3]: # الإعدادات
+    st.header(T["menu"][3])
     
-    # تغيير اللغة حقيقي
-    new_lang = st.selectbox(T["lang_label"], ["العربية", "English"], 
-                            index=0 if st.session_state['lang'] == "العربية" else 1)
-    if new_lang != st.session_state['lang']:
-        st.session_state['lang'] = new_lang
+    # تغيير اللغة حقيقي [cite: 2026-01-09]
+    lang = st.selectbox("اختر اللغة / Select Language", ["العربية", "English"], 
+                        index=0 if st.session_state['lang'] == "العربية" else 1)
+    if lang != st.session_state['lang']:
+        st.session_state['lang'] = lang
         st.rerun()
-
-    # تغيير الثيم حقيقي
-    theme_on = st.toggle(T["theme_label"], value=(st.session_state['theme'] == "White & Black"))
-    st.session_state['theme'] = "White & Black" if theme_on else "Dark"
-    if st.button("Apply Theme"): st.rerun()
-
+    
+    # تغيير الثيم حقيقي (أبيض وأسود)
+    theme = st.toggle("تفعيل وضع الأبيض والأسود", value=(st.session_state['theme'] == "White & Black"))
+    st.session_state['theme'] = "White & Black" if theme else "Dark"
+    if st.button("حفظ الإعدادات"): st.rerun()
+    
     st.write("---")
-    st.subheader(T["login"])
-    contact = st.text_input("Email / Phone")
-    if st.button(T["login"]): st.success(f"Welcome {contact}!")
+    st.subheader("👤 تسجيل الدخول (MIA8444 Safe)")
+    st.text_input("البريد الإلكتروني أو الهاتف")
+    st.text_input("كلمة المرور", type="password")
+    if st.button("دخول"): st.success("مرحباً بك في نظام MIA8444")
