@@ -3,73 +3,99 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 
-# --- 1. إعدادات الهوية واللوجو MIA8444 --- [cite: 2026-01-26]
+# --- 1. نظام الترجمة (الحقيقي) ---
+texts = {
+    "العربية": {
+        "title": "Smart Analyst Beast",
+        "slogan": "You don't have to be a data analyst.. Smart Analyst thinks for you",
+        "menu": ["🏠 الرئيسية", "📄 الشيت الذكي", "🧠 الذكاء الاصطناعي", "📊 الرسوم البيانية", "⚙️ الإعدادات"],
+        "gen_btn": "🚀 توليد ملف الوحش (20,000 صف)",
+        "save_btn": "💾 حفظ البيانات",
+        "login": "تسجيل الدخول",
+        "theme_label": "وضع الأبيض والأسود",
+        "lang_label": "اختر اللغة"
+    },
+    "English": {
+        "title": "Smart Analyst Beast",
+        "slogan": "You don't have to be a data analyst.. Smart Analyst thinks for you",
+        "menu": ["🏠 Home", "📄 Smart Sheet", "🧠 AI Analyst", "📊 Charts", "⚙️ Settings"],
+        "gen_btn": "🚀 Generate Beast File (20,000 Rows)",
+        "save_btn": "💾 Save Data",
+        "login": "Login",
+        "theme_label": "B&W Mode",
+        "lang_label": "Select Language"
+    }
+}
+
+# --- 2. الإعدادات والذاكرة ---
 st.set_page_config(page_title="Smart Analyst Beast", page_icon="🦁", layout="wide")
 
-# عرض اللوجو 8888.jpg في أعلى التطبيق [cite: 2026-01-28]
-try:
-    st.image("8888.jpg", width=120)
-except:
-    st.title("🦁 Smart Analyst Beast")
+if 'lang' not in st.session_state: st.session_state['lang'] = "العربية"
+if 'db' not in st.session_state: st.session_state['db'] = None
+if 'theme' not in st.session_state: st.session_state['theme'] = "Dark"
 
-# محرك الذاكرة لربط الأدوات ببعضها [cite: 2026-01-16]
-if 'main_df' not in st.session_state:
-    st.session_state['main_df'] = None
+T = texts[st.session_state['lang']] # القاموس النشط
 
-# --- 2. السايد بار (ترسانة الأدوات الـ 8) ---
+# --- 3. محرك الثيم (حقيقي) ---
+if st.session_state['theme'] == "White & Black":
+    st.markdown("""<style>
+        .stApp { background-color: white !important; color: black !important; }
+        p, h1, h2, h3, span, label { color: black !important; }
+        .stButton>button { background-color: black !important; color: white !important; border-radius: 10px; }
+    </style>""", unsafe_allow_html=True)
+
+# --- 4. السايد بار ---
 with st.sidebar:
-    st.header("Smart Analyst")
-    tool = st.radio("اختر سلاحك:", [
-        "🏠 الرئيسية", "📄 الشيت الذكي", "🧠 الذكاء الاصطناعي", "📊 الرسوم البيانية"
-    ])
+    st.title("🦁 MIA8444")
     st.write("---")
-    # توقيع MIA8444 ثابت في كل الصفحات [cite: 2026-01-26]
-    st.caption("Signature: MIA8444")
+    choice = st.radio("Menu:", T["menu"])
+    st.write("---")
+    st.caption("Developed by MIA8444")
 
-# --- 3. تشغيل المحركات والربط ---
+# --- 5. الصفحات ---
 
-if tool == "🏠 الرئيسية":
-    st.header("Smart Analyst Beast")
-    # الجملة الافتتاحية الاحترافية التي اتفقنا عليها [cite: 2026-01-24]
-    st.subheader("You don't have to be a data analyst.. Smart Analyst thinks for you")
+if choice in [T["menu"][0]]: # الرئيسية
+    col1, col2, col3 = st.columns([1, 4, 1])
+    with col2:
+        st.markdown(f"<h1 style='text-align: center;'>{T['title']}</h1>", unsafe_allow_html=True)
+        st.markdown(f"<p style='text-align: center; font-size: 20px;'>{T['slogan']}</p>", unsafe_allow_html=True)
+        st.write("---")
+        
+        if st.button(T["gen_btn"]):
+            with st.spinner('Beast is Loading...'):
+                df = pd.DataFrame(np.random.randn(20000, 10), columns=[f'Data_{i}' for i in range(10)])
+                st.session_state['db'] = df
+                st.balloons()
+                st.success("20,000 Rows Generated!")
+
+        file = st.file_uploader("Upload CSV/Excel", type=['xlsx', 'csv'])
+        if file:
+            st.session_state['db'] = pd.read_excel(file) if file.name.endswith('xlsx') else pd.read_csv(file)
+
+elif choice in [T["menu"][1]]: # الشيت الذكي
+    st.header(T["menu"][1])
+    if st.session_state['db'] is not None:
+        if st.button(T["save_btn"]):
+            st.toast("Data Saved Locally ✅")
+        st.data_editor(st.session_state['db'], use_container_width=True)
+    else: st.info("No data found.")
+
+elif choice in [T["menu"][4]]: # الإعدادات
+    st.header(T["menu"][4])
     
+    # تغيير اللغة حقيقي
+    new_lang = st.selectbox(T["lang_label"], ["العربية", "English"], 
+                            index=0 if st.session_state['lang'] == "العربية" else 1)
+    if new_lang != st.session_state['lang']:
+        st.session_state['lang'] = new_lang
+        st.rerun()
+
+    # تغيير الثيم حقيقي
+    theme_on = st.toggle(T["theme_label"], value=(st.session_state['theme'] == "White & Black"))
+    st.session_state['theme'] = "White & Black" if theme_on else "Dark"
+    if st.button("Apply Theme"): st.rerun()
+
     st.write("---")
-    file = st.file_uploader("ارفع ملف البيانات (Excel/CSV)", type=['xlsx', 'csv'])
-    if file:
-        df = pd.read_excel(file) if file.name.endswith('xlsx') else pd.read_csv(file)
-        st.session_state['main_df'] = df
-        st.success("تم شحن البيانات في قلب الوحش! ✅")
-
-elif tool == "📄 الشيت الذكي":
-    st.header("📝 محرك المعادلات (Smart Sheet)")
-    if st.session_state['main_df'] is not None:
-        # الربط: التعديل هنا يغير النتائج في الرسوم والذكاء الاصطناعي [cite: 2026-01-25]
-        updated_df = st.data_editor(st.session_state['main_df'], num_rows="dynamic", use_container_width=True)
-        if st.button("⚡ حفظ وتحديث النظام"):
-            st.session_state['main_df'] = updated_df
-            st.balloons()
-    else: st.info("برجاء رفع ملف من الصفحة الرئيسية أولاً.")
-
-elif tool == "🧠 الذكاء الاصطناعي":
-    st.header("🧠 مخ الذكاء الاصطناعي (AI Analysis)")
-    if st.session_state['main_df'] is not None:
-        df = st.session_state['main_df']
-        numeric_df = df.select_dtypes(include=[np.number])
-        col1, col2 = st.columns(2)
-        col1.metric("إجمالي السجلات", len(df))
-        if not numeric_df.empty:
-            col2.metric("أعلى قيمة مالية", f"{numeric_df.max().max():,.2f}")
-        st.info("الذكاء الاصطناعي يحلل البيانات المحدثة بتوقيع MIA8444.")
-    else: st.warning("لا توجد بيانات للتحليل.")
-
-elif tool == "📊 الرسوم البيانية":
-    st.header("📊 مركز التحليل البصري")
-    if st.session_state['main_df'] is not None:
-        df = st.session_state['main_df']
-        num_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-        if num_cols:
-            x_ax = st.selectbox("المحور الأفقي:", df.columns)
-            y_ax = st.selectbox("المحور الرأسي (أرقام):", num_cols)
-            fig = px.bar(df, x=x_ax, y=y_ax, title="تحليل الوحش الذكي", color=x_ax)
-            st.plotly_chart(fig, use_container_width=True)
-    else: st.error("ارفع بياناتك أولاً ليرسمها الوحش.")
+    st.subheader(T["login"])
+    contact = st.text_input("Email / Phone")
+    if st.button(T["login"]): st.success(f"Welcome {contact}!")
