@@ -1,103 +1,81 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import plotly.express as px
 
-# --- 1. إعدادات الصفحة والهوية MIA8444 [cite: 2026-01-26] ---
+# --- 1. الهوية والإعدادات MIA8444 [cite: 2026-01-26] ---
 st.set_page_config(page_title="Smart Analyst Beast", page_icon="🦁", layout="wide")
 
-# تهيئة مخزن البيانات واللغة [cite: 2026-01-16]
 if 'db' not in st.session_state: st.session_state['db'] = None
 if 'lang' not in st.session_state: st.session_state['lang'] = "العربية"
-if 'theme' not in st.session_state: st.session_state['theme'] = "Dark"
 
-# قاموس اللغات (نظام ترجمة حقيقي) [cite: 2026-01-09]
-texts = {
-    "العربية": {
-        "slogan": "You don't have to be a data analyst.. Smart Analyst thinks for you",
-        "menu": ["🏠 الرئيسية", "📄 الشيت الذكي", "📊 الرسوم البيانية", "⚙️ الإعدادات"],
-        "gen_btn": "🚀 توليد ملف الوحش للاختبار (الآلاف من الصفوف)",
-        "upload": "ارفع ملفك الآن لتبدأ الترويض",
-        "success": "تم رفع البيانات بنجاح!"
-    },
-    "English": {
-        "slogan": "You don't have to be a data analyst.. Smart Analyst thinks for you",
-        "menu": ["🏠 Home", "📄 Smart Sheet", "📊 Charts", "⚙️ Settings"],
-        "gen_btn": "🚀 Generate Beast File (Stress Test)",
-        "upload": "Upload your file to start taming",
-        "success": "Data uploaded successfully!"
-    }
-}
-
-T = texts[st.session_state['lang']]
-
-# تطبيق ثيم الأبيض والأسود [cite: 2026-01-24]
-if st.session_state['theme'] == "White & Black":
-    st.markdown("""<style>
-        .stApp { background-color: white !important; color: black !important; }
-        p, h1, h2, h3, label, span { color: black !important; }
-        .stButton>button { background-color: black !important; color: white !important; }
-    </style>""", unsafe_allow_html=True)
-
-# --- 2. السايد بار بتوقيعك MIA8444 [cite: 2026-01-26] ---
+# --- 2. السايد بار [cite: 2026-01-26] ---
 with st.sidebar:
-    # عرض اللوجو 8888.jpg [cite: 2026-01-28]
-    try:
-        st.image("8888.jpg", use_column_width=True)
-    except:
-        st.title("🦁 Smart Analyst")
-    
+    try: st.image("8888.jpg", use_column_width=True) # اللوجو [cite: 2026-01-28]
+    except: st.title("🦁 Smart Analyst")
     st.write("---")
-    choice = st.radio("القائمة:", T["menu"])
-    st.write("---")
+    choice = st.radio("القائمة:", ["🏠 الرئيسية", "📄 الشيت والكلينر", "🧠 AI Analyst", "📊 الرسوم البيانية", "⚙️ الإعدادات"])
     st.caption("Signature: MIA8444")
 
-# --- 3. الصفحات وتطوير الميزات ---
+# --- 3. الصفحات وتفعيل الأدوات ---
 
-if choice == T["menu"][0]: # الرئيسية
+if choice == "🏠 الرئيسية":
     st.header("Smart Analyst Beast")
-    st.subheader(T["slogan"]) # الجملة الاحترافية [cite: 2026-01-24]
-    st.write("---")
+    st.subheader("You don't have to be a data analyst.. Smart Analyst thinks for you") # [cite: 2026-01-24]
     
-    # ميزة مولد الملفات للاختبار [اليوم الثاني في الخطة]
-    st.markdown("### 🧪 معمل اختبار الوحش")
-    if st.button(T["gen_btn"]):
-        with st.spinner('جاري توليد آلاف الصفوف...'):
-            # توليد 10,000 صف و 20 عمود لاختبار التحمل
-            test_df = pd.DataFrame(np.random.randint(0, 1000, size=(10000, 20)),
-                                  columns=[f'Metric_{i}' for i in range(20)])
-            st.session_state['db'] = test_df
-            st.balloons()
-            st.success("تم شحن الوحش بـ 10,000 صف! اذهب للشيت الذكي الآن.")
+    if st.button("🚀 توليد ملف اختبار ضخم (10,000 صف)"):
+        st.session_state['db'] = pd.DataFrame(np.random.randint(0, 500, size=(10000, 5)), columns=['A', 'B', 'C', 'D', 'E'])
+        st.success("تم شحن الوحش!")
 
-    up = st.file_uploader(T["upload"], type=["csv", "xlsx"])
-    if up:
+    up = st.file_uploader("ارفع ملفك", type=["csv", "xlsx"])
+    if up: 
         st.session_state['db'] = pd.read_excel(up) if up.name.endswith('xlsx') else pd.read_csv(up)
-        st.success(T["success"])
 
-elif choice == T["menu"][1]: # الشيت الذكي
-    st.header(T["menu"][1])
+elif choice == "📄 الشيت والكلينر":
+    st.header("📄 محرك المعادلات والكلينر")
     if st.session_state['db'] is not None:
-        st.data_editor(st.session_state['db'], use_container_width=True)
-    else:
-        st.info("ارفع ملف أو ولد بيانات من الرئيسية.")
+        df = st.session_state['db']
+        
+        # ميزة الكلينر (Cleaner): حذف القيم الفارغة [cite: 2026-01-18]
+        if st.button("🧹 تنظيف البيانات (حذف الفارغ)"):
+            st.session_state['db'] = df.dropna()
+            st.success("تم التنظيف!")
+            st.rerun()
 
-elif choice == T["menu"][3]: # الإعدادات
-    st.header(T["menu"][3])
-    
-    # تغيير اللغة حقيقي [cite: 2026-01-09]
-    lang = st.selectbox("اختر اللغة / Select Language", ["العربية", "English"], 
-                        index=0 if st.session_state['lang'] == "العربية" else 1)
-    if lang != st.session_state['lang']:
-        st.session_state['lang'] = lang
-        st.rerun()
-    
-    # تغيير الثيم حقيقي (أبيض وأسود)
-    theme = st.toggle("تفعيل وضع الأبيض والأسود", value=(st.session_state['theme'] == "White & Black"))
-    st.session_state['theme'] = "White & Black" if theme else "Dark"
-    if st.button("حفظ الإعدادات"): st.rerun()
-    
-    st.write("---")
-    st.subheader("👤 تسجيل الدخول (MIA8444 Safe)")
-    st.text_input("البريد الإلكتروني أو الهاتف")
-    st.text_input("كلمة المرور", type="password")
-    if st.button("دخول"): st.success("مرحباً بك في نظام MIA8444")
+        # ميزة تجميع الأعمدة (Sum Column) [cite: 2025-11-13]
+        cols = df.select_dtypes(include=[np.number]).columns.tolist()
+        target_col = st.selectbox("اختر العمود لجمعه:", cols)
+        if st.button(f"➕ احسب مجموع {target_col}"):
+            total = df[target_col].sum()
+            st.metric(label=f"إجمالي {target_col}", value=f"{total:,}")
+
+        st.data_editor(st.session_state['db'], use_container_width=True)
+    else: st.info("ارفع بيانات أولاً.")
+
+elif choice == "🧠 AI Analyst":
+    st.header("🧠 AI Smart Analyst") # [cite: 2026-01-30]
+    if st.session_state['db'] is not None:
+        df = st.session_state['db']
+        st.write("💡 *رؤية الذكاء الاصطناعي:*")
+        st.write(f"ملفك يحتوي على {len(df)} سجلات. إليك ملخص ذكي:")
+        st.dataframe(df.describe()) # التحليل الإحصائي التلقائي [cite: 2025-11-13]
+        
+        # حساب المتوسط (AVERAGE) [cite: 2025-11-13, 2026-01-20]
+        num_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+        if num_cols:
+            avg_val = df[num_cols[0]].mean()
+            st.write(f"متوسط أول عمود رقمي ({num_cols[0]}) هو: *{avg_val:.2f}*")
+    else: st.warning("لا توجد بيانات للتحليل.")
+
+elif choice == "📊 الرسوم البيانية":
+    st.header("📊 مركز التحليل البصري")
+    if st.session_state['db'] is not None:
+        df = st.session_state['db']
+        num_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+        if len(num_cols) >= 2:
+            x_ax = st.selectbox("المحور الأفقي X:", df.columns)
+            y_ax = st.selectbox("المحور الرأسي Y:", num_cols)
+            fig = px.bar(df.head(100), x=x_ax, y=y_ax, title="تحليل مرئي (أول 100 صف)") # [cite: 2026-01-18]
+            st.plotly_chart(fig, use_container_width=True)
+        else: st.error("البيانات لا تحتوي على أعمدة أرقام كافية للرسم.")
+    else: st.info("ارفع بيانات أولاً.")
