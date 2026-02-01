@@ -4,3 +4,5 @@ openpyxl
 Pillow
 plotly
 numpy
+pytesseract
+opencv-python-headless
