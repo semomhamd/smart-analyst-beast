@@ -1,70 +1,89 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import os
 from io import BytesIO
 
-# 1. إعدادات الواجهة (MIA8444)
-st.set_page_config(page_title="Smart Analyst Beast", page_icon="🦁", layout="centered")
+# 1. إعدادات الهوية والدارك مود
+st.set_page_config(page_title="Smart Analyst Beast PRO", page_icon="🦁", layout="wide")
 
-if 'db' not in st.session_state: 
-    st.session_state['db'] = pd.DataFrame(columns=['البند', 'القيمة'])
+# الجملة اللي بتميزنا
+slogan = "You don't have to be a data analyst.. Smart Analyst thinks for you"
 
-# القائمة المنظمة (اليوم الثالث)
-menu = ["الرئيسية", "منظف البيانات", "الاكسل برو", "المحلل الذكي", "الرسوم البيانيه", "التقرير النهائي"]
+# 2. نظام الإعدادات واللغة والدارك مود
+if 'language' not in st.session_state: st.session_state.language = 'العربية'
+if 'theme' not in st.session_state: st.session_state.theme = 'Dark'
 
 with st.sidebar:
-    st.title("🦁 Beast MIA8444")
+    # إظهار اللوجو 8888.jpg (تأكد من وجود الملف في الـ GitHub)
+    if os.path.exists("8888.jpg"):
+        st.image("8888.jpg", use_column_width=True)
+    else:
+        st.title("🦁 MIA8444")
+    
+    st.write(f"*{slogan}*")
+    st.write("---")
+    
+    # قسم الإعدادات
+    with st.expander("⚙️ الإعدادات (Settings)"):
+        st.session_state.language = st.selectbox("اللغة", ["العربية", "English"])
+        st.session_state.theme = st.selectbox("المظهر", ["Dark", "Light"])
+    
+    st.write("---")
+    menu = ["الرئيسية", "منظف البيانات", "الاكسل برو", "المحلل الذكي", "الرسوم البيانيه", "التقرير النهائي"]
     choice = st.radio("القائمة:", menu)
     st.write("---")
-    st.caption("Focus: Day 3 MVP")
+    st.caption("Signature: MIA8444")
 
-# 2. تنفيذ الصفحات
-if choice == menu[0]: # الرئيسية
-    st.header("🏠 ارفع ملفك")
-    up = st.file_uploader("ارفع Excel/CSV", type=["csv", "xlsx"])
+# 3. تشغيل المحرك
+df = st.session_state.get('db', pd.DataFrame())
+
+if choice == "الرئيسية":
+    st.header("🏠 Smart Analyst Beast")
+    st.subheader(slogan) # الجملة اللي طلبتها
+    up = st.file_uploader("ارفع ملفك (Excel/CSV)", type=["csv", "xlsx"])
     if up:
-        try:
-            st.session_state['db'] = pd.read_excel(up) if up.name.endswith('xlsx') else pd.read_csv(up)
-            st.success("تم الرفع! اجهز يا محمد.")
-        except Exception as e: st.error(f"خطأ: {e}")
-    
-    if st.button("🚀 تجربة ببيانات سريعة"):
-        st.session_state['db'] = pd.DataFrame({'المنتج': ['أ', 'ب', 'ج']*5, 'المبيعات': np.random.randint(100,500,15)})
+        st.session_state['db'] = pd.read_excel(up) if up.name.endswith('xlsx') else pd.read_csv(up)
+        st.success("تم الرفع بنجاح!")
 
-elif choice == menu[1]: # منظف البيانات
+elif choice == "منظف البيانات":
     st.header("✨ منظف البيانات")
-    df = st.session_state['db']
     if not df.empty:
-        if st.button("🚀 غسيل البيانات (حذف التكرار)"):
+        if st.button("🚀 تنظيف احترافي"):
             st.session_state['db'] = df.dropna(how='all').drop_duplicates().fillna(0)
-            st.success("البيانات بقت فلة!")
+            st.success("البيانات أصبحت جاهزة ونظيفة!")
+    else: st.warning("ارفع ملف أولاً")
 
-elif choice == menu[2]: # الاكسل برو (حل مشكلة الصورة 954afff6)
+elif choice == "الاكسل برو":
     st.header("📊 الاكسل برو")
-    df = st.session_state['db']
     if not df.empty:
         df_ed = st.data_editor(df, use_container_width=True)
         st.session_state['db'] = df_ed
-        
+        # دوال متقدمة
         num_cols = df_ed.select_dtypes(include=[np.number]).columns.tolist()
         if num_cols:
-            st.write("---")
-            target = st.selectbox("عمود الحساب (المبيعات):", num_cols)
-            st.metric("المجموع", f"{df_ed[target].sum():,}")
-            
-            st.subheader("📉 ملخص Pivot ذكي")
-            # الحل هنا: بنخلي العمود المختار للحساب ميبقاش موجود في خيارات التصنيف
-            other_cols = [c for c in df_ed.columns if c != target]
-            idx = st.selectbox("تصنيف حسب (اختر عمود مختلف):", other_cols if other_cols else df_ed.columns)
-            
-            # منع الـ ValueError عن طريق إعادة تسمية الأعمدة فوراً
-            res = df_ed.groupby(idx)[target].sum().reset_index()
-            res.columns = [idx, f"إجمالي {target}"] 
-            st.dataframe(res, use_container_width=True)
+            col1, col2 = st.columns(2)
+            with col1:
+                target = st.selectbox("العمود الحسابي:", num_cols)
+                st.metric("المجموع", f"{df_ed[target].sum():,}")
+            with col2:
+                # حل مشكلة الـ Pivot والـ ValueError
+                idx = st.selectbox("تصنيف حسب:", [c for c in df_ed.columns if c != target])
+                res = df_ed.groupby(idx)[target].sum().reset_index()
+                res.columns = [idx, f"إجمالي {target}"]
+                st.dataframe(res)
 
-elif choice == menu[5]: # التقرير النهائي
-    st.header("📄 تصدير البيانات")
-    if not st.session_state['db'].empty:
-        buf = BytesIO()
-        st.session_state['db'].to_excel(buf, index=False)
-        st.download_button("📥 تحميل ملفك المعدل", buf.getvalue(), "MIA8444_Beast.xlsx")
+elif choice == "المحلل الذكي":
+    st.header("🧠 المحلل الذكي (AI Analysis)")
+    if not df.empty:
+        st.write("### 💡 استنتاجات البيانات:")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write("*ملخص الأرقام:*")
+            st.write(df.describe())
+        with col2:
+            st.write("*تحليل الجودة:*")
+            st.write(f"- عدد الأعمدة: {len(df.columns)}")
+            st.write(f"- عدد السجلات: {len(df)}")
+            st.write(f"- القيم المفقودة: {df.isnull().sum().sum()}")
+    else: st.warning("لا توجد بيانات للتحليل")
