@@ -9,15 +9,13 @@ from io import BytesIO
 # 1. إعدادات الهوية الفخمة (MIA8444)
 st.set_page_config(page_title="Smart Analyst Beast PRO", layout="wide", page_icon="🦁")
 
-# تنسيق CSS فخم لإظهار الداشبورد بشكل احترافي
+# لمسة CSS احترافية لتنسيق الألوان وتوسيط اللوجو
 st.markdown("""
     <style>
     .main { background-color: #0e1117; }
     [data-testid="stSidebar"] { background-color: #161b22; }
-    /* تنسيق الكروت (Metrics) زي ما في الصورة بالضبط */
-    [data-testid="stMetricValue"] { font-size: 35px; color: #ffffff; }
-    [data-testid="stMetricLabel"] { font-size: 18px; color: #888; }
-    .stMetric { background-color: #1f2937; padding: 20px; border-radius: 12px; border-top: 4px solid #3b82f6; }
+    .stMetric { background-color: #1f2937; padding: 15px; border-radius: 10px; border-left: 5px solid #3b82f6; }
+    div.stButton > button:first-child { background-color: #3b82f6; color: white; border-radius: 10px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -25,8 +23,11 @@ st.markdown("""
 if 'main_df' not in st.session_state:
     st.session_state['main_df'] = pd.DataFrame()
 
-# --- السايد بار ---
+df = st.session_state['main_df']
+
+# --- السايد بار (مركز التحكم الإمبراطوري) ---
 with st.sidebar:
+    # اللوجو منور الدنيا فوق خالص
     if os.path.exists("8888.jpg"):
         st.image("8888.jpg", use_container_width=True)
     
@@ -34,8 +35,10 @@ with st.sidebar:
     st.markdown("<p style='text-align: center; color: #888;'>Signature: MIA8444</p>", unsafe_allow_html=True)
     st.write("---")
     
+    # القائمة المرتبة بأيقونات طبيعية ومنظمة
+    st.markdown("### 🛠️ القائمة التنفيذية")
     menu = {
-        "🏠 الرئيسية وبوابة البيانات": "الرئيسية",
+        "🏠 الرئيسية وتوليد الاختبار": "الرئيسية",
         "📸 الرؤية الذكية (OCR)": "OCR",
         "🧼 منظف البيانات الذكي": "Clean",
         "📊 محرر الاكسل (Pro)": "Excel",
@@ -45,103 +48,98 @@ with st.sidebar:
         "📄 تقرير PDF النهائي": "PDF"
     }
     
+    # استخدام Radio button بشكل شيك كأنه Menu
     choice = st.radio("انتقل بين الأدوات بدقة:", list(menu.keys()))
+    
     st.write("---")
+    # حالة النظام (Active) بدون أي جمل إضافية
     st.success("System Status: Active 🟢")
+    st.caption("Smart Analyst thinks for you")
 
-# استدعاء البيانات
-df = st.session_state['main_df']
-
-# --- المحتوى ---
+# --- محتوى الأدوات المربوطة ---
 
 # 1. الرئيسية
-if choice == "🏠 الرئيسية وبوابة البيانات":
+if choice == "🏠 الرئيسية وتوليد الاختبار":
     st.header("🏠 بوابة التحكم الرئيسية")
     col1, col2 = st.columns(2)
     with col1:
-        up = st.file_uploader("ارفع ملفك (Excel/CSV)", type=['csv', 'xlsx'])
+        up = st.file_uploader("ارفع ملف البيانات (Excel/CSV)", type=['csv', 'xlsx'])
         if up:
             st.session_state['main_df'] = pd.read_excel(up) if up.name.endswith('xlsx') else pd.read_csv(up)
             st.success("تم الشحن بنجاح!")
-            st.rerun()
     with col2:
-        if st.button("🧬 توليد بيانات اختبار احترافية"):
+        if st.button("🧬 توليد بيانات اختبار (Beast Sample)"):
             test_data = pd.DataFrame({
-                'التاريخ': pd.date_range(start='2025-01-01', periods=50),
-                'المنتج': np.random.choice(['موبايل', 'ساعة', 'لابتوب', 'سماعة'], 50),
-                'المبيعات': np.random.randint(1000, 15000, 50),
-                'الكمية': np.random.randint(1, 20, 50)
+                'التاريخ': pd.date_range(start='2025-01-01', periods=100),
+                'المنتج': np.random.choice(['موبايل', 'ساعة', 'لابتوب', 'سماعة'], 100),
+                'المبيعات': np.random.randint(500, 10000, 100),
+                'التكلفة': np.random.randint(300, 8000, 100)
             })
             st.session_state['main_df'] = test_data
             st.rerun()
 
-# 4. محرر الإكسل (SnaAyas Pro)
+# 2. الرؤية الذكية
+elif choice == "📸 الرؤية الذكية (OCR)":
+    st.header("📸 محرك الرؤية الذكي (AI Vision)")
+    cam = st.camera_input("التقط صورة للجدول")
+    if cam: st.info("جاري استخراج البيانات بذكاء MIA8444...")
+
+# 3. المنظف
+elif choice == "🧼 منظف البيانات الذكي":
+    st.header("🧼 وحدة تنظيف البيانات")
+    if not df.empty:
+        if st.button("🚀 تنظيف عميق ومعالجة القيم"):
+            st.session_state['main_df'] = df.drop_duplicates().fillna(0)
+            st.success("البيانات الآن نظيفة تماماً!")
+    else: st.warning("ارفع بياناتك أولاً.")
+
+# 4. محرر الإكسل (SnaAyas)
 elif choice == "📊 محرر الاكسل (Pro)":
-    st.header("📊 محرر الجداول الذكي (SnaAyas)")
-    if df.empty:
-        if 'empty_df' not in st.session_state:
-            st.session_state['empty_df'] = pd.DataFrame("", index=range(10), columns=['المنتج', 'المبيعات', 'الكمية', 'ملاحظات'])
-        work_df = st.session_state['empty_df']
-    else: work_df = df
+    st.header("📊 محرر الجداول المطور (SnaAyas)")
+    if not df.empty:
+        edited_df = st.data_editor(df, num_rows="dynamic", use_container_width=True)
+        if st.button("💾 حفظ التعديلات"):
+            st.session_state['main_df'] = edited_df
+            st.success("تم الحفظ في ذاكرة الوحش.")
+    else: st.warning("لا توجد بيانات للعرض.")
 
-    edited_df = st.data_editor(work_df, num_rows="dynamic", use_container_width=True)
-    
-    if st.button("💾 حفظ واعتماد البيانات"):
-        for col in ['المبيعات', 'الكمية']:
-            if col in edited_df.columns:
-                edited_df[col] = pd.to_numeric(edited_df[col], errors='coerce').fillna(0)
-        st.session_state['main_df'] = edited_df
-        st.success("تم الحفظ! اذهب الآن للداشبورد لرؤية النتائج.")
+# 5. المحلل
+elif choice == "🧠 المحلل الذكي":
+    st.header("🧠 ذكاء MIA8444 في التحليل")
+    if not df.empty:
+        st.write("🔍 *الوصف الإحصائي:*")
+        st.table(df.describe())
 
-# 7. داشبورد الإدارة (النسخة الفخمة المظبوطة)
+# 6. التنبؤ
+elif choice == "📈 التنبؤ المالي (AI)":
+    st.header("📈 التنبؤ بمستقبل المبيعات")
+    if not df.empty and 'المبيعات' in df.columns:
+        y = df['المبيعات'].values
+        future = np.poly1d(np.polyfit(np.arange(len(y)), y, 1))(np.arange(len(y), len(y) + 10))
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(y=y, name="الحالي", line=dict(color='#3b82f6')))
+        fig.add_trace(go.Scatter(y=future, name="التنبؤ", line=dict(dash='dash', color='red')))
+        st.plotly_chart(fig, use_container_width=True)
+
+# 7. الداشبورد (High-Level)
 elif choice == "🖥️ داشبورد الإدارة":
     st.header("🖥️ Dashboard Performance (MIA8444)")
-    
     if not df.empty:
-        # التأكد من وجود عمود مبيعات للتحليل
-        if 'المبيعات' in df.columns:
-            # الصف الأول: الكروت الرئيسية (Metrics)
-            c1, c2, c3 = st.columns(3)
-            total_sales = df['المبيعات'].sum()
-            avg_sales = df['المبيعات'].mean()
-            total_ops = len(df)
-            
-            c1.metric("إجمالي المبيعات", f"{total_sales:,.0f}")
-            c2.metric("عدد العمليات", f"{total_ops}")
-            c3.metric("متوسط المبيعات", f"{avg_sales:,.2f}")
-            
-            st.write("---")
-            
-            # الصف الثاني: الرسوم البيانية الكبيرة
-            col_chart1, col_chart2 = st.columns([1, 1])
-            
-            with col_chart1:
-                # توزيع المبيعات (Donut Chart) كما في الصورة
-                fig_pie = px.pie(df, names='المنتج' if 'المنتج' in df.columns else df.columns[0], 
-                                 values='المبيعات', hole=0.5, 
-                                 title="توزيع المبيعات حسب المنتج")
-                fig_pie.update_layout(template="plotly_dark", showlegend=True)
-                st.plotly_chart(fig_pie, use_container_width=True)
-            
-            with col_chart2:
-                # أداء المنتجات (Bar Chart) ملون واحترافي
-                fig_bar = px.bar(df, x='المنتج' if 'المنتج' in df.columns else df.columns[0], 
-                                 y='المبيعات', color='المنتج' if 'المنتج' in df.columns else None,
-                                 title="مقارنة أداء المنتجات المباشر",
-                                 text_auto='.2s')
-                fig_bar.update_layout(template="plotly_dark", xaxis_title="المنتج", yaxis_title="المبيعات")
-                st.plotly_chart(fig_bar, use_container_width=True)
-        else:
-            st.warning("البيانات لا تحتوي على عمود 'المبيعات'. يرجى تسمية عمود الأرقام بـ 'المبيعات' ليعمل الداشبورد.")
-    else:
-        st.warning("ارفع بياناتك أو أدخلها في محرر الإكسل أولاً لتنشيط الداشبورد.")
+        c1, c2, c3 = st.columns(3)
+        c1.metric("إجمالي المبيعات", f"{df['المبيعات'].sum():,}")
+        c2.metric("عدد العمليات", len(df))
+        c3.metric("المتوسط", f"{df['المبيعات'].mean():.2f}")
+        
+        ca, cb = st.columns(2)
+        with ca:
+            st.plotly_chart(px.pie(df, names='المنتج', values='المبيعات', hole=0.4, title="توزيع المبيعات"), use_container_width=True)
+        with cb:
+            st.plotly_chart(px.bar(df, x='المنتج', y='المبيعات', color='المنتج', title="أداء المنتجات"), use_container_width=True)
 
-# باقي الأقسام (مختصرة لضمان عمل الكود)
-elif choice == "📸 الرؤية الذكية (OCR)": st.header("📸 AI Vision OCR")
-elif choice == "🧼 منظف البيانات الذكي": st.header("🧼 Data Cleaner")
-elif choice == "🧠 المحلل الذكي": st.header("🧠 Smart Analysis")
-elif choice == "📈 التنبؤ المالي (AI)": st.header("📈 AI Forecast")
-elif choice == "📄 تقرير PDF النهائي": st.header("📄 Export Report")
+# 8. PDF
+elif choice == "📄 تقرير PDF النهائي":
+    st.header("📄 تصدير التقرير النهائي")
+    st.button("📥 تحميل التقرير (MIA8444_Report.pdf)")
 
 st.write("---")
 st.markdown("<center>Smart Analyst Beast | Powered by MIA8444</center>", unsafe_allow_html=True)
