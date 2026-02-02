@@ -3,165 +3,143 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-from PIL import Image
 import os
 from io import BytesIO
 
 # 1. إعدادات الهوية الفخمة (MIA8444)
-st.set_page_config(
-    page_title="Smart Analyst Beast PRO", 
-    layout="wide", 
-    page_icon="🦁",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(page_title="Smart Analyst Beast PRO", layout="wide", page_icon="🦁")
 
-# 2. لمسة جمالية للواجهة (CSS) لتنظيم الشكل والنضافة
+# لمسة CSS احترافية لتنسيق الألوان وتوسيط اللوجو
 st.markdown("""
     <style>
-    .main { background-color: #0e1117; color: white; }
-    [data-testid="stSidebar"] { background-color: #161b22; border-right: 1px solid #30363d; }
-    .stMetric { background-color: #1f2937; padding: 15px; border-radius: 10px; border: 1px solid #3b82f6; }
+    .main { background-color: #0e1117; }
+    [data-testid="stSidebar"] { background-color: #161b22; }
+    .stMetric { background-color: #1f2937; padding: 15px; border-radius: 10px; border-left: 5px solid #3b82f6; }
+    div.stButton > button:first-child { background-color: #3b82f6; color: white; border-radius: 10px; }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. مخزن البيانات (Session State) لضمان عدم فقدان البيانات
+# 2. مخزن البيانات الأساسي
 if 'main_df' not in st.session_state:
     st.session_state['main_df'] = pd.DataFrame()
 
+df = st.session_state['main_df']
+
 # --- السايد بار (مركز التحكم الإمبراطوري) ---
 with st.sidebar:
-    # عرض اللوجو بشكل "منور" واحترافي
+    # اللوجو منور الدنيا فوق خالص
     if os.path.exists("8888.jpg"):
         st.image("8888.jpg", use_container_width=True)
     
-    st.markdown("<h2 style='text-align: center; color: #3b82f6;'>Smart Analyst</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; font-size: 0.8em;'>Signature: MIA8444</p>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: white;'>Smart Analyst Beast</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #888;'>Signature: MIA8444</p>", unsafe_allow_html=True)
     st.write("---")
     
-    # القائمة المرتبة والمنظمة بأيقونات طبيعية
-    menu_options = {
-        "🏠 الرئيسية": "🏠 الرئيسية وتوليد الاختبار",
-        "📸 الرؤية الذكية": "👁️ الرؤية الذكية (OCR)",
-        "🧼 المنظف": "🧼 منظف البيانات",
-        "📊 إكسل برو": "📊 محرر الاكسل (Pro)",
-        "🧠 المحلل": "🧠 المحلل الذكي",
-        "📈 التنبؤ": "📉 التنبؤ المالي (AI)",
-        "🖥️ الداشبورد": "🖥️ داشبورد الإدارة",
-        "📄 التقرير": "📄 تقرير PDF النهائي"
+    # القائمة المرتبة بأيقونات طبيعية ومنظمة
+    st.markdown("### 🛠️ القائمة التنفيذية")
+    menu = {
+        "🏠 الرئيسية وتوليد الاختبار": "الرئيسية",
+        "📸 الرؤية الذكية (OCR)": "OCR",
+        "🧼 منظف البيانات الذكي": "Clean",
+        "📊 محرر الاكسل (Pro)": "Excel",
+        "🧠 المحلل الذكي": "Analysis",
+        "📈 التنبؤ المالي (AI)": "Forecast",
+        "🖥️ داشبورد الإدارة": "Dashboard",
+        "📄 تقرير PDF النهائي": "PDF"
     }
     
-    choice = st.radio("انتقل بين الأدوات بدقة:", list(menu_options.values()))
+    # استخدام Radio button بشكل شيك كأنه Menu
+    choice = st.radio("انتقل بين الأدوات بدقة:", list(menu.keys()))
     
     st.write("---")
-    # تم حذف الجملة السابقة واستبدالها بحالة النظام فقط
+    # حالة النظام (Active) بدون أي جمل إضافية
     st.success("System Status: Active 🟢")
-    st.caption("You don't have to be a data analyst.. Smart Analyst thinks for you")
+    st.caption("Smart Analyst thinks for you")
 
-# استدعاء البيانات الحالية
-df = st.session_state['main_df']
-
-# --- تنفيذ الأقسام بناءً على الاختيار ---
+# --- محتوى الأدوات المربوطة ---
 
 # 1. الرئيسية
 if choice == "🏠 الرئيسية وتوليد الاختبار":
-    st.header("🏠 بوابة التحكم في البيانات")
+    st.header("🏠 بوابة التحكم الرئيسية")
     col1, col2 = st.columns(2)
     with col1:
-        st.subheader("📤 رفع ملف")
-        up = st.file_uploader("ارفع ملفك (Excel/CSV)", type=['csv', 'xlsx'])
+        up = st.file_uploader("ارفع ملف البيانات (Excel/CSV)", type=['csv', 'xlsx'])
         if up:
-            try:
-                st.session_state['main_df'] = pd.read_excel(up) if up.name.endswith('xlsx') else pd.read_csv(up)
-                st.success("تم شحن البيانات بنجاح!")
-                st.rerun()
-            except Exception as e:
-                st.error(f"خطأ في قراءة الملف: {e}")
+            st.session_state['main_df'] = pd.read_excel(up) if up.name.endswith('xlsx') else pd.read_csv(up)
+            st.success("تم الشحن بنجاح!")
     with col2:
-        st.subheader("🧪 عينة اختبار")
-        if st.button("🧬 توليد ملف اختبار احترافي"):
+        if st.button("🧬 توليد بيانات اختبار (Beast Sample)"):
             test_data = pd.DataFrame({
-                'التاريخ': pd.date_range(start='2025-01-01', periods=50),
-                'المنتج': np.random.choice(['موبايل', 'ساعة', 'سماعة', 'لابتوب'], 50),
-                'المبيعات': np.random.randint(100, 5000, 50),
-                'التكلفة': np.random.randint(50, 4000, 50)
+                'التاريخ': pd.date_range(start='2025-01-01', periods=100),
+                'المنتج': np.random.choice(['موبايل', 'ساعة', 'لابتوب', 'سماعة'], 100),
+                'المبيعات': np.random.randint(500, 10000, 100),
+                'التكلفة': np.random.randint(300, 8000, 100)
             })
             st.session_state['main_df'] = test_data
-            st.success("تم توليد بيانات الاختبار!")
             st.rerun()
 
-# 2. الرؤية الذكية (OCR)
-elif choice == "👁️ الرؤية الذكية (OCR)":
-    st.header("👁️ محرك الرؤية الذكي (AI Vision)")
-    cam = st.camera_input("صور المستند الورقي أو ارفعه كصورة")
-    if cam:
-        st.image(cam, caption="تم التقاط الصورة.. جاري معالجتها بذكاء MIA8444")
-        st.info("الذكاء الاصطناعي يقوم الآن بتحويل الصورة لبيانات رقمية...")
+# 2. الرؤية الذكية
+elif choice == "📸 الرؤية الذكية (OCR)":
+    st.header("📸 محرك الرؤية الذكي (AI Vision)")
+    cam = st.camera_input("التقط صورة للجدول")
+    if cam: st.info("جاري استخراج البيانات بذكاء MIA8444...")
 
-# 3. منظف البيانات
-elif choice == "🧼 منظف البيانات":
-    st.header("🧼 وحدة التنظيف والتهيئة")
+# 3. المنظف
+elif choice == "🧼 منظف البيانات الذكي":
+    st.header("🧼 وحدة تنظيف البيانات")
     if not df.empty:
-        if st.button("🚀 تنظيف عميق (Auto Clean)"):
-            df_cleaned = df.drop_duplicates().fillna(0)
-            st.session_state['main_df'] = df_cleaned
-            st.success("تم تنظيف البيانات بنجاح!")
-            st.dataframe(df_cleaned.head())
-    else: st.warning("لا توجد بيانات لتنظيفها. ارفع ملف أولاً.")
+        if st.button("🚀 تنظيف عميق ومعالجة القيم"):
+            st.session_state['main_df'] = df.drop_duplicates().fillna(0)
+            st.success("البيانات الآن نظيفة تماماً!")
+    else: st.warning("ارفع بياناتك أولاً.")
 
-# 4. محرر الاكسل برو
+# 4. محرر الإكسل (SnaAyas)
 elif choice == "📊 محرر الاكسل (Pro)":
-    st.header("📊 Excel Pro Dashboard (SnaAyas)")
+    st.header("📊 محرر الجداول المطور (SnaAyas)")
     if not df.empty:
         edited_df = st.data_editor(df, num_rows="dynamic", use_container_width=True)
-        if st.button("💾 حفظ التعديلات النهائية"):
+        if st.button("💾 حفظ التعديلات"):
             st.session_state['main_df'] = edited_df
-            st.success("تم حفظ التعديلات في ذاكرة الوحش.")
-    else: st.warning("البيانات فارغة. ارفع ملف أولاً.")
+            st.success("تم الحفظ في ذاكرة الوحش.")
+    else: st.warning("لا توجد بيانات للعرض.")
 
-# 5. المحلل الذكي
+# 5. المحلل
 elif choice == "🧠 المحلل الذكي":
     st.header("🧠 ذكاء MIA8444 في التحليل")
     if not df.empty:
-        st.write("🔍 *الملخص الإحصائي للبيانات:*")
-        st.dataframe(df.describe(), use_container_width=True)
-    else: st.warning("لا توجد بيانات للتحليل.")
+        st.write("🔍 *الوصف الإحصائي:*")
+        st.table(df.describe())
 
-# 6. التنبؤ المالي
-elif choice == "📉 التنبؤ المالي (AI)":
-    st.header("📉 التنبؤ بمستقبل المبيعات")
+# 6. التنبؤ
+elif choice == "📈 التنبؤ المالي (AI)":
+    st.header("📈 التنبؤ بمستقبل المبيعات")
     if not df.empty and 'المبيعات' in df.columns:
         y = df['المبيعات'].values
         future = np.poly1d(np.polyfit(np.arange(len(y)), y, 1))(np.arange(len(y), len(y) + 10))
         fig = go.Figure()
-        fig.add_trace(go.Scatter(y=y, name="الواقع الحالي", line=dict(color='#3b82f6')))
-        fig.add_trace(go.Scatter(y=future, name="التنبؤ المستقبلي", line=dict(dash='dash', color='#ef4444')))
+        fig.add_trace(go.Scatter(y=y, name="الحالي", line=dict(color='#3b82f6')))
+        fig.add_trace(go.Scatter(y=future, name="التنبؤ", line=dict(dash='dash', color='red')))
         st.plotly_chart(fig, use_container_width=True)
-    else: st.info("تأكد من وجود عمود باسم 'المبيعات' لتفعيل ميزة التنبؤ.")
 
-# 7. داشبورد الإدارة
+# 7. الداشبورد (High-Level)
 elif choice == "🖥️ داشبورد الإدارة":
-    st.header("🖥️ Dashboard High-Level (MIA8444)")
+    st.header("🖥️ Dashboard Performance (MIA8444)")
     if not df.empty:
-        m1, m2, m3 = st.columns(3)
-        m1.metric("إجمالي المبيعات", f"{df['المبيعات'].sum():,}")
-        m2.metric("عدد العمليات", len(df))
-        m3.metric("متوسط المبيعات", f"{df['المبيعات'].mean():.2f}")
+        c1, c2, c3 = st.columns(3)
+        c1.metric("إجمالي المبيعات", f"{df['المبيعات'].sum():,}")
+        c2.metric("عدد العمليات", len(df))
+        c3.metric("المتوسط", f"{df['المبيعات'].mean():.2f}")
         
-        col_a, col_b = st.columns(2)
-        with col_a:
-            fig_pie = px.pie(df, names='المنتج', values='المبيعات', hole=0.4, title="توزيع المبيعات")
-            st.plotly_chart(fig_pie)
-        with col_b:
-            fig_bar = px.bar(df, x='المنتج', y='المبيعات', color='المنتج', title="أداء المنتجات")
-            st.plotly_chart(fig_bar)
-    else: st.warning("ارفع بيانات لعرض الداشبورد.")
+        ca, cb = st.columns(2)
+        with ca:
+            st.plotly_chart(px.pie(df, names='المنتج', values='المبيعات', hole=0.4, title="توزيع المبيعات"), use_container_width=True)
+        with cb:
+            st.plotly_chart(px.bar(df, x='المنتج', y='المبيعات', color='المنتج', title="أداء المنتجات"), use_container_width=True)
 
-# 8. التقرير النهائي
+# 8. PDF
 elif choice == "📄 تقرير PDF النهائي":
-    st.header("📄 تصدير التقرير الاحترافي")
-    st.info("جاري تجهيز التقرير النهائي بختم MIA8444...")
-    st.button("📥 تحميل التقرير (PDF)")
+    st.header("📄 تصدير التقرير النهائي")
+    st.button("📥 تحميل التقرير (MIA8444_Report.pdf)")
 
-# تذييل الصفحة
-st.markdown("---")
-st.markdown("<center>Smart Analyst Beast | Powered by MIA8444 | 2026</center>", unsafe_allow_html=True)
+st.write("---")
+st.markdown("<center>Smart Analyst Beast | Powered by MIA8444</center>", unsafe_allow_html=True)
