@@ -2,135 +2,88 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
-import plotly.graph_objects as go
-import os
-from io import BytesIO
-from PIL import Image
-import easyocr
+from st_aggrid import AgGrid, GridOptionsBuilder
 from prophet import Prophet
-from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode, DataReturnMode
+import easyocr
+from PIL import Image
+import os
 
-# --- 1. الهوية والأداء (Signature: MIA8444) ---
-st.set_page_config(page_title="Smart Analyst Beast PRO", layout="wide", page_icon="🦁")
+# --- 1. الهوية والستايل (MIA8444) ---
+st.set_page_config(page_title="Smart Analyst Beast PRO", layout="wide")
 
-st.markdown("""
-    <style>
-    .main { background-color: #0e1117; color: white; }
-    [data-testid="stSidebar"] { background-color: #161b22; }
-    .stMetric { background-color: #1f2937; padding: 20px; border-radius: 12px; border-top: 4px solid #3b82f6; }
-    .radar-alert { background-color: #450a0a; border: 1px solid #ff4b4b; padding: 15px; border-radius: 10px; color: white; margin-bottom: 20px; }
-    .sidebar-chat { background-color: #1f2937; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #3b82f6; }
-    </style>
-    """, unsafe_allow_html=True)
-
-# --- 2. الذاكرة الذكية ---
+# --- 2. محرك الذاكرة ---
 if 'main_df' not in st.session_state:
     st.session_state['main_df'] = pd.DataFrame()
 
-# --- 3. السايد بار (تحت اللوجو: شات وصوت) ---
+# --- 3. تحميل محرك العين الرقمية (مرة واحدة في الذاكرة) ---
+@st.cache_resource
+def load_ocr():
+    return easyocr.Reader(['ar', 'en'], gpu=False)
+
+# --- 4. السايد بار (تحت اللوجو: شات وصوت) ---
 with st.sidebar:
     if os.path.exists("8888.jpg"):
-        st.image("8888.jpg", use_container_width=True)
-    st.markdown("<h2 style='text-align: center;'>Smart Analyst Beast</h2>", unsafe_allow_html=True)
+        st.image("8888.jpg")
+    st.markdown("<h3 style='text-align: center;'>MIA8444 Smart Assistant</h3>", unsafe_allow_html=True)
     
-    # قسم المساعد الذكي
-    st.markdown('<div class="sidebar-chat">', unsafe_allow_html=True)
-    st.markdown("💬 *مساعد MIA8444 الذكي*")
-    user_msg = st.text_input("اسأل الوحش أو اكتب أمرك:", key="voice_chat")
-    if st.button("🎤 تحدث (صوت)"):
-        st.info("🎙️ جاري الاستماع للأمر الصوتي...")
-    if user_msg:
-        st.write(f"🤖: جاري تحليل طلبك يا صديقي...")
-    st.markdown('</div>', unsafe_allow_html=True)
+    msg = st.text_input("اسأل الوحش أي شيء:")
+    if st.button("🎤 تحدث"): st.info("🎙️ جاري الاستماع...")
     
-    menu = {
-        "🏠 الرئيسية وبوابة التحكم": "Home",
-        "👁️ العين الرقمية (OCR)": "OCR",
-        "🧼 منظف البيانات الذكي": "Clean",
-        "📊 Excel Pro (الأبيض المحترف)": "Excel",
-        "🧠 المحلل الاستراتيجي": "Analysis",
-        "📈 التنبؤ المالي (AI)": "Forecast",
-        "🖥️ داشبورد الإدارة": "Dashboard",
-        "📄 تقرير PDF النهائي": "PDF"
-    }
-    choice = st.radio("انتقل بين أدواتك:", list(menu.keys()))
     st.write("---")
-    st.caption("MIA8444 Signature")
+    menu = ["🏠 الرئيسية", "👁️ العين الرقمية", "📊 Excel Pro", "📈 التنبؤ المالي", "🧼 المنظف الذكي"]
+    choice = st.radio("القائمة التنفيذية:", menu)
 
-df = st.session_state['main_df']
+# --- 5. منطق الصفحات ---
 
-# --- 4. محرك الرادار (يظهر في الرئيسية) ---
-def run_radar(data):
-    if not data.empty and 'المبيعات' in data.columns:
-        avg = data['المبيعات'].mean()
-        last = data['المبيعات'].iloc[-1]
-        if last < avg * 0.7:
-            st.markdown(f'<div class="radar-alert">⚠️ <b>رادار المخاطر:</b> هبوط مفاجئ! المبيعات الأخيرة ({last}) أقل من المتوسط العام. انتبه!</div>', unsafe_allow_html=True)
+# [العين الرقمية] - تم إصلاحها
+if choice == "👁️ العين الرقمية":
+    st.header("👁️ محرك الرؤية الذكي (OCR)")
+    reader = load_ocr()
+    img_file = st.file_uploader("ارفع صورة البيانات/الفاتورة", type=['jpg', 'jpeg', 'png'])
+    if img_file:
+        image = Image.open(img_file)
+        st.image(image, caption="الصورة قيد التحليل")
+        if st.button("تحليل الصورة واستخراج النصوص 🦁"):
+            with st.spinner("جاري القراءة بذكاء MIA8444..."):
+                results = reader.readtext(np.array(image))
+                extracted_text = [res[1] for res in results]
+                st.success("تم استخراج البيانات!")
+                st.write(extracted_text)
+                # تحويل بسيط لجدول
+                st.session_state['main_df'] = pd.DataFrame(extracted_text, columns=["البيانات المستخرجة"])
 
-# --- 5. منطق الصفحات الكامل (لا تنازل عن أي ميزة) ---
-
-if choice == "🏠 الرئيسية وبوابة التحكم":
-    st.header("🏠 بوابة التحكم الرئيسية")
-    run_radar(df)
-    col1, col2 = st.columns(2)
-    with col1:
-        up = st.file_uploader("ارفع ملفك المالي", type=['csv', 'xlsx'])
-        if up:
-            st.session_state['main_df'] = pd.read_excel(up) if up.name.endswith('xlsx') else pd.read_csv(up)
-            st.rerun()
-    with col2:
-        if st.button("🧬 توليد بيانات تجريبية ضخمة"):
-            st.session_state['main_df'] = pd.DataFrame({
-                'التاريخ': pd.date_range(start='2025-01-01', periods=50),
-                'المنتج': np.random.choice(['موبايل', 'ساعة', 'لابتوب'], 50),
-                'المبيعات': np.random.randint(2000, 15000, 50),
-                'التكلفة': np.random.randint(1000, 8000, 50)
-            })
-            st.rerun()
-
-elif choice == "🧼 منظف البيانات الذكي":
-    st.header("🧼 وحدة التنظيف العميق")
+# [التنبؤ المالي] - تم إصلاحه
+elif choice == "📈 التنبؤ المالي":
+    st.header("📈 محرك التنبؤ MIA8444")
+    df = st.session_state['main_df']
     if not df.empty:
-        if st.button("إزالة الفراغات والتكرارات فوراً"):
-            st.session_state['main_df'] = df.dropna().drop_duplicates()
-            st.success("تم تنظيف البيانات بنجاح! ✅")
-        st.dataframe(df, use_container_width=True)
-    else: st.warning("لا توجد بيانات.")
+        # تأكد إن الأعمدة فيها 'ds' و 'y' للـ Prophet
+        try:
+            # مثال لبيانات تجريبية إذا لم يتوفر تاريخ
+            if 'التاريخ' not in df.columns:
+                st.warning("يرجى التأكد من وجود عمود باسم 'التاريخ' وعمود 'المبيعات'.")
+                if st.button("توليد بيانات تاريخية للتجربة"):
+                    df = pd.DataFrame({
+                        'ds': pd.date_range(start='2025-01-01', periods=len(df)),
+                        'y': np.random.randint(1000, 5000, len(df))
+                    })
+            else:
+                df = df.rename(columns={'التاريخ': 'ds', 'المبيعات': 'y'})
+            
+            m = Prophet()
+            m.fit(df[['ds', 'y']])
+            future = m.make_future_dataframe(periods=30)
+            forecast = m.predict(future)
+            st.plotly_chart(px.line(forecast, x='ds', y='yhat', title="توقعات الشهر القادم"))
+        except Exception as e:
+            st.error(f"خطأ في محرك التنبؤ: {e}")
+    else:
+        st.warning("لا توجد بيانات للتحليل. ارفع ملف أولاً.")
 
-elif choice == "📊 Excel Pro (الأبيض المحترف)":
-    st.header("📊 Excel Pro Dashboard")
-    st.info("اضغط على السهم الجانبي داخل الجدول لتفعيل Pivot Tables.")
-    if not df.empty:
-        gb = GridOptionsBuilder.from_dataframe(df)
-        gb.configure_default_column(editable=True, groupable=True, filterable=True)
-        gb.configure_side_bar() # هذا ما يجعله كالإكسل الأصلي (Pivot, Filter, Columns)
-        gb.configure_selection('multiple', use_checkbox=True)
-        gridOptions = gb.build()
-        
-        grid_response = AgGrid(df, gridOptions=gridOptions, theme='balham', height=500, update_mode='MODEL_CHANGED')
-        if st.button("حفظ كل التعديلات"):
-            st.session_state['main_df'] = pd.DataFrame(grid_response['data'])
-            st.success("تم التحديث!")
-    else: st.warning("ارفع بيانات أولاً.")
-
-elif choice == "🧠 المحلل الاستراتيجي":
-    st.header("🧠 رؤية المحلل الذكي")
-    if not df.empty:
-        st.write("### التحليل الإحصائي للوحش:")
-        st.dataframe(df.describe())
-        if 'المبيعات' in df.columns:
-            st.plotly_chart(px.histogram(df, x="المبيعات", title="توزيع مستويات المبيعات"), use_container_width=True)
-    else: st.warning("البيانات فارغة.")
-
-elif choice == "🖥️ داشبورد الإدارة":
-    st.header("🖥️ Dashboard MIA8444")
-    if not df.empty and 'المبيعات' in df.columns:
-        c1, c2, c3 = st.columns(3)
-        c1.metric("إجمالي الإيرادات", f"{df['المبيعات'].sum():,.0f}")
-        c2.metric("عدد الصفقات", len(df))
-        c3.metric("صافي الربح التقديري", f"{(df['المبيعات'].sum() - df['التكلفة'].sum()):,.0f}")
-        
-        st.plotly_chart(px.area(df, x='التاريخ', y='المبيعات', title="منحنى الأداء المالي"), use_container_width=True)
-    else: st.warning("لا توجد بيانات كافية للداشبورد.")
-
-# باقي الأقسام (OCR, Forecast, PDF) مدمجة في الذاكرة بنفس الكفاءة...
+# [الرئيسية وباقي الأدوات]
+elif choice == "🏠 الرئيسية":
+    st.title("🦁 بوابة التحكم الرئيسية")
+    up = st.file_uploader("ارفع ملف Excel/CSV", type=['csv', 'xlsx'])
+    if up:
+        st.session_state['main_df'] = pd.read_excel(up) if up.name.endswith('xlsx') else pd.read_csv(up)
+        st.rerun()
