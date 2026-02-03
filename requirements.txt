@@ -1,23 +1,15 @@
-# --- الأساسيات وعضلات التطبيق ---
 streamlit>=1.30.0
 pandas>=2.1.0
 numpy>=1.26.0
-
-# --- المرحلة الأولى: العين الرقمية (OCR الذكي) ---
 easyocr
 opencv-python-headless
 Pillow
-
-# --- المرحلة الثانية: ذكاء التنبؤ المالي ---
 prophet
 statsmodels
 plotly>=5.18.0
-
-# --- المرحلة الثالثة: المساعد الصوتي والدردشة ---
 SpeechRecognition
 gTTS
-
-# --- المرحلة الرابعة: تصدير التقارير الفخمة ---
 fpdf2
 openpyxl
 xlsxwriter
+streamlit-aggrid
