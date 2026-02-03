@@ -2,95 +2,104 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
-from st_aggrid import AgGrid, GridOptionsBuilder
+from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode, DataReturnMode
 from prophet import Prophet
-from fpdf import FPDF
-import os
-from datetime import datetime
+import speech_recognition as sr
 
-# --- 1. إعدادات الهوية (MIA8444) ---
+# --- الإعدادات الفخمة (MIA8444) ---
 st.set_page_config(page_title="Smart Analyst Beast PRO", layout="wide")
 
+# تصميم الواجهة والألوان
 st.markdown("""
     <style>
-    .stApp { background-color: #0e1117; color: white; }
-    .sidebar-chat { background: #1f2937; padding: 15px; border-radius: 10px; border: 1px solid #3b82f6; }
-    .report-btn { background-color: #10b981 !important; color: white !important; }
+    .stApp { background-color: #0e1117; }
+    .radar-alert { background-color: #7f1d1d; color: white; padding: 15px; border-radius: 10px; border-left: 5px solid #ef4444; margin-bottom: 20px; }
+    .sidebar-chat { background-color: #1f2937; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. محرك الذاكرة ---
-if 'main_df' not in st.session_state:
-    st.session_state['main_df'] = pd.DataFrame()
-
-# --- 3. السايد بار (الشات + القائمة) ---
+# --- 1. المساعد الصوتي والشات (موقعه: تحت اللوجو) ---
 with st.sidebar:
-    if os.path.exists("8888.jpg"):
-        st.image("8888.jpg")
-    st.markdown("<h2 style='text-align: center;'>MIA8444 Assistant</h2>", unsafe_allow_html=True)
+    st.image("8888.jpg", use_container_width=True) # اللوجو الخاص بك
+    st.markdown("<h3 style='text-align: center;'>Smart Analyst Assistant</h3>", unsafe_allow_html=True)
     
-    st.markdown('<div class="sidebar-chat">', unsafe_allow_html=True)
-    msg = st.text_input("اسأل الوحش أي شيء:")
-    if st.button("🎤 صوت"): st.write("🎙️ جارِ الاستماع...")
-    st.markdown('</div>', unsafe_allow_html=True)
+    with st.container():
+        st.markdown('<div class="sidebar-chat">', unsafe_allow_html=True)
+        user_msg = st.text_input("اسأل MIA8444...", placeholder="اكتب أمرك هنا...")
+        col_voice, col_send = st.columns([1, 3])
+        if col_voice.button("🎤"):
+            st.write("🎙️ جارِ الاستماع...")
+        if user_msg:
+            st.info(f"الوحش: أنا بجهز لك تحليل لـ '{user_msg}' دلوقتي يا صديقي.")
+        st.markdown('</div>', unsafe_allow_html=True)
     
-    menu = ["الرئيسية", "منظف البيانات", "Excel Pro", "المحلل الاستراتيجي", "التنبؤ المالي", "داشبورد الإدارة", "تقرير PDF النهائي"]
-    choice = st.radio("القائمة:", menu)
+    st.write("---")
+    menu = ["🏠 الرئيسية", "📊 Excel Pro", "📉 التنبؤ المالي", "👁️ العين الرقمية"]
+    choice = st.sidebar.selectbox("القائمة التنفيذية:", menu)
+    st.write("---")
+    st.caption("Signature: MIA8444")
 
-df = st.session_state['main_df']
+# --- 2. محرك الرادار الذكي (Smart Radar) ---
+def run_smart_radar(data):
+    if not data.empty and 'المبيعات' in data.columns:
+        last_val = data['المبيعات'].iloc[-1]
+        avg_val = data['المبيعات'].mean()
+        if last_val < avg_val * 0.8:
+            st.markdown(f"""
+            <div class="radar-alert">
+                ⚠️ <b>رادار المخاطر:</b> انخفاض ملحوظ! المبيعات الأخيرة ({last_val:,.0f}) أقل من المتوسط ({avg_val:,.0f}). انتبه للمخزون!
+            </div>
+            """, unsafe_allow_html=True)
 
-# --- 4. تنفيذ الصفحات (بدون نقص ميزة واحدة) ---
+# --- 3. صفحة Excel Pro (المحرر الأبيض) ---
+if choice == "📊 Excel Pro":
+    st.title("📊 Excel Pro Dashboard")
+    st.write("أدوات إدخال البيانات الذكية - Pivot & Tools")
+    
+    # بيانات تجريبية إذا كان الجدول فارغاً
+    if 'main_df' not in st.session_state or st.session_state['main_df'].empty:
+        st.session_state['main_df'] = pd.DataFrame({
+            'التاريخ': pd.date_range(start='2025-01-01', periods=5),
+            'المنتج': ['ساعة', 'موبايل', 'لابتوب', 'ساعة', 'موبايل'],
+            'المبيعات': [5000, 7000, 12000, 4500, 8000],
+            'التكلفة': [3000, 4000, 8000, 2500, 5000]
+        })
 
-if choice == "الرئيسية":
-    st.title("🏠 بوابة التحكم MIA8444")
-    up = st.file_uploader("ارفع ملفك المالي", type=['csv', 'xlsx'])
-    if up:
-        st.session_state['main_df'] = pd.read_excel(up) if up.name.endswith('xlsx') else pd.read_csv(up)
-        st.success("تم رفع البيانات بنجاح!")
+    # إعداد الجدول الأبيض الاحترافي (AgGrid)
+    gb = GridOptionsBuilder.from_dataframe(st.session_state['main_df'])
+    gb.configure_default_column(editable=True, groupable=True, value=True, enableRowGroup=True, aggFunc='sum')
+    gb.configure_side_bar() # تفعيل Pivot Table وتصفية البيانات
+    gb.configure_selection(selection_mode='multiple', use_checkbox=True)
+    grid_options = gb.build()
 
-elif choice == "منظف البيانات":
-    st.header("🧼 منظف البيانات الذكي")
-    if not df.empty:
-        if st.button("تنظيف عميق (حذف الفراغات والتكرار)"):
-            st.session_state['main_df'] = df.dropna().drop_duplicates()
-            st.success("تم التنظيف يا صديقي! ✅")
-        st.dataframe(st.session_state['main_df'])
+    # عرض الجدول بثيم أبيض (Balham)
+    response = AgGrid(
+        st.session_state['main_df'],
+        gridOptions=grid_options,
+        data_return_mode=DataReturnMode.FILTERED_AND_SORTED,
+        update_mode=GridUpdateMode.MODEL_CHANGED,
+        fit_columns_on_grid_load=True,
+        theme='balham', # الثيم الأبيض الاحترافي
+        enable_enterprise_modules=True, # تفعيل أدوات الإكسل المتقدمة
+        height=400,
+        width='100%',
+    )
+    
+    if st.button("حفظ البيانات المحدثة"):
+        st.session_state['main_df'] = response['data']
+        st.success("تم حفظ التعديلات في ذاكرة الوحش! ✅")
 
-elif choice == "Excel Pro":
-    st.header("📊 Excel Pro (الأبيض المحترف)")
-    if not df.empty:
-        gb = GridOptionsBuilder.from_dataframe(df)
-        gb.configure_default_column(editable=True, groupable=True)
-        gb.configure_side_bar() 
-        grid_response = AgGrid(df, gridOptions=gb.build(), theme='balham', height=400)
-        if st.button("حفظ التعديلات"):
-            st.session_state['main_df'] = pd.DataFrame(grid_response['data'])
+# --- 4. الصفحة الرئيسية والرادار ---
+elif choice == "🏠 الرئيسية":
+    st.title("🦁 Smart Analyst Beast Home")
+    run_smart_radar(st.session_state.get('main_df', pd.DataFrame()))
+    
+    if 'main_df' in st.session_state:
+        st.subheader("لمحة سريعة على البيانات الحالية")
+        st.dataframe(st.session_state['main_df'], use_container_width=True)
+    else:
+        st.info("ارفع ملفاتك أو استخدم Excel Pro لبدء التحليل.")
 
-elif choice == "التنبؤ المالي":
-    st.header("📈 محرك التنبؤ بالذكاء الاصطناعي")
-    if not df.empty:
-        try:
-            # تجهيز البيانات للـ Prophet
-            pdf = df.copy()
-            pdf.columns = [c.strip() for c in pdf.columns]
-            if 'التاريخ' in pdf.columns and 'المبيعات' in pdf.columns:
-                pdf = pdf[['التاريخ', 'المبيعات']].rename(columns={'التاريخ': 'ds', 'المبيعات': 'y'})
-                m = Prophet().fit(pdf)
-                future = m.make_future_dataframe(periods=30)
-                forecast = m.predict(future)
-                st.plotly_chart(px.line(forecast, x='ds', y='yhat', title="توقعات الـ 30 يوماً القادمة"))
-            else: st.error("تأكد من وجود أعمدة 'التاريخ' و 'المبيعات' بدقة.")
-        except Exception as e: st.error(f"حدث خطأ في المحرك: {e}")
-
-elif choice == "تقرير PDF النهائي":
-    st.header("📄 مُولد التقارير الملكي")
-    if not df.empty:
-        if st.button("إنشاء وتحميل التقرير (PDF)"):
-            pdf = FPDF()
-            pdf.add_page()
-            pdf.set_font("Arial", size=12)
-            pdf.cell(200, 10, txt="Smart Analyst Beast Report - MIA8444", ln=1, align='C')
-            pdf.cell(200, 10, txt=f"Date: {datetime.now().strftime('%Y-%m-%d')}", ln=2, align='C')
-            pdf.output("report.pdf")
-            with open("report.pdf", "rb") as f:
-                st.download_button("تحميل التقرير الآن 📥", f, "MIA8444_Report.pdf")
+# تذييل الصفحة
+st.write("---")
+st.markdown("<center>Proudly Developed by MIA8444 | 2026</center>", unsafe_allow_html=True)
