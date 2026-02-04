@@ -82,5 +82,5 @@ def main():
     elif choice == "الداشبورد": dashboard_page(df)
     elif choice == "Excel Pro": excel_pro_page(df)
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     main()
