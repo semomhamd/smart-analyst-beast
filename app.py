@@ -6,110 +6,80 @@ import os
 from datetime import datetime, timedelta
 from st_aggrid import AgGrid, GridOptionsBuilder
 
-# --- 1. ذاكرة التطبيق (لحفظ بيانات المستخدمين أثناء الجلسة) ---
-if 'main_data' not in st.session_state:
-    st.session_state['main_data'] = None
+# --- 1. ذاكرة التطبيق (حفظ البيانات للجمهور) ---
+if 'public_vault' not in st.session_state:
+    st.session_state['public_vault'] = None
 
-st.set_page_config(page_title="Smart Analyst Beast", layout="wide", page_icon="🦁")
+st.set_page_config(page_title="Smart Analyst Beast PRO", layout="wide", page_icon="🦁")
 
-# --- 2. الواجهة الجانبية العامة ---
+# --- 2. القائمة الجانبية واللوجو ---
 with st.sidebar:
-    # عرض شعار التطبيق العام
+    # إظهار اللوجو 8888.jpg (تأكد من وجود الملف في GitHub)
     if os.path.exists("8888.jpg"):
         st.image("8888.jpg", use_container_width=True)
     
-    st.markdown("<h2 style='text-align: center;'>Smart Analyst Beast</h2>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center;'>Smart Analyst Beast</h3>", unsafe_allow_html=True)
     st.write("---")
     
     menu = {
-        "🏠 الرئيسية (رفع البيانات)": "Home",
+        "🏠 مركز التحكم (رفع الملفات)": "Home",
         "📊 محرر الجداول (Excel Pro)": "Excel",
-        "📈 لوحة البيانات (Dashboard)": "Dash",
-        "🧊 التحليل ثلاثي الأبعاد": "3D",
-        "🧼 أدوات التنظيف الذكي": "Clean",
-        "👁️ قارئ الصور (OCR)": "OCR"
+        "🧊 التحليل الثلاثي (3D)": "3D",
+        "📈 لوحة البيانات (Dash)": "Dash"
     }
-    choice = st.radio("اختر الأداة المطلوبة:", list(menu.keys()))
+    choice = st.radio("القائمة العامة:", list(menu.keys()))
     
     st.write("---")
-    # ميزة تجريبية للجمهور لاختبار التطبيق ببيانات ضخمة
-    if st.button("🚀 توليد بيانات اختبار (10,000 صف)"):
+    if st.button("🚀 توليد 10,000 صف (اختبار تحمل)"):
         rows = 10000
-        dates = [datetime(2023, 1, 1) + timedelta(days=np.random.randint(0, 1000)) for _ in range(rows)]
         data = {
             'ID': range(1, rows + 1),
-            'التاريخ': dates,
-            'المنتج': [f"منتج_{np.random.randint(1, 50)}" for _ in range(rows)],
-            'المبيعات': np.random.uniform(500, 100000, size=rows),
-            'الكمية': np.random.randint(1, 20, size=rows),
+            'التاريخ': [datetime(2024, 1, 1) + timedelta(days=np.random.randint(0, 365)) for _ in range(rows)],
+            'المنتج': [f"منتج_{np.random.randint(1, 100)}" for _ in range(rows)],
+            'المبيعات': np.random.uniform(500, 50000, size=rows),
+            'الكمية': np.random.randint(1, 50, size=rows),
             'الفرع': [np.random.choice(['القاهرة', 'دبي', 'الرياض', 'لندن']) for _ in range(rows)],
             'التقييم': np.random.randint(1, 6, size=rows)
         }
-        st.session_state['main_data'] = pd.DataFrame(data)
-        st.success("تم إنشاء بيانات افتراضية للاختبار!")
+        st.session_state['public_vault'] = pd.DataFrame(data)
+        st.success("تم شحن 10,000 صف!")
         st.rerun()
 
-    st.caption("Powered by Smart Analyst Beast • MIA8444")
+    st.caption("Developed by MIA8444")
 
-# سحب البيانات الحالية من الجلسة
-df = st.session_state['main_data']
+# سحب البيانات الحالية
+df = st.session_state['public_vault']
 
-# --- 3. محرك الأدوات ---
+# --- 3. تشغيل الأدوات ---
 
 if menu[choice] == "Home":
-    st.title("🦁 مرحباً بك في Smart Analyst Beast")
-    st.markdown("قم برفع ملفاتك (Excel أو CSV) لتبدأ التحليل الذكي.")
-    
-    uploaded_file = st.file_uploader("اختر ملف البيانات", type=['xlsx', 'csv', 'xls'])
-    if uploaded_file:
-        try:
-            if uploaded_file.name.endswith('csv'):
-                st.session_state['main_data'] = pd.read_csv(uploaded_file)
-            else:
-                st.session_state['main_data'] = pd.read_excel(uploaded_file)
-            st.success("تم رفع البيانات ومعالجتها بنجاح!")
-        except Exception as e:
-            st.error(f"عذراً، حدث خطأ أثناء الرفع: {e}")
+    st.title("🦁 بوابة التحكم - Smart Analyst Beast")
+    st.write("مرحباً بك! ارفع ملف Excel أو CSV لبدء التحليل.")
+    up = st.file_uploader("اختر ملفك", type=['xlsx', 'csv'])
+    if up:
+        st.session_state['public_vault'] = pd.read_excel(up) if up.name.endswith('xlsx') else pd.read_csv(up)
+        st.success("تم تثبيت البيانات!")
 
 elif menu[choice] == "Excel":
-    st.header("📊 المحرر الاحترافي (Excel Pro)")
+    st.header("📊 Excel Pro (المحرر الأبيض)")
     if df is not None:
         gb = GridOptionsBuilder.from_dataframe(df)
         gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=15)
-        gb.configure_default_column(editable=True, filterable=True, sortable=True)
+        gb.configure_default_column(editable=True, filterable=True)
         grid_res = AgGrid(df, gridOptions=gb.build(), theme='balham', height=500)
-        
         if st.button("💾 حفظ التعديلات"):
-            st.session_state['main_data'] = pd.DataFrame(grid_res['data'])
-            st.success("تم حفظ التعديلات في جلسة العمل الحالية.")
-    else:
-        st.info("الرجاء رفع ملف بيانات أو استخدام 'بيانات الاختبار' من القائمة الجانبية.")
+            st.session_state['public_vault'] = pd.DataFrame(grid_res['data'])
+            st.success("تم الحفظ!")
+    else: st.warning("الخزنة فارغة.")
 
 elif menu[choice] == "3D":
-    st.header("🧊 التحليل المتطور ثلاثي الأبعاد")
+    st.header("🧊 تحليل البيانات ثلاثي الأبعاد")
     if df is not None:
-        st.write("رسم بياني تفاعلي يحلل العلاقة بين المبيعات، الكمية، والتقييم.")
-        fig = px.scatter_3d(df, x='الكمية', y='المبيعات', z='التقييم',
-                            color='الفرع', opacity=0.7, height=700,
-                            title="تحليل شامل للأداء")
+        fig = px.scatter_3d(df, x='الكمية', y='المبيعات', z='التقييم', color='الفرع', 
+                            title="تحليل شامل للعلاقات")
         st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.warning("لا توجد بيانات متاحة للرسم البياني.")
+    else: st.error("ارفع بيانات أولاً.")
 
-elif menu[choice] == "Dash":
-    st.header("📈 لوحة مراقبة الأداء")
-    if df is not None:
-        c1, c2, c3 = st.columns(3)
-        with c1: st.metric("إجمالي المبيعات", f"{df['المبيعات'].sum():,.0f}")
-        with c2: st.metric("عدد العمليات", len(df))
-        with c3: st.metric("متوسط التقييم", f"{df['التقييم'].mean():.2f}")
-        
-        st.write("---")
-        st.subheader("تحليل المبيعات حسب المنطقة")
-        st.bar_chart(df['الفرع'].value_counts())
-    else:
-        st.info("بانتظار رفع البيانات...")
-
-# ضمان تشغيل التطبيق بشكل سليم
+# --- التصحيح النهائي للـ NameError (الشرطتين __) ---
 if __name__ == "__main__":
     pass
