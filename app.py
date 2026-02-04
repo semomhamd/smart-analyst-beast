@@ -1,83 +1,115 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import plotly.express as px
+import os
 from datetime import datetime, timedelta
 from st_aggrid import AgGrid, GridOptionsBuilder
 
-# 1. الخزنة الحديدية (Session State) لتثبيت البيانات MIA8444
-if 'data_vault' not in st.session_state:
-    st.session_state['data_vault'] = None
+# --- 1. ذاكرة التطبيق (لحفظ بيانات المستخدمين أثناء الجلسة) ---
+if 'main_data' not in st.session_state:
+    st.session_state['main_data'] = None
 
-st.set_page_config(page_title="Smart Analyst Beast - Stress Test", layout="wide")
+st.set_page_config(page_title="Smart Analyst Beast", layout="wide", page_icon="🦁")
 
-# 2. مولد البيانات العملاق (10,000 صف و 15 عمود)
-def generate_giant_data(rows=10000):
-    st.info(f"جاري توليد {rows} صف... استعد لقوة الوحش!")
-    dates = [datetime(2020, 1, 1) + timedelta(days=np.random.randint(0, 2000)) for _ in range(rows)]
-    
-    data = {
-        'ID_المعاملة': range(1, rows + 1),
-        'التاريخ': dates,
-        'المنتج': [f"منتج_{np.random.randint(1, 100)}" for _ in range(rows)],
-        'المبيعات': np.random.uniform(100, 50000, size=rows),
-        'الكمية': np.random.randint(1, 100, size=rows),
-        'الفرع': [np.random.choice(['القاهرة', 'دبي', 'الرياض', 'لندن']) for _ in range(rows)],
-        'العميل': [f"عميل_{np.random.randint(1, 500)}" for _ in range(rows)],
-        'الخصم': np.random.uniform(0, 0.3, size=rows),
-        'الضريبة': np.random.uniform(0.05, 0.15, size=rows),
-        'تكلفة_الشحن': np.random.uniform(10, 500, size=rows),
-        'طريقة_الدفع': [np.random.choice(['كاش', 'فيزا', 'تحويل']) for _ in range(rows)],
-        'حالة_الطلب': [np.random.choice(['تم', 'جاري', 'ملغي']) for _ in range(rows)],
-        'التقييم': np.random.randint(1, 6, size=rows),
-        'وزن_الشحنة': np.random.uniform(0.5, 50, size=rows),
-        'الموظف_المسؤول': [f"موظف_{np.random.randint(1, 50)}" for _ in range(rows)]
-    }
-    return pd.DataFrame(data)
-
-# 3. القائمة الجانبية
+# --- 2. الواجهة الجانبية العامة ---
 with st.sidebar:
-    st.header("MIA8444 Control Panel")
-    menu = st.radio("القائمة:", ["🏠 بوابة التحميل", "📊 Excel Pro (اختبار الضغط)", "📈 تحليل البيانات الضخمة"])
-    if st.button("🚀 توليد 10,000 صف (اختبار التحمل)"):
-        st.session_state['data_vault'] = generate_giant_data(10000)
-        st.success("✅ الوحش ولد 10,000 صف بنجاح!")
+    # عرض شعار التطبيق العام
+    if os.path.exists("8888.jpg"):
+        st.image("8888.jpg", use_container_width=True)
+    
+    st.markdown("<h2 style='text-align: center;'>Smart Analyst Beast</h2>", unsafe_allow_html=True)
+    st.write("---")
+    
+    menu = {
+        "🏠 الرئيسية (رفع البيانات)": "Home",
+        "📊 محرر الجداول (Excel Pro)": "Excel",
+        "📈 لوحة البيانات (Dashboard)": "Dash",
+        "🧊 التحليل ثلاثي الأبعاد": "3D",
+        "🧼 أدوات التنظيف الذكي": "Clean",
+        "👁️ قارئ الصور (OCR)": "OCR"
+    }
+    choice = st.radio("اختر الأداة المطلوبة:", list(menu.keys()))
+    
+    st.write("---")
+    # ميزة تجريبية للجمهور لاختبار التطبيق ببيانات ضخمة
+    if st.button("🚀 توليد بيانات اختبار (10,000 صف)"):
+        rows = 10000
+        dates = [datetime(2023, 1, 1) + timedelta(days=np.random.randint(0, 1000)) for _ in range(rows)]
+        data = {
+            'ID': range(1, rows + 1),
+            'التاريخ': dates,
+            'المنتج': [f"منتج_{np.random.randint(1, 50)}" for _ in range(rows)],
+            'المبيعات': np.random.uniform(500, 100000, size=rows),
+            'الكمية': np.random.randint(1, 20, size=rows),
+            'الفرع': [np.random.choice(['القاهرة', 'دبي', 'الرياض', 'لندن']) for _ in range(rows)],
+            'التقييم': np.random.randint(1, 6, size=rows)
+        }
+        st.session_state['main_data'] = pd.DataFrame(data)
+        st.success("تم إنشاء بيانات افتراضية للاختبار!")
         st.rerun()
 
-df = st.session_state['data_vault']
+    st.caption("Powered by Smart Analyst Beast • MIA8444")
 
-# 4. الصفحات
-if menu == "🏠 بوابة التحميل":
-    st.title("🦁 بوابة التحكم MIA8444")
-    if df is not None:
-        st.write(f"البيانات الحالية: *{len(df)} صف* و *{len(df.columns)} عمود*.")
-        st.dataframe(df.head(100)) # عرض أول 100 بس عشان المتصفح ميهنجش
-    else:
-        st.warning("الخزنة فاضية.. اضغط على زر التوليد في الجنب!")
+# سحب البيانات الحالية من الجلسة
+df = st.session_state['main_data']
 
-elif menu == "📊 Excel Pro (اختبار الضغط)":
-    st.header("📊 اختبار سرعة الاستجابة لـ AgGrid")
+# --- 3. محرك الأدوات ---
+
+if menu[choice] == "Home":
+    st.title("🦁 مرحباً بك في Smart Analyst Beast")
+    st.markdown("قم برفع ملفاتك (Excel أو CSV) لتبدأ التحليل الذكي.")
+    
+    uploaded_file = st.file_uploader("اختر ملف البيانات", type=['xlsx', 'csv', 'xls'])
+    if uploaded_file:
+        try:
+            if uploaded_file.name.endswith('csv'):
+                st.session_state['main_data'] = pd.read_csv(uploaded_file)
+            else:
+                st.session_state['main_data'] = pd.read_excel(uploaded_file)
+            st.success("تم رفع البيانات ومعالجتها بنجاح!")
+        except Exception as e:
+            st.error(f"عذراً، حدث خطأ أثناء الرفع: {e}")
+
+elif menu[choice] == "Excel":
+    st.header("📊 المحرر الاحترافي (Excel Pro)")
     if df is not None:
-        # تحسين للأداء مع البيانات الكبيرة
         gb = GridOptionsBuilder.from_dataframe(df)
-        gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=20) # تقسيم الصفحات مهم جداً هنا
-        gb.configure_side_bar()
-        gb.configure_default_column(editable=True, filterable=True)
+        gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=15)
+        gb.configure_default_column(editable=True, filterable=True, sortable=True)
+        grid_res = AgGrid(df, gridOptions=gb.build(), theme='balham', height=500)
         
-        st.write("إرشادات: جرب تعمل Filter أو Sort وشوف السرعة.")
-        grid_res = AgGrid(df, gridOptions=gb.build(), theme='balham', height=500, update_mode='VALUE_CHANGED')
+        if st.button("💾 حفظ التعديلات"):
+            st.session_state['main_data'] = pd.DataFrame(grid_res['data'])
+            st.success("تم حفظ التعديلات في جلسة العمل الحالية.")
     else:
-        st.error("ارفع أو ولد بيانات أولاً.")
+        st.info("الرجاء رفع ملف بيانات أو استخدام 'بيانات الاختبار' من القائمة الجانبية.")
 
-elif menu == "📈 تحليل البيانات الضخمة":
-    st.header("📈 معالجة إحصائية فورية")
+elif menu[choice] == "3D":
+    st.header("🧊 التحليل المتطور ثلاثي الأبعاد")
     if df is not None:
-        c1, c2 = st.columns(2)
-        with c1:
-            st.metric("إجمالي المبيعات المليونية", f"{df['المبيعات'].sum():,.2f}")
-        with c2:
-            st.metric("متوسط التقييم", f"{df['التقييم'].mean():.2f}")
-        
-        st.subheader("توزيع المبيعات حسب الفرع")
-        import plotly.express as px
-        fig = px.box(df, x='الفرع', y='المبيعات', color='حالة_الطلب', title="تحليل ضخم للمبيعات")
+        st.write("رسم بياني تفاعلي يحلل العلاقة بين المبيعات، الكمية، والتقييم.")
+        fig = px.scatter_3d(df, x='الكمية', y='المبيعات', z='التقييم',
+                            color='الفرع', opacity=0.7, height=700,
+                            title="تحليل شامل للأداء")
         st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.warning("لا توجد بيانات متاحة للرسم البياني.")
+
+elif menu[choice] == "Dash":
+    st.header("📈 لوحة مراقبة الأداء")
+    if df is not None:
+        c1, c2, c3 = st.columns(3)
+        with c1: st.metric("إجمالي المبيعات", f"{df['المبيعات'].sum():,.0f}")
+        with c2: st.metric("عدد العمليات", len(df))
+        with c3: st.metric("متوسط التقييم", f"{df['التقييم'].mean():.2f}")
+        
+        st.write("---")
+        st.subheader("تحليل المبيعات حسب المنطقة")
+        st.bar_chart(df['الفرع'].value_counts())
+    else:
+        st.info("بانتظار رفع البيانات...")
+
+# ضمان تشغيل التطبيق بشكل سليم
+if __name__ == "__main__":
+    pass
