@@ -12,4 +12,4 @@ gTTS
 fpdf2
 openpyxl
 xlsxwriter
-streamlit-aggrid
+streamlit-aggrid==0.3.4.post3
