@@ -1,93 +1,83 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.express as px
-import os
-import easyocr
-from prophet import Prophet
+from datetime import datetime, timedelta
 from st_aggrid import AgGrid, GridOptionsBuilder
 
-# --- 1. الهوية الرسمية (MIA8444) ---
-st.set_page_config(page_title="Smart Analyst Beast PRO", layout="wide", page_icon="🦁")
+# 1. الخزنة الحديدية (Session State) لتثبيت البيانات MIA8444
+if 'data_vault' not in st.session_state:
+    st.session_state['data_vault'] = None
 
-# --- 2. محرك الذاكرة ---
-if 'main_df' not in st.session_state:
-    st.session_state['main_df'] = pd.DataFrame()
+st.set_page_config(page_title="Smart Analyst Beast - Stress Test", layout="wide")
 
-@st.cache_resource
-def load_ocr_model():
-    return easyocr.Reader(['ar', 'en'], gpu=False)
-
-# --- 3. بناء القائمة الجانبية الكاملة ---
-with st.sidebar:
-    if os.path.exists("8888.jpg"):
-        st.image("8888.jpg", use_container_width=True)
-    st.markdown("<h2 style='text-align: center;'>Smart Analyst Beast</h2>", unsafe_allow_html=True)
+# 2. مولد البيانات العملاق (10,000 صف و 15 عمود)
+def generate_giant_data(rows=10000):
+    st.info(f"جاري توليد {rows} صف... استعد لقوة الوحش!")
+    dates = [datetime(2020, 1, 1) + timedelta(days=np.random.randint(0, 2000)) for _ in range(rows)]
     
-    # القائمة الكاملة التي طلبتها يا صديقي
-    menu = {
-        "🏠 الرئيسية وبوابة التحكم": "Home",
-        "👁️ العين الرقمية (OCR)": "OCR",
-        "🧼 منظف البيانات الذكي": "Clean",
-        "📊 Excel Pro (المحرر الأبيض)": "Excel",
-        "🧠 المحلل الاستراتيجي": "Analysis",
-        "📈 التنبؤ المالي (AI)": "Forecast",
-        "🖥️ داشبورد الإدارة": "Dashboard"
+    data = {
+        'ID_المعاملة': range(1, rows + 1),
+        'التاريخ': dates,
+        'المنتج': [f"منتج_{np.random.randint(1, 100)}" for _ in range(rows)],
+        'المبيعات': np.random.uniform(100, 50000, size=rows),
+        'الكمية': np.random.randint(1, 100, size=rows),
+        'الفرع': [np.random.choice(['القاهرة', 'دبي', 'الرياض', 'لندن']) for _ in range(rows)],
+        'العميل': [f"عميل_{np.random.randint(1, 500)}" for _ in range(rows)],
+        'الخصم': np.random.uniform(0, 0.3, size=rows),
+        'الضريبة': np.random.uniform(0.05, 0.15, size=rows),
+        'تكلفة_الشحن': np.random.uniform(10, 500, size=rows),
+        'طريقة_الدفع': [np.random.choice(['كاش', 'فيزا', 'تحويل']) for _ in range(rows)],
+        'حالة_الطلب': [np.random.choice(['تم', 'جاري', 'ملغي']) for _ in range(rows)],
+        'التقييم': np.random.randint(1, 6, size=rows),
+        'وزن_الشحنة': np.random.uniform(0.5, 50, size=rows),
+        'الموظف_المسؤول': [f"موظف_{np.random.randint(1, 50)}" for _ in range(rows)]
     }
-    choice = st.radio("انتقل بين أدواتك بدقة:", list(menu.keys()))
-    st.write("---")
-    st.caption("Owner: MIA8444")
+    return pd.DataFrame(data)
 
-df = st.session_state['main_df']
-
-# --- 4. تشغيل الأدوات ---
-
-if menu[choice] == "Home":
-    st.title("🦁 مركز التحكم - MIA8444")
-    up = st.file_uploader("ارفع ملف البيانات (Excel/CSV)", type=['csv', 'xlsx'])
-    if up:
-        st.session_state['main_df'] = pd.read_excel(up) if up.name.endswith('xlsx') else pd.read_csv(up)
-        st.success("تم رفع البيانات!")
+# 3. القائمة الجانبية
+with st.sidebar:
+    st.header("MIA8444 Control Panel")
+    menu = st.radio("القائمة:", ["🏠 بوابة التحميل", "📊 Excel Pro (اختبار الضغط)", "📈 تحليل البيانات الضخمة"])
+    if st.button("🚀 توليد 10,000 صف (اختبار التحمل)"):
+        st.session_state['data_vault'] = generate_giant_data(10000)
+        st.success("✅ الوحش ولد 10,000 صف بنجاح!")
         st.rerun()
 
-elif menu[choice] == "OCR":
-    st.header("👁️ استخراج النصوص من الصور")
-    reader = load_ocr_model()
-    img = st.file_uploader("ارفع صورة جدول أو فاتورة", type=['jpg', 'png', 'jpeg'])
-    if img:
-        st.image(img)
-        if st.button("تحويل الصورة لبيانات"):
-            res = reader.readtext(np.array(Image.open(img)))
-            st.write([r[1] for r in res])
+df = st.session_state['data_vault']
 
-elif menu[choice] == "Clean":
-    st.header("🧼 تنظيف البيانات")
-    if not df.empty:
-        if st.button("إزالة الصفوف الفارغة والمكررة"):
-            st.session_state['main_df'] = df.dropna().drop_duplicates()
-            st.success("تم التنظيف!")
-            st.dataframe(st.session_state['main_df'])
-    else: st.warning("ارفع ملف أولاً.")
+# 4. الصفحات
+if menu == "🏠 بوابة التحميل":
+    st.title("🦁 بوابة التحكم MIA8444")
+    if df is not None:
+        st.write(f"البيانات الحالية: *{len(df)} صف* و *{len(df.columns)} عمود*.")
+        st.dataframe(df.head(100)) # عرض أول 100 بس عشان المتصفح ميهنجش
+    else:
+        st.warning("الخزنة فاضية.. اضغط على زر التوليد في الجنب!")
 
-elif menu[choice] == "Excel":
-    st.header("📊 Excel Pro المحرر")
-    if not df.empty:
+elif menu == "📊 Excel Pro (اختبار الضغط)":
+    st.header("📊 اختبار سرعة الاستجابة لـ AgGrid")
+    if df is not None:
+        # تحسين للأداء مع البيانات الكبيرة
         gb = GridOptionsBuilder.from_dataframe(df)
-        gb.configure_default_column(editable=True, groupable=True)
-        grid_res = AgGrid(df, gridOptions=gb.build(), theme='balham')
-        if st.button("حفظ التعديلات"):
-            st.session_state['main_df'] = pd.DataFrame(grid_res['data'])
-    else: st.warning("لا توجد بيانات للعرض.")
+        gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=20) # تقسيم الصفحات مهم جداً هنا
+        gb.configure_side_bar()
+        gb.configure_default_column(editable=True, filterable=True)
+        
+        st.write("إرشادات: جرب تعمل Filter أو Sort وشوف السرعة.")
+        grid_res = AgGrid(df, gridOptions=gb.build(), theme='balham', height=500, update_mode='VALUE_CHANGED')
+    else:
+        st.error("ارفع أو ولد بيانات أولاً.")
 
-elif menu[choice] == "Dashboard":
-    st.header("🖥️ داشبورد الإدارة")
-    if not df.empty:
-        nums = df.select_dtypes(include=[np.number]).columns.tolist()
-        if nums:
-            col = st.selectbox("اختر العمود للرسم:", nums)
-            st.plotly_chart(px.area(df, y=col, title=f"تحليل {col}"))
-    else: st.warning("ارفع البيانات لتفعيل الشاشة.")
-
-# السطر السحري المصحح بشرطتين (__) لمنع الـ NameError
-if __name__ == "__main__":
-    pass
+elif menu == "📈 تحليل البيانات الضخمة":
+    st.header("📈 معالجة إحصائية فورية")
+    if df is not None:
+        c1, c2 = st.columns(2)
+        with c1:
+            st.metric("إجمالي المبيعات المليونية", f"{df['المبيعات'].sum():,.2f}")
+        with c2:
+            st.metric("متوسط التقييم", f"{df['التقييم'].mean():.2f}")
+        
+        st.subheader("توزيع المبيعات حسب الفرع")
+        import plotly.express as px
+        fig = px.box(df, x='الفرع', y='المبيعات', color='حالة_الطلب', title="تحليل ضخم للمبيعات")
+        st.plotly_chart(fig, use_container_width=True)
