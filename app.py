@@ -7,7 +7,7 @@ import os
 
 # ======== 1. الذاكرة المركزية (The Unified Brain) ========
 if 'active_df' not in st.session_state:
-    st.session_state.active_df = None # الذاكرة اللي شايلة البيانات اللي شغالين عليها حالياً
+    st.session_state.active_df = None 
 
 # ======== 2. الهوية والإعدادات (UI/UX) ========
 APP_NAME = "Smart Analyst"
@@ -16,7 +16,7 @@ LOGO_FILE = "8888.jpg"
 
 st.set_page_config(page_title=f"{AUTHOR_SIGNATURE} | {APP_NAME}", layout="wide")
 
-# ستايل "التكنولوجيا المظلمة"
+# ستايل "التكنولوجيا المظلمة" الاحترافي
 st.markdown(f"""
     <style>
     .stApp {{ background-color: #0d1117; color: white; }}
@@ -44,9 +44,9 @@ with st.sidebar:
 
 # --- قسم ورشة البيانات (الرفع والتوليد) ---
 if menu == "📂 ورشة البيانات (رفع وتوليد)":
-    st.header("📂 ورشة عمل البيانات")
+    st.header("📂 ورشة عمل البيانات (Data Hub)")
     
-    tab1, tab2, tab3 = st.tabs(["📤 رفع ملفات", "🧪 توليد بيانات اختبار", "✍️ إدخال يدوي (Excel Pro)"])
+    tab1, tab2, tab3 = st.tabs(["📤 رفع ملفات", "🧪 توليد بيانات اختبار", "✍️ Excel Pro (إدخال يدوي)"])
     
     with tab1:
         st.subheader("تحميل ملفاتك الخاصة")
@@ -54,55 +54,55 @@ if menu == "📂 ورشة البيانات (رفع وتوليد)":
         if uploaded_file:
             df = pd.read_excel(uploaded_file) if uploaded_file.name.endswith('xlsx') else pd.read_csv(uploaded_file)
             st.session_state.active_df = df
-            st.success("✅ تم تحميل الملف وربطه بالذاكرة المركزية!")
+            st.success("Successfully uploaded and linked to system!")
 
     with tab2:
-        st.subheader("مولد بيانات الاختبار (Test Data Generator)")
-        rows = st.number_input("عدد الصفوف المراد توليدها:", min_value=10, max_value=1000, value=100)
-        if st.button("🚀 توليد بيانات اختبار عالمية"):
-            # توليد بيانات عشوائية احترافية للاختبار
+        st.subheader("مولد بيانات الاختبار (Data Generator)")
+        rows = st.number_input("عدد الصفوف:", min_value=10, max_value=1000, value=100)
+        if st.button("🚀 توليد بيانات اختبار فورية"):
             test_data = pd.DataFrame({
-                'التاريخ': pd.date_range(start='2025-01-01', periods=rows),
-                'المبيعات': np.random.randint(1000, 5000, size=rows),
-                'التكاليف': np.random.randint(500, 3000, size=rows),
-                'المنطقة': np.random.choice(['القاهرة', 'الأسكندرية', 'دبي', 'الرياض'], size=rows)
+                'Date': pd.date_range(start='2025-01-01', periods=rows),
+                'Sales': np.random.randint(1000, 5000, size=rows),
+                'Costs': np.random.randint(500, 3000, size=rows),
+                'Region': np.random.choice(['Cairo', 'Dubai', 'Riyadh'], size=rows)
             })
             st.session_state.active_df = test_data
-            st.success(f"✅ تم توليد {rows} سجل للاختبار وربطهم بالنظام!")
+            st.success(f"Generated {rows} rows for testing!")
 
     with tab3:
-        st.subheader("Excel Pro: إدخال يدوي")
-        if st.session_state.active_df is not None:
-            edited_df = st.data_editor(st.session_state.active_df, num_rows="dynamic", use_container_width=True)
-            if st.button("💾 حفظ التعديلات اليدوية"):
-                st.session_state.active_df = edited_df
-                st.success("تم الحفظ!")
+        st.subheader("Excel Pro: الإدخال اليدوي")
+        # إذا كانت الذاكرة فارغة، نبدأ بجدول فارغ
+        current_df = st.session_state.active_df if st.session_state.active_df is not None else pd.DataFrame(columns=["Category", "Value", "Note"])
+        edited_df = st.data_editor(current_df, num_rows="dynamic", use_container_width=True)
+        if st.button("💾 حفظ البيانات اليدوية"):
+            st.session_state.active_df = edited_df
+            st.success("Data Saved!")
 
-# --- قسم المنظف (بيشتغل على الـ active_df أوتوماتيك) ---
+# --- قسم منظف البيانات ---
 elif menu == "✨ منظف البيانات العالمي":
-    st.header("✨ محرك التنظيف (Auto-Fix)")
+    st.header("✨ محرك التنظيف (Beast Cleaner)")
     if st.session_state.active_df is not None:
         df = st.session_state.active_df
-        st.write("البيانات الحالية المربوطة:")
+        st.write("البيانات الحالية:")
         st.dataframe(df.head())
         
-        if st.button("🚀 بدء الفحص والتنظيف الشامل"):
-            # تنظيف ذكي
-            df_clean = df.drop_duplicates().apply(lambda x: x.str.strip() if x.dtype == "object" else x)
+        if st.button("🚀 تشغيل التنظيف التلقائي"):
+            df_clean = df.drop_duplicates().dropna(how='all')
             st.session_state.active_df = df_clean
-            st.success("✅ تم التنظيف وتحديث "الذاكرة" بنجاح!")
+            st.success("Cleaning complete! Database updated.")
     else:
-        st.warning("⚠️ لا توجد بيانات. ارفع ملف أو ولد بيانات من 'ورشة البيانات' أولاً.")
+        st.warning("No data found. Please upload or generate data first.")
 
-# --- قسم التنبؤ (بيقرأ من الذاكرة) ---
+# --- قسم التنبؤ ---
 elif menu == "🔮 محرك التنبؤ AI":
     st.header("🔮 AI Prediction Engine")
     if st.session_state.active_df is not None:
         df = st.session_state.active_df
-        # كود التنبؤ الذكي هنا...
-        st.plotly_chart(px.line(df, title="تحليل الاتجاه العام للبيانات المربوطة"))
+        # رسم بياني ذكي
+        fig = px.line(df, title="Data Trend Analysis")
+        st.plotly_chart(fig, use_container_width=True)
     else:
-        st.error("⚠️ النظام يحتاج لبيانات للتحليل. اذهب لورشة البيانات أولاً.")
+        st.error("Please provide data in the Data Hub first.")
 
 # ======== 5. التوقيع (Footer) ========
-st.markdown(f"<div class="footer">Property of {AUTHOR_SIGNATURE} | MIA8444 © 2026</div>", unsafe_allow_html=True)
+st.markdown(f"<div class='footer'>Property of {AUTHOR_SIGNATURE} | MIA8444 © 2026</div>", unsafe_allow_html=True)
