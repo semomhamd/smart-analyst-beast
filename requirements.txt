@@ -1,12 +1,28 @@
-streamlit>=1.28.0
-pandas>=2.0.0
-numpy>=1.24.0
-plotly>=5.15.0
-fpdf>=1.7.2
-openpyxl>=3.1.0
-xlsxwriter>=3.1.0
-supabase>=2.0.0
+# ======= Core =======
+streamlit>=1.31.0
+pandas>=2.2.0
+numpy>=1.26.0
+
+# ======= Visualization =======
+plotly>=5.18.0
+matplotlib>=3.8.0
+
+# ======= PDF (ReportLab - الأقوى) =======
+reportlab>=4.0.0
+
+# ======= Excel =======
+openpyxl>=3.1.2
+xlsxwriter>=3.1.9
+
+# ======= Machine Learning =======
+scikit-learn>=1.4.0
+
+# ======= Cloud & Database =======
+supabase>=2.3.0
 python-dotenv>=1.0.0
-Pillow>=10.0.0
-reportlab
- scikit-learn
+
+# ======= Image Processing =======
+Pillow>=10.2.0
+
+# ======= Utilities =======
+requests>=2.31.0
