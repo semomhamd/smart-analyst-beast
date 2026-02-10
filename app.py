@@ -2,101 +2,91 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
-from sklearn.linear_model import LinearRegression
 import os
 
-# ======== 1. الهوية العالمية (MIA8444) ========
+# ======== 1. الذاكرة المركزية (Session State) ========
+# دي اللي هتربط كل الأدوات ببعض وتمنع اللخبطة
+if 'main_data' not in st.session_state:
+    st.session_state.main_data = None  # هنا البيانات بتتحفظ طول ما إنت فاتح
+
+# ======== 2. الهوية والإعدادات ========
 APP_NAME = "Smart Analyst"
 AUTHOR_SIGNATURE = "MIA8444"
 LOGO_FILE = "8888.jpg"
-ENGLISH_SLOGAN = "The Ultimate Financial Brain"
 
-st.set_page_config(page_title=f"{AUTHOR_SIGNATURE} | {APP_NAME}", layout="wide", page_icon="📈")
-
-# ======== 2. التنسيق (Dark Mode & UI) ========
-st.markdown(f"""
-    <style>
-    .stApp {{ background-color: #0d1117; color: white; }}
-    .footer {{ position: fixed; left: 0; bottom: 0; width: 100%; text-align: center; padding: 5px; background: #161b22; color: #8b949e; border-top: 1px solid #30363d; font-size: 12px; }}
-    .stSidebar {{ background-color: #161b22; }}
-    </style>
-    """, unsafe_allow_html=True)
+st.set_page_config(page_title=f"{AUTHOR_SIGNATURE} | {APP_NAME}", layout="wide")
 
 # ======== 3. القائمة الجانبية المترتبة ========
 with st.sidebar:
     if os.path.exists(LOGO_FILE):
         st.image(LOGO_FILE, use_container_width=True)
     st.markdown(f"<h2 style='text-align:center;'>{APP_NAME}</h2>", unsafe_allow_html=True)
-    st.markdown(f"<p style='text-align:center; font-size:11px;'>{ENGLISH_SLOGAN}</p>", unsafe_allow_html=True)
     st.markdown("---")
     
-    menu = st.radio("المهام المتقدمة:", [
+    menu = st.radio("القائمة الرئيسية:", [
         "🏠 مركز التحكم",
-        "📂 Excel Pro & Manual Entry",
+        "📂 Excel Pro (إدخال يدوي)",
         "✨ منظف البيانات الخارق",
         "🔮 محرك التنبؤ والذكاء",
-        "📊 التحليل البصري (Power BI Style)",
-        "📤 جسر التصدير العالمي",
-        "📄 معالج الـ PDF والتقارير"
+        "📤 جسر التصدير العالمي"
     ])
     
     st.markdown("---")
-    with st.expander("⚙️ الإعدادات (ترس التحكم)"):
+    with st.expander("⚙️ الإعدادات (الترس)"):
         st.selectbox("🌐 اللغة", ["العربية", "English"])
         st.color_picker("🎨 لون الهوية", "#58a6ff")
 
-# ======== 4. تفعيل الأدوات والذكاء الاصطناعي ========
+# ======== 4. تفعيل الأدوات المربوطة ببعضها ========
 
-# --- قسم Excel Pro ---
-if menu == "📂 Excel Pro & Manual Entry":
+# --- قسم Excel Pro (هنا تقدر تدخل بيانات يدوي) ---
+if menu == "📂 Excel Pro (إدخال يدوي)":
     st.header("📂 Excel Pro Hub")
-    if 'data_grid' not in st.session_state:
-        st.session_state.data_grid = pd.DataFrame(columns=["البند", "القيمة", "التاريخ"])
+    st.write("أدخل بياناتك هنا وسيقوم النظام بحفظها لكل الأدوات:")
     
-    st.write("أدخل بياناتك يدوياً لإنشاء شيت احترافي:")
-    new_data = st.data_editor(st.session_state.data_grid, num_rows="dynamic", use_container_width=True)
+    # جدول تفاعلي للإدخال اليدوي
+    if 'manual_df' not in st.session_state:
+        st.session_state.manual_df = pd.DataFrame(columns=["البند", "القيمة", "التاريخ"])
     
-    if st.button("💾 حفظ وتصدير للإكسيل"):
-        st.session_state.data_grid = new_data
-        st.success("تم تجهيز ملف Excel احترافي!")
+    input_df = st.data_editor(st.session_state.manual_df, num_rows="dynamic", use_container_width=True)
+    
+    if st.button("✅ اعتماد البيانات وربطها بالأدوات"):
+        st.session_state.main_data = input_df
+        st.session_state.manual_df = input_df
+        st.success("تم الربط! البيانات الآن متاحة في المنظف والمحرك التنبئي.")
 
-# --- قسم التنبؤ الذكي ---
-elif menu == "🔮 محرك التنبؤ والذكاء":
-    st.header("🔮 AI Prediction Engine")
-    st.info("الذكاء الاصطناعي يحلل الاتجاهات المستقبلية لبياناتك")
+# --- قسم منظف البيانات (بيسحب من اللي دخلته فوق) ---
+elif menu == "✨ منظف البيانات الخارق":
+    st.header("✨ منظف البيانات")
     
-    uploaded_file = st.file_uploader("ارفع بياناتك للتنبؤ", type=['csv', 'xlsx'])
-    if uploaded_file:
-        df = pd.read_excel(uploaded_file) if uploaded_file.name.endswith('xlsx') else pd.read_csv(uploaded_file)
-        num_cols = df.select_dtypes(include=np.number).columns.tolist()
+    # اختيار: ترفع ملف جديد ولا تستخدم اللي دخلته يدوي؟
+    source = st.radio("مصدر البيانات:", ["البيانات الحالية في الذاكرة", "رفع ملف جديد"])
+    
+    if source == "البيانات الحالية في الذاكرة" and st.session_state.main_data is not None:
+        df = st.session_state.main_data
+        st.write("البيانات اللي دخلتها يدوياً جاهزة للتنظيف:")
+        st.dataframe(df)
         
-        if len(num_cols) >= 2:
-            x_col = st.selectbox("بناءً على (X):", num_cols)
-            y_col = st.selectbox("توقع قيمة (Y):", num_cols)
-            
-            # محرك التنبؤ
-            X = df[[x_col]].values.reshape(-1, 1)
-            y = df[y_col].values
-            model = LinearRegression().fit(X, y)
-            
-            fig = px.scatter(df, x=x_col, y=y_col, trendline="ols", title="التنبؤ والاتجاه الذكي", template="plotly_dark")
-            st.plotly_chart(fig, use_container_width=True)
-            st.write(f"🤖 الذكاء الاصطناعي يقول: هناك علاقة قوية بنسبة {round(model.score(X, y)*100, 2)}% بين المتغيرين.")
+        if st.button("🚀 بدء التنظيف الذكي"):
+            df_clean = df.drop_duplicates().dropna(how='all')
+            st.session_state.main_data = df_clean # تحديث الذاكرة بالبيانات النضيفة
+            st.success("تم التنظيف وتحديث الذاكرة المركزية!")
+    else:
+        uploaded_file = st.file_uploader("ارفع ملف جديد لربطه بالنظام", type=['csv', 'xlsx'])
+        if uploaded_file:
+            df = pd.read_excel(uploaded_file) if uploaded_file.name.endswith('xlsx') else pd.read_csv(uploaded_file)
+            st.session_state.main_data = df
+            st.success("تم الرفع والربط بنجاح!")
 
-# --- قسم التصدير العالمي ---
-elif menu == "📤 جسر التصدير العالمي":
-    st.header("📤 Universal Export Bridge")
-    st.markdown("تصدير مباشر لكل أدوات تحليل البيانات العالمية")
-    
-    c1, c2, c3, c4 = st.columns(4)
-    c1.button("💾 To SQL")
-    c2.button("📊 To Power BI")
-    c3.button("🐍 To Python")
-    c4.button("📈 To Tableau")
+# --- قسم التنبؤ (بيحلل البيانات اللي متنظفة في الذاكرة) ---
+elif menu == "🔮 محرك التنبؤ والذكاء":
+    st.header("🔮 محرك التنبؤ")
+    if st.session_state.main_data is not None:
+        df = st.session_state.main_data
+        st.write("البيانات المربوطة جاهزة للتحليل:")
+        st.dataframe(df.head())
+        # هنا تحط كود التنبؤ اللي بيسحب من df
+    else:
+        st.warning("⚠️ لا توجد بيانات في الذاكرة. من فضلك ادخل بيانات في Excel Pro أولاً.")
 
-# ======== 5. التوقيع (Footer) ========
-st.markdown(f"""
-    <div class="footer">
-        {APP_NAME} | {ENGLISH_SLOGAN} | MIA8444 Signature © 2026
-    </div>
-    """, unsafe_allow_html=True)
+# ======== 5. التوقيع النهائي ========
+st.markdown(f"<div style='text-align:center; padding:20px; color:#8b949e;'>Property of {AUTHOR_SIGNATURE} | MIA8444 © 2026</div>", unsafe_allow_html=True)
