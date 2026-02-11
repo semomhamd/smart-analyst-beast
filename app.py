@@ -824,33 +824,60 @@ elif menu == "📷 OCR - استخراج من صور":
                 if st.button("🔍 بدء الاستخراج", use_container_width=True):
                     with st.spinner("جاري تحليل الصورة..."):
                         try:
-                            st.info("⚠️ تأكد من تثبيت Tesseract OCR")
+                            from PIL import Image
+                            import pytesseract
+                            import cv2
+                            import numpy as np
                             
-                            st.markdown("*النص المستخرج:*")
-                            st.code("""
-التاريخ    | المبيعات | المصاريف | الربح
-2026-01-01 | 15000    | 8000     | 7000
-2026-01-02 | 18000    | 9000     | 9000
-2026-01-03 | 16500    | 8500     | 8000
-                            """)
+                            image = Image.open(img_file)
+                            img_array = np.array(image)
                             
-                            ocr_df = pd.DataFrame({
-                                'التاريخ': pd.date_range('2026-01-01', periods=3),
-                                'المبيعات': [15000, 18000, 16500],
-                                'المصاريف': [8000, 9000, 8500],
-                                'الربح': [7000, 9000, 8000]
-                            })
+                            if len(img_array.shape) == 3:
+                                gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
+                            else:
+                                gray = img_array
                             
-                            st.success(get_text('success'))
-                            st.dataframe(ocr_df, use_container_width=True)
+                            _, thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY_INV)
                             
-                            if st.button("💾 استخدام هذه البيانات"):
-                                st.session_state.beast_df = ocr_df
-                                st.session_state.ocr_results = {'source': 'صورة', 'date': datetime.now()}
-                                st.success(get_text('success'))
+                            custom_config = r'--oem 3 --psm 6 -l ara+eng'
+                            text = pytesseract.image_to_string(image, config=custom_config)
+                            
+                            lines = text.strip().split('\n')
+                            data = []
+                            
+                            for line in lines:
+                                row = re.split(r'\s{2,}|\t|(?<=\d)\s+(?=\d)', line.strip())
+                                row = [cell.strip() for cell in row if cell.strip()]
+                                if len(row) > 1:
+                                    data.append(row)
+                            
+                            if len(data) > 1 and extract_table:
+                                max_cols = max(len(row) for row in data)
+                                normalized_data = []
+                                for row in data:
+                                    while len(row) < max_cols:
+                                        row.append('')
+                                    normalized_data.append(row[:max_cols])
+                                
+                                ocr_df = pd.DataFrame(normalized_data[1:], columns=normalized_data[0] if normalized_data else None)
+                                
+                                for col in ocr_df.columns:
+                                    ocr_df[col] = pd.to_numeric(ocr_df[col], errors='ignore')
+                                
+                                st.success(f"✅ تم استخراج جدول بـ {len(ocr_df)} صف!")
+                                st.dataframe(ocr_df, use_container_width=True)
+                                
+                                if st.button("💾 استخدام هذه البيانات"):
+                                    st.session_state.beast_df = ocr_df
+                                    st.session_state.ocr_results = {'source': 'صورة', 'date': datetime.now()}
+                                    st.success(get_text('success'))
+                            else:
+                                st.markdown("*النص المستخرج:*")
+                                st.text_area("", text, height=200)
                                 
                         except Exception as e:
                             st.error(f"{get_text('error')}: {e}")
+                            st.info("💡 تأكد من تثبيت Tesseract OCR على جهازك المحلي")
     
     with tab_ocr2:
         st.subheader("استخراج من PDF")
@@ -865,7 +892,59 @@ elif menu == "📷 OCR - استخراج من صور":
             if st.button("📖 استخراج المحتوى", use_container_width=True):
                 with st.spinner("جاري قراءة PDF..."):
                     try:
-                        st.success(get_text('success'))
+                        if pdf_type == "PDF نصي (قابل للتحديد)":
+                            import pdfplumber
+                            
+                            text_content = []
+                            tables = []
+                            
+                            with pdfplumber.open(pdf_file) as pdf:
+                                for page in pdf.pages:
+                                    text_content.append(page.extract_text() or "")
+                                    page_tables = page.extract_tables()
+                                    for table in page_tables:
+                                        if table:
+                                            tables.append(table)
+                            
+                            full_text = "\n".join(text_content)
+                            
+                            if tables:
+                                st.success(f"✅ تم العثور على {len(tables)} جدول!")
+                                for i, table in enumerate(tables[:3]):
+                                    if len(table) > 1:
+                                        df_table = pd.DataFrame(table[1:], columns=table[0])
+                                        st.write(f"*جدول {i+1}:*")
+                                        st.dataframe(df_table, use_container_width=True)
+                                        
+                                        if st.button(f"💾 استخدام جدول {i+1}", key=f"table_{i}"):
+                                            st.session_state.beast_df = df_table
+                                            st.session_state.ocr_results = {'source': f'PDF جدول {i+1}', 'date': datetime.now()}
+                                            st.success(get_text('success'))
+                            else:
+                                st.markdown("*النص المستخرج:*")
+                                st.text_area("", full_text[:2000], height=200)
+                        else:
+                            from pdf2image import convert_from_path
+                            import pytesseract
+                            import tempfile
+                            
+                            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+                                tmp_file.write(pdf_file.getvalue())
+                                tmp_path = tmp_file.name
+                            
+                            images = convert_from_path(tmp_path)
+                            
+                            all_text = []
+                            for i, img in enumerate(images):
+                                text = pytesseract.image_to_string(img, lang='ara+eng')
+                                all_text.append(f"--- صفحة {i+1} ---\n{text}")
+                            
+                            os.unlink(tmp_path)
+                            
+                            full_text = "\n".join(all_text)
+                            st.markdown("*النص المستخرج من PDF الممسوح:*")
+                            st.text_area("", full_text[:3000], height=300)
+                            
                     except Exception as e:
                         st.error(f"{get_text('error')}: {e}")
     
@@ -1035,6 +1114,15 @@ elif menu == "🧠 تنبؤ AI":
                         fig.add_trace(go.Scatter(y=list(y)+list(preds), name='تنبؤ', line=dict(color='#10b981', dash='dash')))
                         fig.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)')
                         st.plotly_chart(fig, use_container_width=True)
+                        
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("متوسط التنبؤ", f"{np.mean(preds):,.0f}")
+                        with col2:
+                            st.metric("القمة المتوقعة", f"{np.max(preds):,.0f}")
+                        with col3:
+                            trend = "📈 صاعد" if preds[-1] > preds[0] else "📉 هابط"
+                            st.metric("الاتجاه", trend)
                         
                         st.success(get_text('success'))
                         
