@@ -531,7 +531,7 @@ def create_beast_pdf(language=None):
             elements.append(Paragraph(t["cleaning_log"], heading_style))
             
             clean_data = [[t['op_number'], t['operation'], t['timestamp'], t['status']]]
-            for idx, log in enumerate(st.session['status']]]
+            for idx, log in enumerate(st.session['status'])]
             for idx, log in enumerate(st.session_state.cleaning_log, 1):
                 clean_data.append([str(idx), log, datetime.now().strftime('%H:%M'), t['completed']])
             
